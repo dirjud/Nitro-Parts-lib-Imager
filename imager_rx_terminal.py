@@ -6,20 +6,11 @@ di = DeviceInterface(
     comment="""These are the terminals common control an Imager receiver.""",
     terminal_list = [
         Terminal(
-            name="ImagerRX",
+            name="ImagerRx",
             regAddrWidth=8,
             regDataWidth=16,
             comment="Controls imager receiver",
             register_list = [
-                Register(
-                    name="mode",
-                    comment="Controls modes of the MT9M032 controller",
-                    type="int",
-                    mode="write",
-                    subregs = [
-                        SubReg(name="enable", comment="Enables capture ring buffer", width=1, init=0),
-                        ],
-                    ),
                 Register(
                     name="format",
                     mode="write",
@@ -102,7 +93,7 @@ di = DeviceInterface(
                     comment="Number of rows read from imager",
                     type="int",
                     mode="read",
-                    width=14,
+                    width=16,
                     init=0,
                     ),
                 Register(
@@ -110,7 +101,7 @@ di = DeviceInterface(
                     comment="Number of columns read from imager",
                     type="int",
                     mode="read",
-                    width=14,
+                    width=16,
                     init=0,
                     ),
                 Register(
@@ -122,11 +113,19 @@ di = DeviceInterface(
                     init=0,
                     ),
                 Register(
-                    name="frame_cycles",
+                    name="clks_per_frame",
                     comment="Number of clock cycles measured in this frame. Can be used calculate the frame rate and/or integration time.",
                     type="int",
                     mode="read",
                     width=32,
+                    init=0,
+                    ),
+                Register(
+                    name="clks_per_row",
+                    comment="Number of clock cycles measured per row.",
+                    type="int",
+                    mode="read",
+                    width=16,
                     init=0,
                     ),
                 Register(
@@ -144,7 +143,7 @@ di = DeviceInterface(
                     mode="read",
                     sub_regs = [
                         SubReg(name="color", width=4, valuemap={"Mono":0, "Bayer":1}),
-                        SubReg(name="format", width=4, valuemap={"unpacked":0, "packed":1, "compressed": 2}),
+                        SubReg(name="packed", width=1),
                         ]
                     ),
                 Register(

@@ -24,25 +24,12 @@
 //    in the image stream.
 //
 
-`define DTYPE_WIDTH        5
-
-`define DTYPE_FRAME_START   0
-`define DTYPE_FRAME_END     1
-`define DTYPE_ROW_START     2
-`define DTYPE_ROW_END       3
-`define DTYPE_HEADER_START  4
-`define DTYPE_HEADER_END    5
-
-`define DTYPE_HEADER        8
-`define DTYPE_PIXEL         9
-`define DTYPE_PIXEL_RED    10
-`define DTYPE_PIXEL_BLUE   11
-`define DTYPE_PIXEL_GREEN1 12
-`define DTYPE_PIXEL_GREEN2 13
-
+`include "dtypes.v"
+`include "terminals_defs.v"
 
 module imager_rx
    #(parameter PIXEL_WIDTH=12,
+     parameter DATA_WIDTH=16,
      parameter DIM_WIDTH=16)
    (
     input 			  resetb,
@@ -62,41 +49,91 @@ module imager_rx
     output reg [15:0] 		  di_transfer_status,
     output reg 			  di_IMAGER_RX_en,
 
+    input 			  enable, // sync to di_clk
+    
     input 			  clki,
     input 			  fv,
     input 			  lv,
     input [PIXEL_WIDTH-1:0] 	  datai,
 
+    input 			  header_stall,
+    
     output reg 			  dvo,
-    output reg [PIXEL_WIDTH-1:0]  datao,
+    output reg [DATA_WIDTH-1:0]   datao,
     output reg [`DTYPE_WIDTH-1:0] dtypeo
     );
    
-   reg [DIM_WIDTH-1:0] row_count, col_count;
-   reg [DIM_WIDTH-1:0] num_rows, num_cols;
-   reg fv_s, fv_ss, fv_sss, lv_s, lv_ss, lv_sss;
-   reg [PXIEL_WIDTH-1:0] datai_s, datai_ss, datai_sss;
+   reg fv_s, fv_ss, fv_sss, lv_s, lv_ss;
+   reg [PIXEL_WIDTH-1:0] datai_s, datai_ss;
 
    // synthesis attribute IOB of fv_s  is "TRUE";
    // synthesis attribute IOB of lv_s  is "TRUE";
    // synthesis attribute IOB of datai is "TRUE";
    
-   reg [31:0] frame_cycles_count;
-   reg [15:0] num_rows, num_cols;
-   reg [15:0] checksum;
+   reg [DIM_WIDTH-1:0] row_count, col_count;
+   reg [DIM_WIDTH-1:0] num_rows, num_cols;
+   reg [31:0] frame_cycles_count, clks_per_frame;
+   reg [15:0] checksum, frame_count, clks_per_row;
 
-`include "ImagerRXTerminalInstance.v"
-//`include "ImageTerminalInstance.v"
-
-   always @(posedge clki) begin
-   end
+   wire [31:0] frame_start = 32'hFFFFFFFE;
+   wire [29:0] frame_length = 0;
+   wire [15:0] imageHeaderVersion = 2;
+   wire [15:0] image_type = 0;
+   wire [15:0] image_data = 0;
    
+`include "ImagerRxTerminalInstance.v"
+   
+   always @(*) begin
+      if(di_term_addr == `TERM_ImagerRx) begin
+         di_IMAGER_RX_en = 1;
+         di_reg_datao = ImagerRxTerminal_reg_datao;
+         di_read_rdy  = 1;
+         di_write_rdy = 1;
+         di_transfer_status = 0;
+      end else begin
+         di_IMAGER_RX_en = 0;
+         di_reg_datao = 16'hAAAA;
+         di_read_rdy  = 1;
+         di_write_rdy = 1;
+         di_transfer_status = 16'hFFFD; // undefined terminal, return error code
+      end
+   end
+
    wire       fv_rising         = ( fv_s && !fv_ss);
    wire       fv_falling        = (!fv_s &&  fv_ss);
-   wire       lv_rising         = ( lv_ss && !lv_sss);
-   wire       lv_falling        = (!lv_ss &&  lv_sss);
+   wire       lv_rising         = ( lv_s && !lv_ss);
+   wire       lv_falling        = (!lv_s &&  lv_ss);
 
-   reg 	      lv_falling_s, lv_falling_ss, fv_falling_s, fv_falling_ss;
+   reg 	      lv_falling_s, fv_falling_s;
+   reg 	      enable_s, wait_for_fv_to_drop, header_stall_s;
+   reg [15:0] clks_per_row_count;
+   
+   wire       dv = fv_ss && lv_ss;
+   reg [1:0]  header_mode;
+   reg [5:0]  header_addr;
+   wire [15:0] header_data;
+//`include "ImageTerminalInstance.v"
+  ImageTerminal ImageTerminal(
+     .clk(clki),
+     .resetb(resetb),
+     .we(1'b0),
+     .addr({10'b0, header_addr}),
+     .datai(16'b0),
+     .datao(header_data),
+
+     .frame_start(frame_start),
+     .frame_length(frame_length),
+     .imageHeaderVersion(imageHeaderVersion),
+     .num_rows(num_rows),
+     .num_cols(num_cols),
+     .frame_count(frame_count),
+     .clks_per_frame(clks_per_frame),
+     .clks_per_row(clks_per_row),
+     .checksum(checksum),
+     .image_type(image_type),
+     .image_data(image_data)
+     );
+
    
    always @(posedge clki or negedge resetb) begin
       if(!resetb) begin
@@ -106,12 +143,9 @@ module imager_rx
 	 fv_ss         <= 0;
 	 lv_ss         <= 0;
 	 datai_ss      <= 0;
-	 datai_sss     <= 0;
-	 dvo_pre       <= 0;
+	 fv_sss        <= 0;
 	 lv_falling_s  <= 0;
-	 lv_falling_ss <= 0;
 	 fv_falling_s  <= 0;
-	 fv_falling_ss <= 0;
 
 	 checksum      <= 0;
 	 frame_cycles_count <= 0;
@@ -119,6 +153,12 @@ module imager_rx
 	 num_cols      <=0;
 	 col_count     <=0;
 	 row_count     <=0;
+	 enable_s      <=0;
+	 wait_for_fv_to_drop   <=1;
+	 frame_count   <=0;
+	 header_mode   <=0;
+	 header_addr   <=0;
+	 header_stall_s<=0;
       end else begin
 	 fv_s       <= fv;
 	 lv_s       <= lv;
@@ -126,50 +166,103 @@ module imager_rx
 	 fv_ss      <= fv_s;
 	 lv_ss      <= lv_s;
 	 datai_ss   <= datai_s;
-	 datai_sss  <= datai_ss;
-	 dvo_pre    <= fv_ss && lv_ss;
+	 fv_sss     <= fv_ss;
 	 lv_falling_s  <= lv_falling;
-	 lv_falling_ss <= lv_falling_s;
 	 fv_falling_s  <= fv_falling;
-	 fv_falling_ss <= fv_falling_s;
-
-	 if(dvo_pre) begin 
+	 enable_s <= enable;
+	 header_stall_s <= header_stall;
+	 
+	 if(!enable_s || wait_for_fv_to_drop) begin
+	    dvo      <= 0;
+	    dtypeo   <= 0;
+	    datao    <= 0;
+	    checksum <= 0;
+	    if(!fv_s && !fv_ss && !fv_sss) begin
+	       // wait for fv to drop before moving out of the disabled state
+	       // into active state to prevent an incomplete frame from
+	       // entering the pipeline. We wait for all three to prevent
+	       // the `DTYPE_FRAME_END from being emitted
+	       wait_for_fv_to_drop <= 0;
+	    end else begin
+	       wait_for_fv_to_drop <= 1;
+	    end
+	 
+	 end else if(dv) begin 
 	    // Valid image data get 1st priority and trumps all other
 	    // data types. We don't know yet what type of data this
 	    // is, so we set it type `DTYPE_PIXEL. Later streams can
 	    // deal with assigning it the correct color and whatnot.
 	    dvo    <= 1;
 	    dtypeo <= `DTYPE_PIXEL;
-	    datao  <= datai_sss;
-	    checksum <= checksum + datai_sss;
+	    /* verilator lint_off WIDTH */
+	    datao  <= datai_ss;
+	    checksum <= checksum + datai_ss;
+	    /* verilator lint_on WIDTH */
 	 end else if(fv_rising) begin
-	    // `DTYPE_FRAME_START gets second priority. Since dvo_pre
+	    // `DTYPE_FRAME_START gets second priority. Since dv
 	    // is delayed one cycle beyond fv_rising, it should not
 	    // be possible to miss this even though it is second
 	    // priority
 	    dvo    <= 1;
 	    dtypeo <= `DTYPE_FRAME_START;
-	    datao  <= 0;
+	    datao  <= frame_count[DATA_WIDTH-1:0];
 	    checksum <= 0;
-	 end else if(fv_falling_ss) begin
+	 end else if(fv_falling_s) begin
 	    // `DTYPE_FRAME_END get third priority. Shouldn't be able to
 	    // miss this either.
-	    dvo    <= 0;
+	    dvo    <= 1;
 	    dtypeo <= `DTYPE_FRAME_END;
 	    datao  <= 0;
+	    header_mode <= 1;
+	    header_addr <= 0;
+	    
 	 end else if(lv_rising) begin
 	    dvo    <= 1;
 	    dtypeo <= `DTYPE_ROW_START;
-	    datao  <= 0;
-	 end else if(lv_falling_ss) begin
+	    datao  <= row_count;
+
+	 end else if(lv_falling_s) begin
 	    dvo    <= 1;
 	    dtypeo <= `DTYPE_ROW_END;
 	    datao  <= 0;
+
+	 end else if(header_mode == 1) begin
+	    if(header_stall_s) begin
+	       dvo <= 0;
+	       
+	    end else begin
+	       dvo <= 1;
+	       header_mode <= 2;
+	       header_addr <= header_addr + 1;
+	    end
+	    dtypeo <= `DTYPE_HEADER_START;
+	    datao  <= 0;
+
+	 end else if(header_mode == 2) begin
+	    header_addr <= header_addr + 1;
+	    dvo <= 1;
+	    dtypeo <= `DTYPE_HEADER;
+	    datao <= header_data;
+	    if(header_addr >= `Image_image_data) begin
+	       header_mode <= 3;
+	    end
+
+	 end else if(header_mode == 3) begin
+	    dvo <= 1;
+	    dtypeo <= `DTYPE_HEADER_END;
+	    datao <= 0;
+	    header_mode <= 0;
+
+	 end else begin
+	    dvo    <= 0;
+	    datao  <= 0;
+	    dtypeo <= 0;
 	 end
 
 	 if(fv_rising) begin
+	    frame_count <= frame_count + 1;
 	    frame_cycles_count <= 0;
-	    clks_per_frame <= frame_cycles_count;
+	    clks_per_frame <= frame_cycles_count + 1;
 	    row_count <= 0;
 	 end else begin
 	    frame_cycles_count <= frame_cycles_count + 1;
@@ -181,7 +274,7 @@ module imager_rx
 
 	 if(lv_rising) begin
 	    col_count <= 0;
-	 end else if(dvo) begin
+	 end else if(dv) begin
 	    col_count <= col_count + 1;
 	 end
 
@@ -189,6 +282,16 @@ module imager_rx
 	    num_cols <= col_count;
 	    num_rows <= row_count;
 	 end
+
+	 if(fv_s) begin
+	    if(lv_rising) begin
+	       clks_per_row_count <= 0;
+	       clks_per_row <= clks_per_row_count + 1;
+	    end else begin
+	       clks_per_row_count <= clks_per_row_count + 1;
+	    end
+	 end
+
       end
    end
    
