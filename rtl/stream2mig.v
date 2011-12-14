@@ -7,9 +7,9 @@
 module stream2mig
   #(parameter ADDR_WIDTH=30)
   (
-   input 		       resetb,
    input 		       enable, // syncronous to rclk
 
+   input 		       wresetb,
    input 		       clki,
    input 		       dvi,
    input [`DTYPE_WIDTH-1:0]    dtypei,
@@ -28,6 +28,7 @@ module stream2mig
    input 		       pW_cmd_empty,
    output reg		       pW_busy,
    
+   input 		       rresetb,
    input 		       rclk,
    input 		       di_read_mode,
    input 		       di_read,
@@ -61,11 +62,12 @@ module stream2mig
    reg 	    re, we;
    wire [ADDR_BLOCK_WIDTH-1:0] rdata;
    wire 		 wfull, rempty;
-
+   
    wire [ADDR_BLOCK_WIDTH-1:0] wdata;
    assign wdata = waddr_base[29:6];
    
    wire [FIFO_WIDTH-1:0]       wFreeSpace, rUsedSpace;
+   wire 		       wwait = wFreeSpace < 2;
    
    stream2migFifoDualClk #(.ADDR_WIDTH(FIFO_WIDTH), 
 			   .DATA_WIDTH(ADDR_BLOCK_WIDTH))
@@ -74,7 +76,7 @@ module stream2mig
       .rclk(rclk),
       .we(we),
       .re(re),
-      .resetb(resetb),
+      .resetb(wresetb),
       .flush(!enable),
       .full(wfull),
       .empty(rempty),
@@ -97,8 +99,8 @@ module stream2mig
    assign pR_wr_data = 0;
    assign pW_rd_en   = 0;
    
-   always @(posedge rclk or negedge resetb) begin
-      if(!resetb) begin
+   always @(posedge rclk or negedge rresetb) begin
+      if(!rresetb) begin
          rword_sel    <= 0;
          rfirst_word  <= 1;
          di_reg_datao <= 0;
@@ -139,8 +141,8 @@ module stream2mig
    wire [23:0] next_rpos    = next_pR_cmd_byte_addr[29:6];
    wire	rwait = rempty;
    reg 	read_done;
-   always @(posedge rclk or negedge resetb) begin
-      if(!resetb) begin
+   always @(posedge rclk or negedge rresetb) begin
+      if(!rresetb) begin
          pR_cmd_en <= 0;
          pR_cmd_instr <= CMD_IDLE;
          pR_cmd_byte_addr <= 0;
@@ -215,8 +217,8 @@ module stream2mig
 
 	       datai;
 
-   always @(posedge clki or negedge resetb) begin
-      if(!resetb) begin
+   always @(posedge clki or negedge wresetb) begin
+      if(!wresetb) begin
          wword_sel    <= 0;
          pW_wr_en     <= 0;
          pW_wr_data   <= 0;
@@ -262,8 +264,8 @@ module stream2mig
    reg [1:0]   state;
    parameter STATE_WRITE_FRAME=0, STATE_WRITE_HEADER=1, STATE_HEADER_END=2, STATE_FRAME_END=3;
 
-   always @(posedge clki or negedge resetb) begin
-      if(!resetb) begin
+   always @(posedge clki or negedge wresetb) begin
+      if(!wresetb) begin
          pW_cmd_en <= 0;
          pW_cmd_byte_addr <= 0;
          pW_cmd_bl <= 0;
@@ -273,7 +275,9 @@ module stream2mig
 	 state <= STATE_WRITE_FRAME;
 	 frame_length <= 0;
       end else begin
-	 if(!enable_s) begin
+	 if(!enable_s && wfifo_empty) begin
+
+	    // drain any data in wfifo
             pW_cmd_en <= 0;
             pW_cmd_byte_addr <= 0;
             pW_cmd_bl <= 0;
@@ -287,7 +291,7 @@ module stream2mig
 	 end else begin
 
 	    if(dvi && dtypei == `DTYPE_HEADER_END) begin
-	       if(wfull) begin
+	       if(wwait) begin
 		  $display("Dropping frame because fifo is full.");
 		  we <= 0;
 	       end else begin
@@ -317,7 +321,7 @@ module stream2mig
 
 	    end
 	    
-	    if(state == STATE_HEADER_END) begin
+	    if(state == STATE_HEADER_END || !enable_s) begin
 	       if(wfifo_empty) begin
 		  pW_busy <= 0;
 		  state <= STATE_WRITE_FRAME;
@@ -392,7 +396,21 @@ module stream2migFifoDualClk #(parameter ADDR_WIDTH=4, DATA_WIDTH=8)
     output [ADDR_WIDTH-1:0] rUsedSpace
     );
 
-   wire reset = !resetb | flush;
+   reg 			    wreset, rreset;
+   always @(posedge wclk or negedge resetb) begin
+      if(!resetb) begin
+	 wreset <= 1;
+      end else begin
+	 wreset <= flush;
+      end
+   end
+   always @(posedge rclk or negedge resetb) begin
+      if(!resetb) begin
+	 rreset <= 1;
+      end else begin
+	 rreset <= flush;
+      end
+   end
 
    reg [ADDR_WIDTH-1:0]    waddr, raddr, nextWaddr;
    wire [ADDR_WIDTH-1:0]   nextRaddr = raddr + 1;
@@ -406,8 +424,8 @@ module stream2migFifoDualClk #(parameter ADDR_WIDTH=4, DATA_WIDTH=8)
       raddr_ss  <= raddr;
    end
       
-   always @(posedge wclk or posedge reset) begin
-      if(reset) begin
+   always @(posedge wclk or posedge wreset) begin
+      if(wreset) begin
 	 waddr      <= 0;
 	 nextWaddr  <= 1;
       end else begin
@@ -431,8 +449,8 @@ module stream2migFifoDualClk #(parameter ADDR_WIDTH=4, DATA_WIDTH=8)
       waddr_ss  <= waddr;
    end
 
-   always @(posedge rclk or posedge reset) begin
-      if(reset) begin
+   always @(posedge rclk or posedge rreset) begin
+      if(rreset) begin
 	 raddr <= 0;
       end else begin
 	 raddr <= raddr_pre;

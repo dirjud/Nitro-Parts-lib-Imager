@@ -1,7 +1,7 @@
 `ifndef _DTYPES_V_
  `define _DTYPES_V_
 
- `define DTYPE_WIDTH        5
+ `define DTYPE_WIDTH        4
 
  `define DTYPE_FRAME_START   0
  `define DTYPE_FRAME_END     1

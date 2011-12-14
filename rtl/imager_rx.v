@@ -32,9 +32,9 @@ module imager_rx
      parameter DATA_WIDTH=16,
      parameter DIM_WIDTH=16)
    (
-    input 			  resetb,
 
     input 			  di_clk,
+    input 			  resetb_di_clk,
     input [15:0] 		  di_term_addr,
     input [31:0] 		  di_reg_addr,
     input 			  di_read_mode,
@@ -52,6 +52,7 @@ module imager_rx
     input 			  enable, // sync to di_clk
     
     input 			  clki,
+    input 			  resetb_clki,
     input 			  fv,
     input 			  lv,
     input [PIXEL_WIDTH-1:0] 	  datai,
@@ -80,7 +81,8 @@ module imager_rx
    wire [15:0] imageHeaderVersion = 2;
    wire [15:0] image_type = 0;
    wire [15:0] image_data = 0;
-   
+
+   wire resetb = resetb_di_clk;
 `include "ImagerRxTerminalInstance.v"
    
    always @(*) begin
@@ -112,10 +114,9 @@ module imager_rx
    reg [1:0]  header_mode;
    reg [5:0]  header_addr;
    wire [15:0] header_data;
-//`include "ImageTerminalInstance.v"
   ImageTerminal ImageTerminal(
      .clk(clki),
-     .resetb(resetb),
+     .resetb(resetb_clki),
      .we(1'b0),
      .addr({10'b0, header_addr}),
      .datai(16'b0),
@@ -134,9 +135,14 @@ module imager_rx
      .image_data(image_data)
      );
 
+   /* verilator lint_off WIDTH */
+   wire [PIXEL_WIDTH-1:0] test_pat = frame_count + row_count + col_count;
+   /* verilator lint_on WIDTH */
+   wire [PIXEL_WIDTH-1:0] datai_s_mux = (mode_test_pat) ? test_pat : datai_s;
+   reg 			  left_justify_s;
    
-   always @(posedge clki or negedge resetb) begin
-      if(!resetb) begin
+   always @(posedge clki or negedge resetb_clki) begin
+      if(!resetb_clki) begin
 	 fv_s          <= 0;
 	 lv_s          <= 0;
 	 datai_s       <= 0;
@@ -159,13 +165,15 @@ module imager_rx
 	 header_mode   <=0;
 	 header_addr   <=0;
 	 header_stall_s<=0;
-      end else begin
+	 left_justify_s <= 0;
+   end else begin
+	 left_justify_s <= mode_left_justify;
 	 fv_s       <= fv;
 	 lv_s       <= lv;
 	 datai_s    <= datai;
 	 fv_ss      <= fv_s;
 	 lv_ss      <= lv_s;
-	 datai_ss   <= datai_s;
+	 datai_ss   <= datai_s_mux;
 	 fv_sss     <= fv_ss;
 	 lv_falling_s  <= lv_falling;
 	 fv_falling_s  <= fv_falling;
@@ -194,9 +202,7 @@ module imager_rx
 	    // deal with assigning it the correct color and whatnot.
 	    dvo    <= 1;
 	    dtypeo <= `DTYPE_PIXEL;
-	    /* verilator lint_off WIDTH */
-	    datao  <= datai_ss;
-	    checksum <= checksum + datai_ss;
+	    datao  <= left_justify_s ? { datai_ss, 4'b0 } : {4'b0, datai_ss};
 	    /* verilator lint_on WIDTH */
 	 end else if(fv_rising) begin
 	    // `DTYPE_FRAME_START gets second priority. Since dv

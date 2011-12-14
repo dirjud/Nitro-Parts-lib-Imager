@@ -12,12 +12,12 @@ di = DeviceInterface(
             comment="Controls imager receiver",
             register_list = [
                 Register(
-                    name="format",
+                    name="mode",
                     mode="write",
                     shadow=True,
                     subregs = [
-                        SubReg(name="left_justify", width=1, init=0, comment="0: data is right justified, 1: data is left justified in the 16b word. Not applicable to packed data. Compressed data needs to be right justified"),
-                        SubReg(name="test_pat", width=1, init=0, comment="0: normal mode. 1: enable test pattern substitution"),
+                        SubReg(name="test_pat",     width=1, init=0, comment="0: normal mode. 1: enable test pattern substitution"),
+                        SubReg(name="left_justify", width=1, init=0, comment="0: right justified data. 1: left justified data stream"),
                         ],
                     ),
                 Register(
