@@ -140,6 +140,9 @@ module imager_rx
    /* verilator lint_on WIDTH */
    wire [PIXEL_WIDTH-1:0] datai_s_mux = (mode_test_pat) ? test_pat : datai_s;
    reg 			  left_justify_s;
+   wire [DATA_WIDTH-PIXEL_WIDTH-1:0] zero_padding = 0;
+   wire [DATA_WIDTH-1:0] datai_formatted = left_justify_s ? { datai_ss, zero_padding } : { zero_padding, datai_ss };
+
    
    always @(posedge clki or negedge resetb_clki) begin
       if(!resetb_clki) begin
@@ -202,8 +205,8 @@ module imager_rx
 	    // deal with assigning it the correct color and whatnot.
 	    dvo    <= 1;
 	    dtypeo <= `DTYPE_PIXEL;
-	    datao  <= left_justify_s ? { datai_ss, 4'b0 } : {4'b0, datai_ss};
-	    /* verilator lint_on WIDTH */
+	    datao  <= datai_formatted;
+	    checksum <= checksum + datai_formatted;
 	 end else if(fv_rising) begin
 	    // `DTYPE_FRAME_START gets second priority. Since dv
 	    // is delayed one cycle beyond fv_rising, it should not
