@@ -13,7 +13,8 @@ module pack_12to16
 
    output reg dvo,
    output reg [`DTYPE_WIDTH-1:0] dtypeo,
-   output reg [15:0] datao
+   output reg [15:0] datao,
+   output reg [15:0] frame_count
    );
 
    reg [1:0] 	packing_phase;
@@ -31,6 +32,7 @@ module pack_12to16
 	 state    <= STATE_IDLE;
 	 datai_s  <= 0;
 	 header_addr <= 0;
+	 frame_count <= 0;
 	 
       end else begin
 	 enable_s <= enable;
@@ -38,6 +40,7 @@ module pack_12to16
 	 if(dvi && dtypei == `DTYPE_FRAME_START) begin
 	    state <= STATE_FRAME_DATA;
 	    enable_ss <= enable_s;
+	    frame_count <= frame_count + 1;
 	 end else if(dvi && dtypei == `DTYPE_HEADER_START) begin
 	    state <= STATE_HEADER_DATA;
 	 end else if(dvi && (dtypei == `DTYPE_FRAME_END || dtypei == `DTYPE_HEADER_END)) begin

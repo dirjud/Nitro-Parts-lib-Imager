@@ -136,7 +136,7 @@ module imager_rx
      );
 
    /* verilator lint_off WIDTH */
-   wire [PIXEL_WIDTH-1:0] test_pat = frame_count + row_count + col_count;
+   wire [PIXEL_WIDTH-1:0] test_pat = row_count + col_count; // + frame_count;
    /* verilator lint_on WIDTH */
    wire [PIXEL_WIDTH-1:0] datai_s_mux = (mode_test_pat) ? test_pat : datai_s;
    reg 			  left_justify_s;
