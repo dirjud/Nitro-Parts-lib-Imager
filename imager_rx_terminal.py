@@ -147,6 +147,15 @@ di = DeviceInterface(
                         ]
                     ),
                 Register(
+                    name="flags",
+                    width=16,
+                    init=0,
+                    mode="read",
+                    type="int",
+                    comment="Flags. This register is hardware specific and gets sampled at the start of every frame.",
+                    addr=15,
+                    ),
+                Register(
                     name="image_data",
                     addr=32,
                     comment="Image data",

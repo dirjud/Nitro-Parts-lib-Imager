@@ -58,6 +58,7 @@ module imager_rx
     input [PIXEL_WIDTH-1:0] 	  datai,
 
     input 			  header_stall,
+    input [15:0] 		  flags,
     
     output reg 			  dvo,
     output reg [DATA_WIDTH-1:0]   datao,
@@ -109,6 +110,7 @@ module imager_rx
    reg 	      lv_falling_s, fv_falling_s;
    reg 	      enable_s, wait_for_fv_to_drop, header_stall_s;
    reg [15:0] clks_per_row_count;
+   reg [15:0] flags_s, flags_ss;
    
    wire       dv = fv_ss && lv_ss;
    reg [1:0]  header_mode;
@@ -132,6 +134,7 @@ module imager_rx
      .clks_per_row(clks_per_row),
      .checksum(checksum),
      .image_type(image_type),
+     .flags(flags_ss),
      .image_data(image_data)
      );
 
@@ -169,7 +172,10 @@ module imager_rx
 	 header_addr   <=0;
 	 header_stall_s<=0;
 	 left_justify_s <= 0;
-   end else begin
+	 flags_s        <= 0;
+	 flags_ss       <= 0;
+      end else begin // if (!resetb_clki)
+	 flags_s <= flags;
 	 left_justify_s <= mode_left_justify;
 	 fv_s       <= fv;
 	 lv_s       <= lv;
@@ -216,6 +222,7 @@ module imager_rx
 	    dtypeo <= `DTYPE_FRAME_START;
 	    datao  <= frame_count[DATA_WIDTH-1:0];
 	    checksum <= 0;
+	    flags_ss <= flags_s;
 	 end else if(fv_falling_s) begin
 	    // `DTYPE_FRAME_END get third priority. Shouldn't be able to
 	    // miss this either.
