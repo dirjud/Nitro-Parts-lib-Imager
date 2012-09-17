@@ -1,3 +1,4 @@
+`include "terminals_defs.v"
 `include "dtypes.v"
 
 module frame_downsampler

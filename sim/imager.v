@@ -1,5 +1,5 @@
 module imager
-      #(DATA_WIDTH=10,
+      #(parameter DATA_WIDTH=10,
 	NUM_ROWS_WIDTH=12,
 	NUM_COLS_WIDTH=12)
    (
