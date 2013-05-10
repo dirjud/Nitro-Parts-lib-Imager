@@ -5,7 +5,8 @@
 //       Xilinx. This module mates the two interfaces.
 `include "dtypes.v"
 module stream2mig
-  #(parameter ADDR_WIDTH=30)
+  #(parameter ADDR_WIDTH=30,
+    parameter DI_DATA_WIDTH=16)
   (
    input 		       enable, // syncronous to rclk
 
@@ -33,7 +34,7 @@ module stream2mig
    input 		       di_read_mode,
    input 		       di_read,
    output reg 		       di_read_rdy,
-   output reg [15:0] 	       di_reg_datao,
+   output reg [DI_DATA_WIDTH-1:0] di_reg_datao,
 
    output reg 		       pR_rd_en,
    input [31:0] 	       pR_rd_data,
@@ -116,19 +117,23 @@ module stream2mig
             di_read_rdy  <= 0;
 	    pR_rd_en     <= !pR_rd_empty && !pR_rd_en; // drain any data left in the read fifo when not in read_mode
          end else if(pR_cmd_instr == CMD_READ) begin
-            if(di_read) rfirst_word <= 0;
-            if(rfirst_word || di_read) begin
-               di_reg_datao <= (rword_sel || !di_read) ? pR_rd_data[15:0] : pR_rd_data[31:16];
-               if(di_read) begin
-                  rword_sel <= !rword_sel;
-                  pR_rd_en <= !rword_sel;
+	    if(DI_DATA_WIDTH==16) begin
+               if(di_read) rfirst_word <= 0;
+               if(rfirst_word || di_read) begin
+		  di_reg_datao[15:0] <= (rword_sel || !di_read) ? pR_rd_data[15:0] : pR_rd_data[31:16];
+		  if(di_read) begin
+                     rword_sel <= !rword_sel;
+                     pR_rd_en <= !rword_sel;
+		  end else begin
+                     pR_rd_en <= 0;
+		  end
                end else begin
-                  pR_rd_en <= 0;
+		  pR_rd_en <= 0;
                end
-            end else begin
-               pR_rd_en <= 0;
-            end
-            
+            end else begin // assume DI_DATA_WIDTH is 32b
+	       di_reg_datao <= pR_rd_data[DI_DATA_WIDTH-1:0];
+	       pR_rd_en <= di_read;
+	    end
          end else begin
             rword_sel <= 0;
             rfirst_word <= 1;
