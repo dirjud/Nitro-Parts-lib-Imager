@@ -11,6 +11,7 @@ module imager
                       // 2: vertical gradient
                       // 3: diagonal gradient
                       // 4: constant based on frame number
+                      // 5: diagonal gradient offset based on frame number.
     
     input [NUM_ROWS_WIDTH-1:0] num_active_rows,
     input [NUM_ROWS_WIDTH-1:0] num_virtual_rows,
