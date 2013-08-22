@@ -69,13 +69,14 @@ module stream2mig
    
    wire [FIFO_WIDTH-1:0]       wFreeSpace, rUsedSpace;
    wire 		       wwait = wFreeSpace < 2;
+   reg 			       we_s, we_ss, we_sss;
    
    stream2migFifoDualClk #(.ADDR_WIDTH(FIFO_WIDTH), 
 			   .DATA_WIDTH(ADDR_BLOCK_WIDTH))
    fifoDualClk
      (.wclk(clki),
       .rclk(rclk),
-      .we(we),
+      .we(we_sss),
       .re(re),
       .resetb(wresetb),
       .flush(!enable),
@@ -144,7 +145,8 @@ module stream2mig
    wire[ADDR_WIDTH-1:0] next_pR_cmd_byte_addr = pR_cmd_byte_addr + 30'd64;
 
    wire [23:0] next_rpos    = next_pR_cmd_byte_addr[29:6];
-   wire	rwait = rempty;
+   reg 	       rwait;
+
    reg 	read_done;
    always @(posedge rclk or negedge rresetb) begin
       if(!rresetb) begin
@@ -156,8 +158,10 @@ module stream2mig
          rfifo_count <= 0;
 	 re <= 0;
 	 read_done <= 0;
+	 rwait <= 1;
 	 
       end else begin
+	 rwait <= rempty;
 	 read_done <= next_rpos == rdata; // goes high when finished with current read buffer		  
 
 	 if(!enable) begin
@@ -279,7 +283,14 @@ module stream2mig
 	 we <= 0;
 	 state <= STATE_WRITE_FRAME;
 	 frame_length <= 0;
+	 we_s <= 0;
+	 we_ss <= 0;
+	 we_sss <= 0;
       end else begin
+	 we_s <= we;
+	 we_ss <= we_s;
+	 we_sss <= we_ss;
+
 	 if(!enable_s && wfifo_empty) begin
 
 	    // drain any data in wfifo
