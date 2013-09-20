@@ -55,6 +55,7 @@ module imager_rx
     input 			  resetb_clki,
     input 			  fv,
     input 			  lv,
+    input             dvi,
     input [PIXEL_WIDTH-1:0] 	  datai,
 
     input 			  header_stall,
@@ -65,7 +66,7 @@ module imager_rx
     output reg [`DTYPE_WIDTH-1:0] dtypeo
     );
    
-   reg fv_s, fv_ss, fv_sss, lv_s, lv_ss;
+   reg fv_s, fv_ss, fv_sss, lv_s, lv_ss, dv_s, dv_ss;
    reg [PIXEL_WIDTH-1:0] datai_s, datai_ss;
 
    // synthesis attribute IOB of fv_s  is "TRUE";
@@ -112,7 +113,7 @@ module imager_rx
    reg [15:0] clks_per_row_count;
    reg [15:0] flags_s, flags_ss;
    
-   wire       dv = fv_ss && lv_ss;
+   wire       dv = fv_ss && lv_ss && dv_ss;
    reg [1:0]  header_mode;
    reg [5:0]  header_addr;
    wire [15:0] header_data;
@@ -154,6 +155,8 @@ module imager_rx
 	 datai_s       <= 0;
 	 fv_ss         <= 0;
 	 lv_ss         <= 0;
+     dv_s          <= 0;
+     dv_ss         <= 0;
 	 datai_ss      <= 0;
 	 fv_sss        <= 0;
 	 lv_falling_s  <= 0;
@@ -179,9 +182,11 @@ module imager_rx
 	 left_justify_s <= mode_left_justify;
 	 fv_s       <= fv;
 	 lv_s       <= lv;
+     dv_s       <= dvi;
 	 datai_s    <= datai;
 	 fv_ss      <= fv_s;
 	 lv_ss      <= lv_s;
+     dv_ss      <= dv_s;
 	 datai_ss   <= datai_s_mux;
 	 fv_sss     <= fv_ss;
 	 lv_falling_s  <= lv_falling;
