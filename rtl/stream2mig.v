@@ -101,22 +101,37 @@ module stream2mig
    assign pR_wr_data = 0;
    assign pW_rd_en   = 0;
    
+   reg 			   pR_rd_en_reg, di_read_rdy_reg, pR_rd_empty_s;
+   
+   always @(*) begin
+      if(DI_DATA_WIDTH==16) begin
+	 pR_rd_en           = pR_rd_en_reg;
+	 di_read_rdy        = di_read_rdy_reg;
+      end else begin
+	 pR_rd_en           = (rfirst_word || di_read || (!enable && pR_rd_en_reg)) && !pR_rd_empty;
+	 di_read_rdy        = !pR_rd_empty && !pR_rd_empty_s;
+      end
+   end
+
    always @(posedge rclk or negedge rresetb) begin
       if(!rresetb) begin
          rword_sel    <= 0;
          rfirst_word  <= 1;
          di_reg_datao <= 0;
-         di_read_rdy  <= 0;
-         pR_rd_en     <= 0;
+         di_read_rdy_reg  <= 0;
+         pR_rd_en_reg     <= 0;
+	 pR_rd_empty_s <= 0;
+	 
       end else begin
-         di_read_rdy  <= !pR_rd_empty;
+	 pR_rd_empty_s <= pR_rd_empty;
+	 di_read_rdy_reg  <= !pR_rd_empty;
 
 	 if(!enable) begin
             rword_sel    <= 0;
             rfirst_word  <= 1;
             di_reg_datao <= 0;
-            di_read_rdy  <= 0;
-	    pR_rd_en     <= !pR_rd_empty && !pR_rd_en; // drain any data left in the read fifo when not in read_mode
+            di_read_rdy_reg  <= 0;
+	    pR_rd_en_reg <= !pR_rd_empty && !pR_rd_en_reg; // drain any data left in the read fifo when not in read_mode
          end else if(pR_cmd_instr == CMD_READ) begin
 	    if(DI_DATA_WIDTH==16) begin
                if(di_read) rfirst_word <= 0;
@@ -124,20 +139,28 @@ module stream2mig
 		  di_reg_datao[15:0] <= (rword_sel || !di_read) ? pR_rd_data[15:0] : pR_rd_data[31:16];
 		  if(di_read) begin
                      rword_sel <= !rword_sel;
-                     pR_rd_en <= !rword_sel;
+                     pR_rd_en_reg <= !rword_sel;
 		  end else begin
-                     pR_rd_en <= 0;
+                     pR_rd_en_reg <= 0;
 		  end
                end else begin
-		  pR_rd_en <= 0;
+		  pR_rd_en_reg <= 0;
                end
             end else begin // assume DI_DATA_WIDTH is 32b
-	       di_reg_datao <= pR_rd_data[DI_DATA_WIDTH-1:0];
-	       pR_rd_en <= di_read;
+	       if(pR_rd_en) begin
+		  rfirst_word <= 0;
+	       end else if(di_read && pR_rd_empty) begin
+		  rfirst_word <= 1;
+	       end
+	       if(pR_rd_en) begin
+		  di_reg_datao <= pR_rd_data[DI_DATA_WIDTH-1:0];
+	       end
 	    end
          end else begin
             rword_sel <= 0;
-            rfirst_word <= 1;
+             if(DI_DATA_WIDTH == 16) begin
+		rfirst_word <= 1;
+	     end
          end
       end
    end
