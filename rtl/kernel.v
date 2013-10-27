@@ -28,10 +28,13 @@ module kernel
    output reg dvo,
    output reg [DATA_WIDTH-1:0] meta_datao,
    output reg [`DTYPE_WIDTH-1:0] dtypeo,
-   output reg [PIXEL_WIDTH-1:0] datao[0:KERNEL_SIZE-1][0:KERNEL_SIZE-1]
+   output [KERNEL_SIZE*KERNEL_SIZE*PIXEL_WIDTH-1:0] kernel_datao
    );
 
-   int 			       row, col;
+   reg [PIXEL_WIDTH-1:0] datao [0:KERNEL_SIZE-1][0:KERNEL_SIZE-1];
+`PACK_2DARRAY(PIXEL_WIDTH, KERNEL_SIZE, KERNEL_SIZE, datao, kernel_datao)
+   
+   reg [31:0] row, col;
    
    reg [NUM_COLS_WIDTH-1:0] col_addr;
    reg [KERNEL_SIZE-1:0] row_addr; // this should be a width of LOG2_KERNEL_SIZE
