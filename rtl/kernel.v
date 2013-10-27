@@ -66,8 +66,8 @@ module kernel
    generate
       for(x=0; x<KERNEL_SIZE-1; x=x+1) begin
 	 rowbuffer #(.ADDR_WIDTH(NUM_COLS_WIDTH),
-		     .NUM_WORDS(MAX_COLS),
-		     .DATA_WIDTH(PIXEL_WIDTH)
+		     .MAX_COLS(MAX_COLS),
+		     .PIXEL_WIDTH(PIXEL_WIDTH)
 		     )
 	 rowbuffer
 	   (.addr(col_addr),
@@ -167,28 +167,4 @@ module kernel
 	 end
       end
    end
-endmodule
-
-module rowbuffer
-  #(parameter ADDR_WIDTH=11,
-    parameter DATA_WIDTH=10,
-    parameter NUM_WORDS=1288
-    )
-  (
-   input [ADDR_WIDTH-1:0] addr,
-   input we,
-   input clk,
-   input [DATA_WIDTH-1:0] datai,
-   output [DATA_WIDTH-1:0] datao
-   );
-
-   reg [DATA_WIDTH-1:0]    data[0:NUM_WORDS-1];
-   
-   always @(posedge clk) begin
-      if (we) begin
-	 data[addr] <= datai;
-      end
-   end
-   assign datao = data[addr];
-   
 endmodule
