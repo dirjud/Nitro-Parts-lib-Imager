@@ -366,7 +366,11 @@ module stream2mig
                end
 
 	       if(dvi && |(dtypei & `DTYPE_PIXEL_MASK)) begin
-		  frame_length <= frame_length + 2;
+		  if(STREAM_DATA_WIDTH == 16) begin
+		     frame_length <= frame_length + 2;
+		  end else begin
+		     frame_length <= frame_length + 4;
+		  end
 	       end
 
 	    end

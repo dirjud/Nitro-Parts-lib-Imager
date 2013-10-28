@@ -23,8 +23,10 @@ module rgb2stream
    
    reg [OBUF_WIDTH-1:0] obuf;
    reg [5:0] 		opos;
-   wire [OBUF_WIDTH-1:0] next_obuf = { obuf[OBUF_WIDTH-3*PIXEL_WIDTH-1:0], r, g, b };
-   wire [5:0] 		 next_opos  = opos + 3*PIXEL_WIDTH;
+   wire [OBUF_WIDTH-1:0] next_obuf = (image_type == 0) ? { obuf[OBUF_WIDTH-PIXEL_WIDTH-1:0], meta_datai[PIXEL_WIDTH-1:0] } :
+                                                         { obuf[OBUF_WIDTH-3*PIXEL_WIDTH-1:0], r, g, b };
+   wire [5:0] 		 next_opos  = (image_type == 0) ? opos + PIXEL_WIDTH : 
+			              opos + 3*PIXEL_WIDTH;
    wire [5:0] 		 next_opos2 = next_opos - 32;
    
    wire [15:0] meta_datao = (opos == `Image_image_type) ? image_type :

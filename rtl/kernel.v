@@ -115,7 +115,12 @@ module kernel
 	 dtypeo <= dtypei;
 
 	 if (dvi) begin
-	    if (dtypei == `DTYPE_FRAME_START) begin
+	    if (!enable) begin
+	       dvo <= 1;
+	       row_addr <= 0;
+	       col_addr <= 0;
+	       
+	    end else if (dtypei == `DTYPE_FRAME_START) begin
 	       row_addr <= 0;
 	       dvo <= 1;
 	       
