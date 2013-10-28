@@ -31,7 +31,7 @@ module imager
     output reg lv
     );
 
-   reg [DATA_WIDTH-1:0] image_data[0:4095][0:4095] /*verilator public */;
+   reg [DATA_WIDTH-1:0] image_buf[0:4095][0:4095] /* verilator public */;
    reg [31:0] noise;
    reg [NUM_ROWS_WIDTH:0] row_count;
    reg [NUM_COLS_WIDTH:0] col_count;
@@ -56,7 +56,7 @@ module imager
 			           (mode == 3) ? row_count + col_count :
 			           (mode == 4) ? frame_count :
 			           (mode == 5) ? frame_count + col_count + row_count :
-			           image_data[row_count][col_count];
+			 image_buf[row_count][col_count];
    /* verilator lint_on WIDTH */
    
    
@@ -111,18 +111,31 @@ module imager
    reg x;
    always @(posedge fv) begin
       if (mode == 6) begin
-	 x = $c("get_new_image(",image_data,")");
+	 x <= $c("loader->get_new_image()");
       end
    end
 `systemc_header
 #ifndef __IMAGER_H__
 #define __IMAGER_H__
-extern int get_new_image(IData image_data);
+   
+class ImageLoader {
+ public:
+		   SData *img_buf;
+
+ inline int get_new_image() {
+  return 0;
+ }
+};
+   
 #endif
 
 `systemc_interface
+ImageLoader *loader;
 `systemc_ctor
+loader = new ImageLoader();
+loader->img_buf = (SData *) image_buf;
 `systemc_dtor
+delete loader;
 `verilog
 `endif
 

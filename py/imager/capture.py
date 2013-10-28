@@ -128,6 +128,8 @@ def _capture(dev, img, di, timeout):
     # but implementation here is for 16to8 (8 bit data)...
     # so .... they need to be both supported
     byteWidth = header['image_type'] & 0x00f0 == 0 and 2 or 1
+    if header["image_type"] == 1:
+        byteWidth = 3
 
     data_len = header["frame_length"] - len(raw_header)
     expected = header['num_rows'] * header['num_cols'] * byteWidth

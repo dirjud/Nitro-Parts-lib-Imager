@@ -67,10 +67,10 @@ module rgb2stream
 	    opos <= opos + 1;
 	    if(opos[0]) begin
 	       datao[31:16] <= meta_datao;
-	       dvo <= 0;
+	       dvo <= 1;
 	    end else begin
 	       datao[15: 0] <= meta_datao;
-	       dvo <= 1;
+	       dvo <= 0;
 	    end
 	 end else begin
 	    dvo <= dvi;
