@@ -270,9 +270,9 @@ module stream2mig
             pW_wr_data   <= 0;
          end else begin
             if(dvi && dtype_needs_written) begin
-	       header_addr <= header_addr + 1;
                wword_sel <= !wword_sel;
 	       if(STREAM_DATA_WIDTH == 16) begin
+		  header_addr <= header_addr + 1;
 		  if(wword_sel) begin
                      pW_wr_data[31:16] <= datai_mux[15:0];
                      pW_wr_en <= 1;
@@ -281,6 +281,7 @@ module stream2mig
                      pW_wr_en <= 0;
 		  end
 	       end else if(STREAM_DATA_WIDTH == 32) begin
+		  header_addr <= header_addr + 2;
 		  pW_wr_en <= 1;
 		  pW_wr_data[STREAM_DATA_WIDTH-1:0] <= datai_mux;
 	       end
