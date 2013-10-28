@@ -6,7 +6,9 @@
 `include "dtypes.v"
 module stream2mig
   #(parameter ADDR_WIDTH=30,
-    parameter DI_DATA_WIDTH=16)
+    parameter DI_DATA_WIDTH=16,
+    parameter STREAM_DATA_WIDTH=16
+    )
   (
    input 		       enable, // syncronous to rclk
 
@@ -14,7 +16,7 @@ module stream2mig
    input 		       clki,
    input 		       dvi,
    input [`DTYPE_WIDTH-1:0]    dtypei,
-   input [15:0] 	       datai,
+   input [STREAM_DATA_WIDTH-1:0] datai,
    
    output 		       pW_rd_en,
    input [31:0] 	       pW_rd_data,
@@ -243,11 +245,14 @@ module stream2mig
    reg [29:0] frame_length;
    wire [29:0] frame_length_rounded  = (frame_length + 63) & 30'h3FFFFFC0;
    reg [5:0] header_addr;
-   wire [15:0] datai_mux = (state != STATE_WRITE_HEADER) ? datai :
-	       (header_addr == `Image_frame_length_0) ? frame_length_rounded[15:0]  :
-	       (header_addr == `Image_frame_length_1) ? {2'b0, frame_length_rounded[29:16] } :
 
+   /* verilator lint_off WIDTH */
+   wire [STREAM_DATA_WIDTH-1:0] datai_mux = (state != STATE_WRITE_HEADER) ? datai :
+	       (header_addr == `Image_frame_length_0 && STREAM_DATA_WIDTH==16) ? frame_length_rounded[15:0]  :
+	       (header_addr == `Image_frame_length_1 && STREAM_DATA_WIDTH==16) ? {2'b0, frame_length_rounded[29:16] } :
+	       (header_addr == `Image_frame_length_0 && STREAM_DATA_WIDTH==32) ? frame_length_rounded :
 	       datai;
+   /* verilator lint_on WIDTH */
 
    always @(posedge clki or negedge wresetb) begin
       if(!wresetb) begin
@@ -267,13 +272,18 @@ module stream2mig
             if(dvi && dtype_needs_written) begin
 	       header_addr <= header_addr + 1;
                wword_sel <= !wword_sel;
-               if(wword_sel) begin
-                  pW_wr_data[31:16] <= datai_mux;
-                  pW_wr_en <= 1;
-               end else begin
-                  pW_wr_data[15:0] <= datai_mux;
-                  pW_wr_en <= 0;
-               end
+	       if(STREAM_DATA_WIDTH == 16) begin
+		  if(wword_sel) begin
+                     pW_wr_data[31:16] <= datai_mux[15:0];
+                     pW_wr_en <= 1;
+		  end else begin
+                     pW_wr_data[15:0] <= datai_mux[15:0];
+                     pW_wr_en <= 0;
+		  end
+	       end else if(STREAM_DATA_WIDTH == 32) begin
+		  pW_wr_en <= 1;
+		  pW_wr_data[STREAM_DATA_WIDTH-1:0] <= datai_mux;
+	       end
             end else begin
                pW_wr_en <= 0;
 	       if(dvi && (dtypei == `DTYPE_FRAME_END || dtypei == `DTYPE_HEADER_END)) begin

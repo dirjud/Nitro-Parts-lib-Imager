@@ -19,15 +19,16 @@ module kernel
     parameter NUM_COLS_WIDTH = 11
     )
   (input clk,
-   input resetb,
+   input 					    resetb,
 
-   input dvi,
-   input [`DTYPE_WIDTH-1:0] dtypei,
-   input [DATA_WIDTH-1:0] datai,
-
-   output reg dvo,
-   output reg [DATA_WIDTH-1:0] meta_datao,
-   output reg [`DTYPE_WIDTH-1:0] dtypeo,
+   input 					    dvi,
+   input [`DTYPE_WIDTH-1:0] 			    dtypei,
+   input [DATA_WIDTH-1:0] 			    datai,
+   input 					    enable,
+   
+   output reg 					    dvo,
+   output reg [DATA_WIDTH-1:0] 			    meta_datao,
+   output reg [`DTYPE_WIDTH-1:0] 		    dtypeo,
    output [KERNEL_SIZE*KERNEL_SIZE*PIXEL_WIDTH-1:0] kernel_datao
    );
 
@@ -160,8 +161,9 @@ module kernel
 	 end
 
 	 // adjust the image header to mark the smaller image
-	 if(dvi && ((header_addr == `Image_num_cols) || 
-		    (header_addr == `Image_num_rows))) begin
+	 if(enable && dvi && 
+	    ((header_addr == `Image_num_cols) || 
+	     (header_addr == `Image_num_rows))) begin
 	    /* verilator lint_off WIDTH */
 	    meta_datao <= datai - BORDER_SIZE;
 	    /* verilator lint_on WIDTH */

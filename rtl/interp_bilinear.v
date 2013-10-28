@@ -13,7 +13,8 @@ module interp_bilinear
     )
   (input clk,
    input 			 resetb,
-
+   input 			 enable,
+   
    input 			 dvi,
    input [`DTYPE_WIDTH-1:0] 	 dtypei,
    input [DATA_WIDTH-1:0] 	 datai,
@@ -45,6 +46,7 @@ module interp_bilinear
      (
       .clk(clk),
       .resetb(resetb),
+      .enable(enable),
       .dvi(dvi),
       .dtypei(dtypei),
       .datai(datai),

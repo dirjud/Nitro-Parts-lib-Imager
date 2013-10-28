@@ -12,7 +12,7 @@ module imager
                       // 3: diagonal gradient
                       // 4: constant based on frame number
                       // 5: diagonal gradient offset based on frame number.
-    
+                      // 6: image from memory.    
     input [NUM_ROWS_WIDTH-1:0] num_active_rows,
     input [NUM_ROWS_WIDTH-1:0] num_virtual_rows,
     input [NUM_COLS_WIDTH-1:0] num_active_cols,
@@ -31,6 +31,7 @@ module imager
     output reg lv
     );
 
+   reg [DATA_WIDTH-1:0] image_data[0:4095][0:4095] /*verilator public */;
    reg [31:0] noise;
    reg [NUM_ROWS_WIDTH:0] row_count;
    reg [NUM_COLS_WIDTH:0] col_count;
@@ -54,7 +55,8 @@ module imager
 			           (mode == 2) ? col_count :
 			           (mode == 3) ? row_count + col_count :
 			           (mode == 4) ? frame_count :
-			           frame_count + col_count + row_count;
+			           (mode == 5) ? frame_count + col_count + row_count :
+			           image_data[row_count][col_count];
    /* verilator lint_on WIDTH */
    
    
@@ -102,4 +104,26 @@ module imager
          end
       end
    end
+
+
+
+`ifdef verilator
+   reg x;
+   always @(posedge fv) begin
+      if (mode == 6) begin
+	 x = $c("get_new_image(",image_data,")");
+      end
+   end
+`systemc_header
+#ifndef __IMAGER_H__
+#define __IMAGER_H__
+extern int get_new_image(IData image_data);
+#endif
+
+`systemc_interface
+`systemc_ctor
+`systemc_dtor
+`verilog
+`endif
+
 endmodule 
