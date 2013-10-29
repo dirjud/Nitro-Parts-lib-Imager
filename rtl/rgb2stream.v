@@ -29,11 +29,14 @@ module rgb2stream
    wire [PIXEL_WIDTH-1:0] raw_data = meta_datai >> RAW_PIXEL_SHIFT;
    /* verilator lint_on WIDTH */
    
-   wire [OBUF_WIDTH-1:0] next_obuf = (image_type == 0) ? { obuf[OBUF_WIDTH-PIXEL_WIDTH-1:0], raw_data } :
-                                                         { obuf[OBUF_WIDTH-3*PIXEL_WIDTH-1:0], r, g, b };
+   wire [OBUF_WIDTH-1:0] next_obuf = (image_type == 0) ? { raw_data, obuf[OBUF_WIDTH-1:PIXEL_WIDTH] } :
+                                                         { b, g, r, obuf[OBUF_WIDTH-1:3*PIXEL_WIDTH] };
    wire [5:0] 		 next_opos  = (image_type == 0) ? opos + PIXEL_WIDTH : 
 			              opos + 3*PIXEL_WIDTH;
    wire [5:0] 		 next_opos2 = next_opos - 32;
+   /* verilator lint_off WIDTH */
+   wire [5:0] 		 next_opos3 = OBUF_WIDTH - next_opos;
+   /* verilator lint_on WIDTH */
    
    wire [15:0] meta_datao = (opos == `Image_image_type) ? image_type :
 	       meta_datai;
@@ -55,7 +58,7 @@ module rgb2stream
 	    if(next_opos >= 32) begin
 	       dvo <= 1;
 	       /* verilator lint_off WIDTH */
-	       datao <= next_obuf >> next_opos2;
+	       datao <= next_obuf >> next_opos3;
 	       /* verilator lint_on WIDTH */
 	       opos <= next_opos2;
 	    end else begin
