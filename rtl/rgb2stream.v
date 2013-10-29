@@ -38,6 +38,9 @@ module rgb2stream
    wire [15:0] meta_datao = (opos == `Image_image_type) ? image_type :
 	       meta_datai;
    
+   /* verilator lint_off WIDTH */
+   wire [31:0] datao1 = next_obuf >> next_opos2;
+   /* verilator lint_on WIDTH */
    
    always @(posedge clk or negedge resetb) begin
       if(!resetb) begin
@@ -54,9 +57,7 @@ module rgb2stream
 	    obuf <= next_obuf;
 	    if(next_opos >= 32) begin
 	       dvo <= 1;
-	       /* verilator lint_off WIDTH */
-	       datao <= next_obuf >> next_opos2;
-	       /* verilator lint_on WIDTH */
+	       datao <= { datao1[7:0], datao1[15:8], datao1[23:16], datao1[31:24] };
 	       opos <= next_opos2;
 	    end else begin
 	       opos <= next_opos;
