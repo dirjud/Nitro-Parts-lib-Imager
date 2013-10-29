@@ -54,8 +54,9 @@ def verify_header(header):
     if(header["frame_start"] != 0xFFFFFFFE):
         raise Exception("Out of sync: header: start=0x%x len=%d type=0x%x count=%d" % (header["frame_start"], header["frame_length"], header["image_type"], header["frame_count"]))
 
-    if(header["frame_length"] > 5e6):
-        raise Exception("Frame Length Too Large")
+    if header["frame_length"] > 5e6:
+        log.error("Header: %s" % str(header))
+        raise Exception("Bad frame length: %d" % header['frame_length'])
 
 def resync(dev, raw_header, di, timeout=None):
     """This will read short frames from the image stream in an attempt
@@ -119,29 +120,19 @@ def _capture(dev, img, di, timeout):
         verify_header(header)
 
     img["header"]     = header
+    log.debug ( "Header: %s" % str(header) )
     img["raw_header"] = raw_header
 
     raw_data = img.get("raw_data", None)
 
-    # TODO packed is using 0010 right now.
-    # both 16to8 and 12to16 packers are using that
-    # but implementation here is for 16to8 (8 bit data)...
-    # so .... they need to be both supported
-    byteWidth = header['image_type'] & 0x00f0 == 0 and 2 or 1
-    if header["image_type"] == 1:
-        byteWidth = 3
-
     data_len = header["frame_length"] - len(raw_header)
-    expected = header['num_rows'] * header['num_cols'] * byteWidth
-    if data_len != expected:
-        log.warn ( "BAD DATA LEN: %d expected %d diff=%d" % ( data_len, expected, expected-data_len ) ) 
 
     if(raw_data is None):
-        raw_data = numpy.zeros([data_len/byteWidth], dtype=numpy.uint16 if byteWidth==2 else numpy.uint8)
+        raw_data = numpy.zeros([data_len], dtype=numpy.uint8)
         buf = raw_data.data
     elif(raw_data.__class__.__name__  == "ndarray"):
-        if(raw_data.size*byteWidth != data_len):
-            raw_data = numpy.zeros([data_len/byteWidth], dtype=numpy.uint16 if byteWidth==2 else numpy.uint8)
+        if(raw_data.size != data_len):
+            raw_data = numpy.zeros([data_len], dtype=numpy.uint8)
         buf = raw_data.data
     elif type(raw_data) in [str, buffer, nitro.Buffer]:
         if(len(raw_data) != data_len):
@@ -155,18 +146,13 @@ def _capture(dev, img, di, timeout):
         dev.read("Image", 0, buf)
     else:
         dev.read("Image", 0, buf, timeout)
-    if data_len < expected:
-        raw_data = numpy.append ( raw_data, numpy.zeros ([(expected-data_len)/byteWidth], dtype=numpy.uint16 if byteWidth==2 else numpy.uint8))
     img["raw_data"] = raw_data
 
     shape  = (header["num_rows"]*header["num_cols"],)
     length = shape[0]
     reshape = (header["num_rows"],header["num_cols"],1)
 
-    if(header["image_type"] & 0x00F0 in [0x0000, 0x0010]):
-        data = numpy.reshape(raw_data[:length], reshape)
-    else:
-        raise Exception("Unsupported image_type")
+    data = numpy.reshape(raw_data[:length], reshape)
 
     if not(data is None):
         img["data"]     = data

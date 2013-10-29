@@ -108,35 +108,20 @@ module imager
 
 
 `ifdef verilator
-   reg x;
    always @(posedge fv) begin
       if (mode == 6) begin
-	 x <= $c("loader->get_new_image()");
+         $c("get_new_image( (void*)", image_buf, ");" );
       end
    end
-`systemc_header
-#ifndef __IMAGER_H__
-#define __IMAGER_H__
-   
-class ImageLoader {
- public:
-		   SData *img_buf;
 
- inline int get_new_image() {
-  return 0;
- }
-};
-   
-#endif
+   `systemc_header
+   #include <vpycallbacks.h>
 
-`systemc_interface
-ImageLoader *loader;
-`systemc_ctor
-loader = new ImageLoader();
-loader->img_buf = (SData *) image_buf;
-`systemc_dtor
-delete loader;
-`verilog
+   `systemc_interface
+    void get_new_image( void* image_buf ) {
+        VPyCallbacks::executeCallback("get_image", image_buf);
+    }
+    `verilog
 `endif
 
 endmodule 
