@@ -1,7 +1,9 @@
 `include "dtypes.v"
 
 module rgb2stream
-  #(parameter PIXEL_WIDTH=10)
+  #(parameter PIXEL_WIDTH=10,
+    parameter RAW_PIXEL_SHIFT=0
+    )
   (input clk,
    input 		     resetb,
    input [15:0]		     image_type,
@@ -23,7 +25,11 @@ module rgb2stream
    
    reg [OBUF_WIDTH-1:0] obuf;
    reg [5:0] 		opos;
-   wire [OBUF_WIDTH-1:0] next_obuf = (image_type == 0) ? { obuf[OBUF_WIDTH-PIXEL_WIDTH-1:0], meta_datai[PIXEL_WIDTH-1:0] } :
+   /* verilator lint_off WIDTH */
+   wire [PIXEL_WIDTH-1:0] raw_data = meta_datai >> RAW_PIXEL_SHIFT;
+   /* verilator lint_on WIDTH */
+   
+   wire [OBUF_WIDTH-1:0] next_obuf = (image_type == 0) ? { obuf[OBUF_WIDTH-PIXEL_WIDTH-1:0], raw_data } :
                                                          { obuf[OBUF_WIDTH-3*PIXEL_WIDTH-1:0], r, g, b };
    wire [5:0] 		 next_opos  = (image_type == 0) ? opos + PIXEL_WIDTH : 
 			              opos + 3*PIXEL_WIDTH;
