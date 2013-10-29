@@ -148,16 +148,6 @@ def _capture(dev, img, di, timeout):
         dev.read("Image", 0, buf, timeout)
     img["raw_data"] = raw_data
 
-    shape  = (header["num_rows"]*header["num_cols"],)
-    length = shape[0]
-    reshape = (header["num_rows"],header["num_cols"],1)
-
-    data = numpy.reshape(raw_data[:length], reshape)
-
-    if not(data is None):
-        img["data"]     = data
-
-
 def capture(dev, img, timeout=None):
     """Captures an image from 'dev' into dictionary 'img'. If 'img' does
     does have data in it, then it is allocated, otherwise tries to reuse
