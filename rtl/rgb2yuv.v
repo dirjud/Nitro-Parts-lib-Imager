@@ -80,7 +80,10 @@ module rgb2yuv
 	 a0 = r * c0;
 	 a1 = g * c1;
 	 a2 = b * c2;
-	 x1 = {2'b0, a0} + {2'b0, a1} + {2'b0, a2} + 128; // add and round knowing divide by 256 is next. 128 is the rounding factor given the 8b coefficient data
+	 x1 = { {2{a0[PIXEL_WIDTH+8]}}, a0} +  // sign-extend
+	      { {2{a1[PIXEL_WIDTH+8]}}, a1} + 
+	      { {2{a2[PIXEL_WIDTH+8]}}, a2} + 
+	      128; // add and round knowing divide by 256 is next. 128 is the rounding factor given the 8b coefficient data
 	 dot_product[PIXEL_WIDTH+2:0] = x1[PIXEL_WIDTH+10:8]; // divide by 256
 
       end
