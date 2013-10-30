@@ -60,13 +60,13 @@ module interp_bilinear
    reg row_phase, col_phase;
 
    wire [PIXEL_WIDTH-1:0] kcenter      = k[1][1];
-   wire [PIXEL_WIDTH+1:0] kplus_add    = {2'b0, k[0][1]} + {2'b0, k[2][1]} + {2'b0, k[1][0]} + {2'b0, k[1][2]};
+   wire [PIXEL_WIDTH+1:0] kplus_add    = {2'b0, k[0][1]} + {2'b0, k[2][1]} + {2'b0, k[1][0]} + {2'b0, k[1][2]} + 2; // add two bits at the top to prevent overflow and add 2 to round the result when the lower bits are dropped
    wire [PIXEL_WIDTH-1:0] kplus        = kplus_add[PIXEL_WIDTH+1:2];
-   wire [PIXEL_WIDTH+1:0] kdiamond_add = {2'b0, k[0][0]} + {2'b0, k[2][0]} + {2'b0, k[0][2]} + {2'b0, k[2][2]};
+   wire [PIXEL_WIDTH+1:0] kdiamond_add = {2'b0, k[0][0]} + {2'b0, k[2][0]} + {2'b0, k[0][2]} + {2'b0, k[2][2]} + 2;
    wire [PIXEL_WIDTH-1:0] kdiamond     = kdiamond_add[PIXEL_WIDTH+1:2];
-   wire [PIXEL_WIDTH:0]   kvert_add    = k[0][1] + k[2][1];
+   wire [PIXEL_WIDTH:0]   kvert_add    = k[0][1] + k[2][1] + 1;
    wire [PIXEL_WIDTH-1:0] kvert        = kvert_add[PIXEL_WIDTH:1];
-   wire [PIXEL_WIDTH:0]   khorz_add    = k[1][0] + k[1][2];
+   wire [PIXEL_WIDTH:0]   khorz_add    = k[1][0] + k[1][2] + 1;
    wire [PIXEL_WIDTH-1:0] khorz        = khorz_add[PIXEL_WIDTH:1];
 
    always @(posedge clk or negedge resetb) begin
