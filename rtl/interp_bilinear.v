@@ -101,7 +101,7 @@ module interp_bilinear
 		     b <= kdiamond;
 		  end
 		  1: begin // G1 pixel
-		     r <= kplus;
+		     r <= khorz;
 		     g <= kcenter;
 		     b <= kvert;
 		  end
