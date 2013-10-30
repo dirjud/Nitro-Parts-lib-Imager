@@ -44,6 +44,19 @@ module rgb2yuv
    wire [PIXEL_WIDTH-1:0] y1 = unsigned_clamp(dot_product( 66, 129,  25));
    wire [PIXEL_WIDTH-1:0] u1 =   signed_clamp(dot_product(-38, -74, 112));
    wire [PIXEL_WIDTH-1:0] v1 =   signed_clamp(dot_product(112, -94, -18));
+
+   wire [PIXEL_WIDTH+2:0] p;
+   dot_product1 dpU
+     (
+      .c0(-38),
+      .c1(-74),
+      .c2(112),
+      .r(r),
+      .g(g),
+      .b(b),
+      .result(p)
+      );
+   
    
    always @(posedge clk or negedge resetb) begin
       if(!resetb) begin
@@ -116,5 +129,40 @@ module rgb2yuv
 					   x3[PIXEL_WIDTH-1:0];
       end
    endfunction
+
+endmodule
+
+module dot_product1
+   // This module takes in 9b signed coefficients where the top
+   // bit is the sign (2's complement) and the lower eight bits are
+   // fractional portion. In other words, the it divides the
+   // integer coeficients it receives by 256.
+  #(parameter PIXEL_WIDTH=10)
+   (
+    input signed [8:0] 	     c0,
+    input signed [8:0] 	     c1,
+    input signed [8:0] 	     c2,
+    input [PIXEL_WIDTH-1:0]  r,
+    input [PIXEL_WIDTH-1:0]  g,
+    input [PIXEL_WIDTH-1:0]  b,
+    output [PIXEL_WIDTH-1:0] result
+    );
+   
+   wire signed [PIXEL_WIDTH+8:0] a0;
+   wire signed [PIXEL_WIDTH+8:0] a1;
+   wire signed [PIXEL_WIDTH+8:0] a2;
+   wire signed [PIXEL_WIDTH+10:0] x1;
+   wire signed [PIXEL_WIDTH+2:0]  product;
+   
+   
+   assign a0 = r * c0;
+   assign a1 = g * c1;
+   assign a2 = b * c2;
+   assign x1 = { {2{a0[PIXEL_WIDTH+8]}}, a0 } +  // sign-extend
+	       { {2{a1[PIXEL_WIDTH+8]}}, a1 } + 
+	       { {2{a2[PIXEL_WIDTH+8]}}, a2 } + 
+	       128; // add and round knowing divide by 256 is next. 128 is the rounding factor given the 8b coefficient data
+
+   assign product = x1[PIXEL_WIDTH+10:8]; // divide by 256
 
 endmodule
