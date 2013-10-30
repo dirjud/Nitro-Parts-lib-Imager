@@ -110,7 +110,7 @@ module imager
 `ifdef verilator
    always @(posedge fv) begin
       if (mode == 6) begin
-         $c("get_new_image( (void*)", image_buf, ");" );
+         $c("get_new_image(" , image_buf, ");" );
       end
    end
 
@@ -118,8 +118,8 @@ module imager
    #include <vpycallbacks.h>
 
    `systemc_interface
-    void get_new_image( void* image_buf ) {
-        VPyCallbacks::executeCallback("get_image", image_buf);
+    void get_new_image( SData image_buf[][4096] ) {
+        VPyCallbacks::executeCallback("get_image", (void*)image_buf);
     }
     `verilog
 `endif
