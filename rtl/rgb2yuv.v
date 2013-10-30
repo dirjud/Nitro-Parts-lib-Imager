@@ -64,6 +64,10 @@ module rgb2yuv
    end
 
    function [PIXEL_WIDTH+2:0] dot_product;
+      // This function takes in 9b signed coefficients where the top
+      // bit is the sign (2's complement) and the lower eight bits are
+      // fractional portion. In other words, the it divides the
+      // integer coeficients it receives by 256.
       input signed [8:0] c0;
       input signed [8:0] c1;
       input signed [8:0] c2;
