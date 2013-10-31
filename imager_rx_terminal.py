@@ -166,5 +166,16 @@ di = DeviceInterface(
                     ),
                 ],
             ),
-        ],
+        Terminal(
+            name="GammaLookup",
+            regAddrWidth=16,
+            regDataWidth=16,
+            comment="""
+                Write only terminal control the gamma lookup table.,
+                This terminal takes PIXEL_WIDTH bits of data from each
+                di_write.  So each lookup value should be packed into whatever
+                size data type your write bus is. (16 or 32 bits)
+                """
+            )
+         ],
     )
