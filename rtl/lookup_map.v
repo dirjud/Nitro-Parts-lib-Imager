@@ -69,12 +69,16 @@ module lookup_map
             di_en <= 0;
             di_transfer_status <= 16'hffff;
         end
+       /* verilator lint_off WIDTH */
+       di_reg_datao <= y_lookup;
+       /* verilator lint_on WIDTH */
+       di_read_rdy  <= di_read_req;
     end
    end 
 
    wire [PIXEL_WIDTH-1:0] y_lookup;
    wire di_rowbuffer_we = di_write && di_term_addr == `TERM_LookupMap;
-   wire [9:0] di_rowbuffer_addr = di_write_mode && di_term_addr == `TERM_LookupMap ? di_reg_addr[9:0] : y[9:0];
+   wire [9:0] di_rowbuffer_addr = (di_write_mode || di_read_mode) && di_term_addr == `TERM_LookupMap ? di_reg_addr[9:0] : y[9:0];
 
    rowbuffer
      #(.ADDR_WIDTH(10),
