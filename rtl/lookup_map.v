@@ -18,7 +18,7 @@ module lookup_map
    input enable,
 
    // di interface
-   input                  if_clk,
+   input                  di_clk,
    input [15:0] 		  di_term_addr,
    input [31:0] 		  di_reg_addr,
    input 		          di_read_mode,
@@ -52,7 +52,7 @@ module lookup_map
 
 
    // di registers
-   always @(posedge if_clk) begin
+   always @(posedge di_clk) begin
     if (!resetb) begin
         di_read_rdy <= 0;
         di_reg_datao <= 0;
@@ -60,7 +60,7 @@ module lookup_map
         di_transfer_status <= 0;
         di_en <= 0;
     end else begin
-        if (di_term_addr == `TERM_GammaLookup) begin
+        if (di_term_addr == `TERM_LookupMap) begin
             di_write_rdy <= 1;
             di_en <= 1;
             di_transfer_status <= 0;
@@ -73,8 +73,8 @@ module lookup_map
    end 
 
    wire [PIXEL_WIDTH-1:0] y_lookup;
-   wire di_rowbuffer_we = di_write && di_term_addr == `TERM_GammaLookup;
-   wire [9:0] di_rowbuffer_addr = di_write_mode && di_term_addr == `TERM_GammaLookup ? di_reg_addr[9:0] : y[9:0];
+   wire di_rowbuffer_we = di_write && di_term_addr == `TERM_LookupMap;
+   wire [9:0] di_rowbuffer_addr = di_write_mode && di_term_addr == `TERM_LookupMap ? di_reg_addr[9:0] : y[9:0];
 
    rowbuffer
      #(.ADDR_WIDTH(10),
@@ -83,7 +83,7 @@ module lookup_map
    rowbuffer (
     .addr(di_rowbuffer_addr),
     .we(di_rowbuffer_we),
-    .clk(if_clk),
+    .clk(di_clk),
     .datai(di_reg_datai[PIXEL_WIDTH-1:0]),
     .datao(y_lookup)
    );

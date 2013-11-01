@@ -167,7 +167,7 @@ di = DeviceInterface(
                 ],
             ),
         Terminal(
-            name="GammaLookup",
+            name="LookupMap",
             regAddrWidth=16,
             regDataWidth=16,
             comment="""
