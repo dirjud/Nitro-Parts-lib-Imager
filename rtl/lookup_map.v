@@ -9,7 +9,7 @@
   
  */
 
-module gamma 
+module lookup_map
   #(parameter PIXEL_WIDTH=8,
     parameter DI_DATA_WIDTH=16)
   (
