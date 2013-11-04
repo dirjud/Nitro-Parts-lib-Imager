@@ -1,4 +1,3 @@
-`include "terminals_defs.v"
 `include "dtypes.v"
 // Author: Lane Brooks
 // Date: October 30, 2013
