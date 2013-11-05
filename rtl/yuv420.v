@@ -13,7 +13,8 @@ module yuv420
   (input clk,
    input 			 resetb,
    input [15:0] 		 image_type,
-   input 			 enable_420,
+   input 			 enable_yuv,
+   input 			 enable_yuv420,
    
    input 			 dvi,
    input [`DTYPE_WIDTH-1:0] 	 dtypei,
@@ -27,9 +28,9 @@ module yuv420
    output reg [31:0] 		 datao
 
    );
-   // Add 128 to u and v channels for yuv compliance reasons
-   wire [7:0] u0 = ui + 128;
-   wire [7:0] v0 = vi + 128;
+   // Add 128 to u and v channels for yuv compliance reasons. if not enabled, pass rgb data as is.
+   wire [7:0] u0 = enable_yuv ? ui + 128 : ui;
+   wire [7:0] v0 = enable_yuv ? vi + 128 : vi;
    
    // Delay the stream one pipeline cycle to match that of the kernel module.
    reg [7:0] 		   y1, u1, v1;
@@ -141,7 +142,7 @@ module yuv420
       end else if(image_type == 0) begin // raw mode
 	 next_obuf = { obuf[OBUF_WIDTH-9:0],  raw_data };
 	 next_opos = opos_plus_8;
-      end else if(enable_420 == 0) begin // pass all the yuv data
+      end else if(enable_yuv420 == 0) begin // pass all the yuv data
 	 next_obuf = { obuf[OBUF_WIDTH-25:0], y1, u1, v1  };
 	 next_opos = opos_plus_24;
       end else if(dump_uv == 1) begin // time to dump the u and v subsampled channels
