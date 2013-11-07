@@ -57,11 +57,11 @@ module rgb2yuv
 // wire [PIXEL_WIDTH-1:0] u1 = signed_clamp(dot_product(112, 38, 74, b, r, g));
    wire [PIXEL_WIDTH-1:0] v1 = signed_clamp(dot_product(112, 94, 18, r, g, b));
 
-   wire [PIXEL_WIDTH+10:0] y0;
+   wire [PIXEL_WIDTH+9:0] y0;
    dot_product3
-     #(.A_DATA_WIDTH(9),
+     #(.A_DATA_WIDTH(8),
        .B_DATA_WIDTH(PIXEL_WIDTH),
-       .A_SIGNED(1),
+       .A_SIGNED(0),
        .B_SIGNED(0))
    Ydot_product
      (.a0(66),
@@ -72,19 +72,19 @@ module rgb2yuv
       .b2(b),
       .y(y0)
       );
-   wire [PIXEL_WIDTH+10:0] y0a = y0 + 128; // round
-   wire [PIXEL_WIDTH-1:0]  y1;
-   clamp #(.DATAI_WIDTH(PIXEL_WIDTH+3),
+   wire [PIXEL_WIDTH+9:0] y0a = y0 + 128; // round
+   wire [PIXEL_WIDTH-1:0] y1;
+   clamp #(.DATAI_WIDTH(PIXEL_WIDTH+2),
    	   .DATAO_WIDTH(PIXEL_WIDTH),
-   	   .SIGNED(1))
-   Yclamp(.xi(y0a[PIXEL_WIDTH+10:8]), .xo(y1));
+   	   .SIGNED(0))
+   Yclamp(.xi(y0a[PIXEL_WIDTH+9:8]), .xo(y1));
    //assign y1 = y0a[PIXEL_WIDTH+10:8];
 
    
-   wire [PIXEL_WIDTH+10:0] u0;
+   wire [PIXEL_WIDTH+9:0] u0;
    wire [PIXEL_WIDTH-1:0]  u1;
    dot_product3minus
-     #(.A_DATA_WIDTH(9),
+     #(.A_DATA_WIDTH(8),
        .B_DATA_WIDTH(PIXEL_WIDTH),
        .A_SIGNED(0),
        .B_SIGNED(0))
@@ -97,7 +97,7 @@ module rgb2yuv
       .b2(g),
       .y(u0)
       );
-   wire signed [PIXEL_WIDTH+10:0] u0a = u0 + 128; // round
+   wire signed [PIXEL_WIDTH+9:0] u0a = u0 + 128; // round
    //clamp #(.DATAI_WIDTH(PIXEL_WIDTH+3),
    //	   .DATAO_WIDTH(PIXEL_WIDTH),
    //	   .SIGNED(1))
