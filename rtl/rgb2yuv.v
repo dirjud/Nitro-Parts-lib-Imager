@@ -86,12 +86,12 @@ module rgb2yuv
    dot_product3minus
      #(.A_DATA_WIDTH(9),
        .B_DATA_WIDTH(PIXEL_WIDTH),
-       .A_SIGNED(1),
+       .A_SIGNED(0),
        .B_SIGNED(0))
    Udot_product
      (.a0(112),
       .a1(38),
-      .a2(18),
+      .a2(74),
       .b0(b),
       .b1(r),
       .b2(g),
@@ -156,9 +156,9 @@ module rgb2yuv
       input signed [8:0] c0;
       input signed [8:0] c1;
       input signed [8:0] c2;
-      input unsigned [PIXEL_WIDTH:0] p0;
-      input unsigned [PIXEL_WIDTH:0] p1;
-      input unsigned [PIXEL_WIDTH:0] p2;
+      input unsigned [PIXEL_WIDTH-1:0] p0;
+      input unsigned [PIXEL_WIDTH-1:0] p1;
+      input unsigned [PIXEL_WIDTH-1:0] p2;
 
       reg signed [PIXEL_WIDTH+8:0]  a0;
       reg signed [PIXEL_WIDTH+8:0]  a1;

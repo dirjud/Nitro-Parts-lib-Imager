@@ -36,8 +36,8 @@ module dot_product3minus
    reg signed [TOTAL_WIDTH-1:0] mult1_signed;
    reg signed [TOTAL_WIDTH-1:0] mult2_signed;
    wire [TOTAL_WIDTH-1:0]       mult0_unsigned = a0 * b0;
-   wire [TOTAL_WIDTH-1:0]       mult1_unsigned = a0 * b0;
-   wire [TOTAL_WIDTH-1:0]       mult2_unsigned = a0 * b0;
+   wire [TOTAL_WIDTH-1:0]       mult1_unsigned = a1 * b1;
+   wire [TOTAL_WIDTH-1:0]       mult2_unsigned = a2 * b2;
 
    always @(a0, a1, a2, b0, b1, b2, a0_signed, a1_signed, a2_signed, b0_signed, b1_signed, b2_signed) begin
       if(A_SIGNED == 1 && B_SIGNED == 0) begin

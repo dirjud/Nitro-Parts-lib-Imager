@@ -53,9 +53,9 @@ module color_saturation
    // requires growing the y, u, and v terms by one bit.
    
    parameter COEFF_WIDTH=8;// 1 sign bit, 1 integer bit, & rest fractional bits
-   wire signed [COEFF_WIDTH-1:0] b0 =  64;
-   wire signed [COEFF_WIDTH-1:0] b1 = -89;  //equiv. to 1.391, 1% quant. error
-   wire signed [COEFF_WIDTH-1:0] b2 = -43;  //equiv. to 0.672, .2% quant. error 
+   wire signed [COEFF_WIDTH-1:0] b0 = 64;
+   wire signed [COEFF_WIDTH-1:0] b1 = 89;  //equiv. to 1.391, 1% quant. error
+   wire signed [COEFF_WIDTH-1:0] b2 = 43;  //equiv. to 0.672, .2% quant. error 
    
    wire signed [STRENGTH_WIDTH+COEFF_WIDTH-1:0] bs0 = { b0, { STRENGTH_WIDTH { 1'b0 }}};
    wire signed [STRENGTH_WIDTH+COEFF_WIDTH-1:0] bs1 = b1 * strength;
@@ -66,7 +66,7 @@ module color_saturation
    wire signed [TOTAL_WIDTH+1:0] 		y0;
    wire signed [TOTAL_WIDTH+1:0] 		maxy = { 5'b0, { TOTAL_WIDTH-3 { 1'b1 }}};
    
-   dot_product3 #(.A_DATA_WIDTH(PIXEL_WIDTH+1),
+   dot_product3minus #(.A_DATA_WIDTH(PIXEL_WIDTH+1),
 		  .B_DATA_WIDTH(STRENGTH_WIDTH+COEFF_WIDTH), // two integer bits and 6 fractional bits
 		  .A_SIGNED(1),
 		  .B_SIGNED(1))
@@ -112,7 +112,7 @@ module color_saturation
       end else begin
 	 dvo        <= dvi;
 	 dtypeo     <= dtypei;
-         yo         <= (enable) ? yi : yi;
+         yo         <= (enable) ? y1 : yi;
          uo         <= (enable) ? u1 : ui;
          vo         <= (enable) ? v1 : vi;
 	 meta_datao <= meta_datai;
