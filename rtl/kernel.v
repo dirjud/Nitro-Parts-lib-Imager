@@ -88,7 +88,7 @@ module kernel
    endgenerate
    
    
-   always @(posedge clk or negedge resetb) begin
+   always @(posedge clk) begin
       if(!resetb) begin
 	 row_addr <= 0;
 	 col_addr <= 0;
