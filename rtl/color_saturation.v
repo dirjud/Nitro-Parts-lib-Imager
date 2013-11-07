@@ -112,7 +112,7 @@ module color_saturation
       end else begin
 	 dvo        <= dvi;
 	 dtypeo     <= dtypei;
-         yo         <= (enable) ? y1 : yi;
+         yo         <= (enable) ? yi : yi;
          uo         <= (enable) ? u1 : ui;
          vo         <= (enable) ? v1 : vi;
 	 meta_datao <= meta_datai;
