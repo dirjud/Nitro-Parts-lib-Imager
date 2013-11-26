@@ -41,8 +41,8 @@ module color_saturation
    output reg 			  dvo,
    output reg [`DTYPE_WIDTH-1:0]  dtypeo,
    output reg [PIXEL_WIDTH-1:0]   yo,
-   output reg [PIXEL_WIDTH-1:0]   uo,
-   output reg [PIXEL_WIDTH-1:0]   vo,
+   output reg signed [PIXEL_WIDTH-1:0]   uo,
+   output reg signed [PIXEL_WIDTH-1:0]   vo,
    output reg [15:0] 		  meta_datao
    
    );
@@ -53,9 +53,9 @@ module color_saturation
    // requires growing the y, u, and v terms by one bit.
    
    parameter COEFF_WIDTH=8;// 1 sign bit, 1 integer bit, & rest fractional bits
-   wire signed [COEFF_WIDTH-1:0] b0 =  64;
-   wire signed [COEFF_WIDTH-1:0] b1 = -89;  //equiv. to 1.391, 1% quant. error
-   wire signed [COEFF_WIDTH-1:0] b2 = -43;  //equiv. to 0.672, .2% quant. error 
+   wire signed [COEFF_WIDTH-1:0] b0 = 64;
+   wire signed [COEFF_WIDTH-1:0] b1 = 89;  //equiv. to 1.391, 1% quant. error
+   wire signed [COEFF_WIDTH-1:0] b2 = 43;  //equiv. to 0.672, .2% quant. error 
    
    wire signed [STRENGTH_WIDTH+COEFF_WIDTH-1:0] bs0 = { b0, { STRENGTH_WIDTH { 1'b0 }}};
    wire signed [STRENGTH_WIDTH+COEFF_WIDTH-1:0] bs1 = b1 * strength;
@@ -66,7 +66,7 @@ module color_saturation
    wire signed [TOTAL_WIDTH+1:0] 		y0;
    wire signed [TOTAL_WIDTH+1:0] 		maxy = { 5'b0, { TOTAL_WIDTH-3 { 1'b1 }}};
    
-   dot_product3 #(.A_DATA_WIDTH(PIXEL_WIDTH+1),
+   dot_product3minus #(.A_DATA_WIDTH(PIXEL_WIDTH+1),
 		  .B_DATA_WIDTH(STRENGTH_WIDTH+COEFF_WIDTH), // two integer bits and 6 fractional bits
 		  .A_SIGNED(1),
 		  .B_SIGNED(1))
@@ -79,27 +79,30 @@ module color_saturation
 	.b2(bs2),
 	.y(y0)
 	);
-   wire [PIXEL_WIDTH-1:0] y1 = (y0 > maxy) ? { PIXEL_WIDTH { 1'b1 }} :
-			       (y0 < 0   ) ? { PIXEL_WIDTH { 1'b0 }} :
-			       y0[PIXEL_WIDTH+STRENGTH_WIDTH+COEFF_WIDTH-3:STRENGTH_WIDTH+COEFF_WIDTH-2];
+   wire [PIXEL_WIDTH-1:0] y1 = y0[PIXEL_WIDTH+STRENGTH_WIDTH+COEFF_WIDTH-3:STRENGTH_WIDTH+COEFF_WIDTH-2];
 
    // Calculate u and v terms as 3*strength + 1.0
    wire [STRENGTH_WIDTH+1:0] uv_coeff0 = (3 * strength);
-   wire [STRENGTH_WIDTH+1:0] uv_coeff1 = uv_coeff0 + { 1'b0, 1'b1, {STRENGTH_WIDTH{1'b0}}}; // add 1.0
+   wire [STRENGTH_WIDTH+1:0] uv_coeff1 = uv_coeff0 + { 2'b01, {STRENGTH_WIDTH{1'b0}}}; // add 1.0
 
 
-   wire signed [STRENGTH_WIDTH+PIXEL_WIDTH+1:0] u0 = ui * uv_coeff1;
-   wire signed [STRENGTH_WIDTH+PIXEL_WIDTH+1:0] v0 = vi * uv_coeff1;
-
-   wire signed [STRENGTH_WIDTH+PIXEL_WIDTH+1:0] max_uv = { 2'b00, { PIXEL_STRENGTH_WIDTH { 1'b1 }}};
-   wire signed [STRENGTH_WIDTH+PIXEL_WIDTH+1:0] min_uv = { 2'b11, { PIXEL_STRENGTH_WIDTH { 1'b0 }}};
+   wire signed [STRENGTH_WIDTH+PIXEL_WIDTH+2:0] u0 = $signed(ui) * $signed({1'b0, uv_coeff1});
+   wire signed [STRENGTH_WIDTH+PIXEL_WIDTH+2:0] v0 = $signed(vi) * $signed({1'b0, uv_coeff1});
+   wire signed [PIXEL_WIDTH-1:0] u1;
+   wire signed [PIXEL_WIDTH-1:0] v1;
    
-   wire signed [PIXEL_WIDTH-1:0] u1 = (u0 > max_uv) ? { 1'b0, { PIXEL_WIDTH-1 {1'b1}}} :
-	                              (u0 < min_uv) ? { 1'b1, { PIXEL_WIDTH-1 {1'b0}}} :
-	                              u0[PIXEL_WIDTH+STRENGTH_WIDTH-1:STRENGTH_WIDTH];
-   wire signed [PIXEL_WIDTH-1:0] v1 = (v0 > max_uv) ? { 1'b0, { PIXEL_WIDTH-1 {1'b1}}} :
-	                              (v0 < min_uv) ? { 1'b1, { PIXEL_WIDTH-1 {1'b0}}} :
-	                              v0[PIXEL_WIDTH+STRENGTH_WIDTH-1:STRENGTH_WIDTH];
+   clamp #(.DATAI_WIDTH(PIXEL_WIDTH+3),
+	   .DATAO_WIDTH(PIXEL_WIDTH),
+	   .SIGNED(1))
+   Uclamp(.xi(u0[PIXEL_WIDTH+STRENGTH_WIDTH+2:STRENGTH_WIDTH]),
+	  .xo(u1));
+
+   clamp #(.DATAI_WIDTH(PIXEL_WIDTH+3),
+	   .DATAO_WIDTH(PIXEL_WIDTH),
+	   .SIGNED(1))
+   Vclamp(.xi(v0[PIXEL_WIDTH+STRENGTH_WIDTH+2:STRENGTH_WIDTH]),
+	  .xo(v1));
+     
 
    always @(posedge clk or negedge resetb) begin
       if(!resetb) begin

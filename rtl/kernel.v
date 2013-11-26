@@ -40,17 +40,6 @@ module kernel
    reg [NUM_COLS_WIDTH-1:0] col_addr;
    reg [KERNEL_SIZE-1:0] row_addr; // this should be a width of LOG2_KERNEL_SIZE
 
-   wire [PIXEL_WIDTH-1:0]   datao00 = datao[0][0];
-   wire [PIXEL_WIDTH-1:0]   datao01 = datao[0][1];
-   wire [PIXEL_WIDTH-1:0]   datao02 = datao[0][2];
-   wire [PIXEL_WIDTH-1:0]   datao10 = datao[1][0];
-   wire [PIXEL_WIDTH-1:0]   datao11 = datao[1][1];
-   wire [PIXEL_WIDTH-1:0]   datao12 = datao[1][2];
-   wire [PIXEL_WIDTH-1:0]   datao20 = datao[2][0];
-   wire [PIXEL_WIDTH-1:0]   datao21 = datao[2][1];
-   wire [PIXEL_WIDTH-1:0]   datao22 = datao[2][2];
-   
-   
    parameter BORDER_SIZE = KERNEL_SIZE-1;
    /* verilator lint_off WIDTH */
    wire valid_col = col_addr >= BORDER_SIZE;
@@ -99,7 +88,7 @@ module kernel
    endgenerate
    
    
-   always @(posedge clk or negedge resetb) begin
+   always @(posedge clk) begin
       if(!resetb) begin
 	 row_addr <= 0;
 	 col_addr <= 0;

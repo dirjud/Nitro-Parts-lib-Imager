@@ -7,7 +7,7 @@
 // whether the b terms are signed or not by setting the 'A_SIGNED' and
 // 'B_SIGNED' parameters.
 
-module dot_product3
+module dot_product3minus
   #(parameter A_DATA_WIDTH=8,
     parameter B_DATA_WIDTH=9,
     parameter A_SIGNED=0,
@@ -55,11 +55,11 @@ module dot_product3
       end
    end
 
-   wire [TOTAL_WIDTH+1:0] accum_unsigned = { 2'b0, mult0_unsigned } + 
-			                   { 2'b0, mult1_unsigned } + 
+   wire [TOTAL_WIDTH+1:0] accum_unsigned = { 2'b0, mult0_unsigned } - 
+			                   { 2'b0, mult1_unsigned } - 
 			                   { 2'b0, mult2_unsigned };
-   wire [TOTAL_WIDTH+1:0] accum_signed = { {2{mult0_signed[TOTAL_WIDTH-1]}}, mult0_signed } + 
-			                 { {2{mult1_signed[TOTAL_WIDTH-1]}}, mult1_signed } + 
+   wire [TOTAL_WIDTH+1:0] accum_signed = { {2{mult0_signed[TOTAL_WIDTH-1]}}, mult0_signed } - 
+			                 { {2{mult1_signed[TOTAL_WIDTH-1]}}, mult1_signed } - 
 			                 { {2{mult2_signed[TOTAL_WIDTH-1]}}, mult2_signed };
 
    always @(mult0_unsigned,mult1_unsigned,mult2_unsigned,mult0_signed,mult1_signed,mult2_signed) begin
