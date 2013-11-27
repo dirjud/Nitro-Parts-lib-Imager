@@ -64,23 +64,24 @@ module color_saturation
    parameter TOTAL_WIDTH = PIXEL_WIDTH+STRENGTH_WIDTH+COEFF_WIDTH+1;
    parameter PIXEL_STRENGTH_WIDTH = PIXEL_WIDTH + STRENGTH_WIDTH;
    wire signed [TOTAL_WIDTH+1:0] 		y0;
-   wire signed [TOTAL_WIDTH+1:0] 		maxy = { 5'b0, { TOTAL_WIDTH-3 { 1'b1 }}};
    
    dot_product3minus #(.A_DATA_WIDTH(PIXEL_WIDTH+1),
-		  .B_DATA_WIDTH(STRENGTH_WIDTH+COEFF_WIDTH), // two integer bits and 6 fractional bits
-		  .A_SIGNED(1),
-		  .B_SIGNED(1))
-     y_dot_product
-       (.a0( {              1'b0, yi } ), // use an extra bit to turn y signed
-	.a1( { ui[PIXEL_WIDTH-1], ui } ),
-	.a2( { vi[PIXEL_WIDTH-1], vi } ),
-	.b0(bs0),
-	.b1(bs1),
-	.b2(bs2),
-	.y(y0)
-	);
-   wire [PIXEL_WIDTH-1:0] y1 = y0[PIXEL_WIDTH+STRENGTH_WIDTH+COEFF_WIDTH-3:STRENGTH_WIDTH+COEFF_WIDTH-2];
-
+		       .B_DATA_WIDTH(STRENGTH_WIDTH+COEFF_WIDTH), // two integer bits and 6 fractional bits
+		       .SIGNED(1))
+   y_dot_product
+     (.a0( {              1'b0, yi } ), // use an extra bit to turn y signed
+      .a1( { ui[PIXEL_WIDTH-1], ui } ),
+      .a2( { vi[PIXEL_WIDTH-1], vi } ),
+      .b0(bs0),
+      .b1(bs1),
+      .b2(bs2),
+      .y(y0)
+      );
+   parameter Y_TOP_BIT = PIXEL_WIDTH+STRENGTH_WIDTH+COEFF_WIDTH-2;
+   wire [PIXEL_WIDTH-1:0] y1 = /*y0[TOTAL_WIDTH+1] ? 0 : // check if it is negative and clamp to zero if it is */
+			       |y0[TOTAL_WIDTH:Y_TOP_BIT] ? { PIXEL_WIDTH { 1'b1 }} :
+			       y0[Y_TOP_BIT-1:Y_TOP_BIT-PIXEL_WIDTH];
+   
    // Calculate u and v terms as 3*strength + 1.0
    wire [STRENGTH_WIDTH+1:0] uv_coeff0 = (3 * strength);
    wire [STRENGTH_WIDTH+1:0] uv_coeff1 = uv_coeff0 + { 2'b01, {STRENGTH_WIDTH{1'b0}}}; // add 1.0
@@ -88,8 +89,7 @@ module color_saturation
 
    wire signed [STRENGTH_WIDTH+PIXEL_WIDTH+2:0] u0 = $signed(ui) * $signed({1'b0, uv_coeff1});
    wire signed [STRENGTH_WIDTH+PIXEL_WIDTH+2:0] v0 = $signed(vi) * $signed({1'b0, uv_coeff1});
-   wire signed [PIXEL_WIDTH-1:0] u1;
-   wire signed [PIXEL_WIDTH-1:0] v1;
+   wire signed [PIXEL_WIDTH-1:0] u1, v1;
    
    clamp #(.DATAI_WIDTH(PIXEL_WIDTH+3),
 	   .DATAO_WIDTH(PIXEL_WIDTH),
@@ -123,5 +123,3 @@ module color_saturation
    end
 
 endmodule
-
-
