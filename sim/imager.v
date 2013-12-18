@@ -106,7 +106,7 @@ module imager
    end
 
 
-
+`ifdef IMAGER_CALLBACKS
 `ifdef verilator
    always @(posedge fv) begin
       if (mode == 6) begin
@@ -123,5 +123,6 @@ module imager
     }
     `verilog
 `endif
-
+`endif
+      
 endmodule 
