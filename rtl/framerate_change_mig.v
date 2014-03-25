@@ -5,10 +5,9 @@
 //  and num_hblank_cols should be an even number.
 
 `include "dtypes.v"
-module stream2mig
+module framerate_change_mig
   #(parameter ADDR_WIDTH=30,
-    parameter PIXEL_WIDTH=24,
-    parameter PIXEL_WIDTH=16
+    DIM_WIDTH=12
     )
   (
    input 		       enable, // syncronous to any clock
@@ -23,7 +22,7 @@ module stream2mig
    input 		       clki,
    input 		       dvi,
    input [`DTYPE_WIDTH-1:0]    dtypei,
-   input [PIXEL_WIDTH-1:0]     datai,
+   input [31:0]     datai,
    
    output 		       pW_rd_en,
    input [31:0] 	       pW_rd_data,
@@ -40,9 +39,9 @@ module stream2mig
    
    input 		       rresetb,
    input 		       rclk,
-   input 		       dvo,
-   input [`DTYPE_WIDTH-1:0]    dtypeo,
-   input [PIXEL_WIDTH-1:0]     datao,
+   output reg 		       dvo,
+   output reg [`DTYPE_WIDTH-1:0]    dtypeo,
+   output reg [31:0]                datao,
    
    output reg 		       pR_rd_en,
    input [31:0] 	       pR_rd_data,
@@ -54,8 +53,7 @@ module stream2mig
    output reg [5:0] 	       pR_cmd_bl,
    output reg [ADDR_WIDTH-1:0] pR_cmd_byte_addr,
    input 		       pR_cmd_full,
-   input 		       pR_cmd_empty,
-   output reg 		       pR_busy
+   input 		       pR_cmd_empty
    
    );
 
@@ -70,6 +68,7 @@ module stream2mig
 
    reg 	    re, we;
    wire [ADDR_BLOCK_WIDTH-1:0] rdata;
+   reg [ADDR_BLOCK_WIDTH-1:0] prev_rdata;
    wire 		 wfull, rempty;
    
    wire [ADDR_BLOCK_WIDTH-1:0] wdata;
@@ -77,14 +76,13 @@ module stream2mig
    
    wire [FIFO_WIDTH-1:0]       wFreeSpace, rUsedSpace;
    wire 		       wwait = wFreeSpace < 2;
-   reg 			       we_s, we_ss, we_sss;
    
-   stream2migFifoDualClk #(.ADDR_WIDTH(FIFO_WIDTH), 
+   framerateChangeFifoDualClk #(.ADDR_WIDTH(FIFO_WIDTH), 
 			   .DATA_WIDTH(ADDR_BLOCK_WIDTH))
    fifoDualClk
      (.wclk(clki),
       .rclk(rclk),
-      .we(we_sss),
+      .we(we),
       .re(re),
       .resetb(wresetb),
       .flush(!enable),
@@ -103,114 +101,11 @@ module stream2mig
      RSTATE_SEND_ROW = 2,
      RSTATE_HBLANK1 = 3,
      RSTATE_VBLANK1 = 4;
-   wire [DIM_WIDTH-1:0] totals_cols = num_cols + num_hblank_cols;
+   wire [DIM_WIDTH-1:0] total_cols = num_cols + num_hblank_cols;
    reg [DIM_WIDTH-1:0] row_num, col_num;
    wire [DIM_WIDTH-1:0] next_row_num = row_num + 1;
    wire [DIM_WIDTH-1:0] next_col_num = col_num + 1;
-   
-   always @(posedge rclk or negedge rresetb) begin
-      if(!rresetb) begin
-	 row_num <= 0;
-	 col_num <= 0;
-	 rstate  <= RSTATE_VBLANK0;
-	 dvo     <= 0;
-	 datao   <= 0;
-	 dtypeo  <= 0;
-      end else begin
-	 if(!enable_r) begin
-	    rstate  <= RSTATE_VBLANK0;
-	    row_num <= 0;
-	    col_num <= 0;
-	    dvo     <= 0;
-	 end else if (rstate == RSTATE_VBLANK0) begin
-	    if(col_num == 0 && row_num == 0) begin
-	       dtypeo <= DTYPE_FRAME_START;
-	       dvo <= 1;
-	    end else begin
-	       dvo <= 0;
-	       dtypeo <= 0;
-	    end
-	    if(next_col_num >= total_cols) begin
-	       col_num <= 0;
-	       if(next_row_num >= (num_vblank_rows >> 1)) begin
-		  row_num <= 0;
-		  rstate <= RSTATE_HBLANK0;
-	       end else begin
-		  row_num <= next_row_num;
-	       end
-	    end else begin
-	       col_num <= next_col_num;
-	    end
-	 end else if(rstate <= RSTATE_HBLANK0) begin
-	    dtypeo <= DTYLE_ROW_START;
-	    if(col_num == 0) begin
-	       dvo <= 1;
-	    end else begin
-	       dvo <= 0;
-	    end
-	    if(next_col_num >= (num_hblank_rows >> 1)) begin
-	       col_num <= 0;
-	       rstate <= RSTATE_SEND_ROW;
-	    end else begin
-	       col_num <= next_col_num;
-	    end
-	 end else if(rstate <= RSTATE_SEND_ROW) begin
-	    dvo    <= 1;
-	    dtypeo <= DTYPE_PIXEL_MASK;
-	    datao  <= asdfa;
-	    if(next_col_num >= num_cols) begin
-	       col_num <= 0;
-	       rstate <= RSTATE_HBLANK1;
-	    end else begin
-	       col_num <= next_col_num;
-	    end
-	 end else if(rstate <= RSTATE_HBLANK0) begin
-	    dtypeo <= DTYLE_ROW_END;
-	    if(col_num == 0) begin
-	       dvo <= 1;
-	       row_num <= next_row_num;
-	    end else begin
-	       dvo <= 0;
-	    end
-	    if(next_col_num >= (num_hblank_rows >> 1)) begin
-	       col_num <= 0;
-	       if(row_num >= num_rows) begin
-		  row_num <= 0;
-		  rstate <= RSTATE_VBLANK1;
-	       end else begin
-		  rstate <= RSTATE_HBLANK0;
-	       end
-	    end else begin
-	       col_num <= next_col_num;
-	    end
-	 end else if(rstate <= RSTATE_VBLANK1) begin
-	    if(col_num == 0 && row_num == 0) begin
-	       // send frame end signal
-	       dtypeo <= DTYPE_FRAME_END;
-	       dvo <= 1;
-	    end else begin
-	       dvo <= 0;
-	       dtypeo <= 0;
-	    end
-	    
-	    if(next_col_num >= total_cols) begin
-	       col_num <= 0;
-	       if(next_row_num >= (num_vblank_rows >> 1)) begin
-		  row_num <= 0;
-		  rstate <= RSTATE_RFRAME_START;
-	       end else begin
-		  row_num <= next_row_num;
-	       end
-	    end else begin
-	       col_num <= next_col_num;
-	    end
-	 end else begin
-	     // shouldn't get to this state, but just in case
-	    rstate <= RSTATE_VBLANK0;
-	 end
-      end
-   end
-   
+
    localparam  CMD_WRITE=0,
                CMD_READ=1,
                CMD_WRITE_WITH_AUTO_PRECHARGE=2,
@@ -222,120 +117,199 @@ module stream2mig
    assign pR_wr_data = 0;
    assign pW_rd_en   = 0;
    
-   reg 			   pR_rd_en_reg, di_read_rdy_reg, pR_rd_empty_s;
-   
-   always @(*) begin
-      pR_rd_en    = (rfirst_word || di_read || (!enable_r && pR_rd_en_reg)) && !pR_rd_empty;
-      di_read_rdy = !pR_rd_empty && !pR_rd_empty_s;
-   end
-
-   always @(posedge rclk or negedge rresetb) begin
-      if(!rresetb) begin
-         rword_sel    <= 0;
-         rfirst_word  <= 1;
-         di_reg_datao <= 0;
-         di_read_rdy_reg  <= 0;
-         pR_rd_en_reg     <= 0;
-	 pR_rd_empty_s <= 0;
-	 enable_r <= 0;
-	 
-      end else begin
-	 enable_r <= enable;
-	 
-	 pR_rd_empty_s <= pR_rd_empty;
-	 di_read_rdy_reg  <= !pR_rd_empty;
-
-	 if(!enable_r) begin
-            rword_sel    <= 0;
-            rfirst_word  <= 1;
-            di_reg_datao <= 0;
-            di_read_rdy_reg  <= 0;
-	    pR_rd_en_reg <= !pR_rd_empty && !pR_rd_en_reg; // drain any data left in the read fifo when not in read_mode
-         end else if(pR_cmd_instr == CMD_READ) begin
-	    if(pR_rd_en) begin
-	       rfirst_word <= 0;
-	    end else if(di_read && pR_rd_empty) begin
-	       rfirst_word <= 1;
-	    end
-	    if(pR_rd_en) begin
-	       di_reg_datao <= pR_rd_data;
-	    end
-         end else begin
-            rword_sel <= 0;
-         end
-      end
-   end
 
    wire[ADDR_WIDTH-1:0] next_pR_cmd_byte_addr = pR_cmd_byte_addr + 30'd64;
-
-   wire [23:0] next_rpos    = next_pR_cmd_byte_addr[29:6];
-   reg 	       rwait;
-
-   reg 	read_done;
-
+   reg 			dvo0;
+   reg [`DTYPE_WIDTH-1:0] dtypeo0;
    
    always @(posedge rclk or negedge rresetb) begin
       if(!rresetb) begin
+	 row_num <= 0;
+	 col_num <= 0;
+	 rstate  <= RSTATE_VBLANK0;
+	 re      <= 0;
          pR_cmd_en <= 0;
          pR_cmd_instr <= CMD_IDLE;
          pR_cmd_byte_addr <= 0;
-         pR_cmd_bl <= 0;
-	 pR_busy <= 0;
+         pR_cmd_bl   <= 0;
          rfifo_count <= 0;
-	 re <= 0;
-	 read_done <= 0;
-	 rwait <= 1;
+	 prev_rdata  <= 0;
+         pR_rd_en    <= 0;
+
+	 dvo     <= 0;
+	 datao   <= 0;
+	 dtypeo  <= 0;
+	 dvo0    <= 0;
+	 dtypeo0 <= 0;
 	 
       end else begin
-	 rwait <= rempty;
-	 read_done <= next_rpos == rdata; // goes high when finished with current read buffer		  
-
+	 enable_r <= enable;
+	 dvo      <= dvo0;
+	 dtypeo   <= dtypeo0;
+	 datao    <= pR_rd_data;
+	 
 	 if(!enable_r) begin
+	    rstate  <= RSTATE_VBLANK0;
+	    row_num <= 0;
+	    col_num <= 0;
+	    dvo0     <= 0;
+
+            pR_rd_en     <= 0;
             pR_cmd_en    <= 0;
             pR_cmd_instr <= CMD_IDLE;
             pR_cmd_byte_addr <= 0;
             pR_cmd_bl    <= 0;
-	    pR_busy      <= 0;
             rfifo_count  <= 0;
 	    re <= 0;
+	    prev_rdata <= 0;
 
-         end else if(pR_cmd_instr == CMD_IDLE) begin
-            if(dvo && dtypeo == `DTYPE_FRAME_START) begin
-               pR_cmd_instr <= CMD_READ;
-	       pR_busy <= 1;
-            end else begin
-	       pR_busy <= 0;
-	    end
-            pR_cmd_en <= 0;
-	    re <= 0;
-	    
-         end else if(pR_cmd_instr == CMD_READ) begin
-            if(dvo && dtypeo == `DTYPE_FRAME_END) begin
-               pR_cmd_instr <= CMD_IDLE;
-               pR_cmd_en    <= 0;
-	       re <= 0;
-            end else begin
-               pR_cmd_bl <= 15;
-               if(!pR_cmd_full && !pR_cmd_en && rfifo_count < 32 && !rwait) begin
-                  pR_cmd_en <= 1;
-               end else begin
-                  pR_cmd_en <= 0;
-               end
-               if(pR_cmd_en) begin
-                  pR_cmd_byte_addr <= next_pR_cmd_byte_addr;
-		  re <= read_done;
-               end else begin
+	 end else begin
+            if(pR_cmd_instr == CMD_IDLE) begin
+	       if(!pR_rd_en && pR_rd_empty) begin
+		  // In this scenerio, we have drained any left over
+		  // data in the read fifo and are ready to start
+		  // reading a new frame
+		  pR_cmd_instr <= CMD_READ;
+		  if(!rempty) begin
+		     re <= 1; // grab a new frame if it is available.
+		     prev_rdata <= rdata;
+		     pR_cmd_byte_addr <= { rdata, 6'd0 };
+		     $display("Reading new frame from dram.");
+		  end else begin
+		     re <= 0;
+		     $display("Reading old frame from dram because no new frames are available.");
+		     // else use the previous frame
+		     pR_cmd_byte_addr <= { prev_rdata, 6'd0 };
+		  end
+	       end else begin
 		  re <= 0;
 	       end
+	    end else begin
+	       re <= 0;
+	       if(dvo && dtypeo == `DTYPE_FRAME_END) begin
+		  pR_cmd_instr <= CMD_IDLE;
+		  // at the end of the read frame, drain data left in
+		  // the read fifo.
+	       end
 
-               if(pR_cmd_en && pR_rd_en) begin
-                  rfifo_count <= rfifo_count + 6'd15;
-               end else if(pR_rd_en) begin
-                  rfifo_count <= rfifo_count - 6'd1;
-               end else if(pR_cmd_en) begin
-                  rfifo_count <= rfifo_count + 6'd16;
-               end
+	       // figure out if we need to fetch more data from for the
+	       // read fifo
+	       pR_cmd_bl <= 15;
+	       if(!pR_cmd_full && !pR_cmd_en && rfifo_count < 32) begin
+		  pR_cmd_en <= 1;
+	       end else begin
+		  pR_cmd_en <= 0;
+	       end
+	       if(pR_cmd_en) begin
+		  pR_cmd_byte_addr <= next_pR_cmd_byte_addr;
+	       end
+	    end
+            if(pR_cmd_en && pR_rd_en) begin
+               rfifo_count <= rfifo_count + 6'd15;
+            end else if(pR_rd_en) begin
+               rfifo_count <= rfifo_count - 6'd1;
+            end else if(pR_cmd_en) begin
+               rfifo_count <= rfifo_count + 6'd16;
             end
+	    
+	    // manage the output stream by generating VBLANK and HBLANK times
+	    if (rstate == RSTATE_VBLANK0) begin
+	       if(pR_cmd_instr == CMD_IDLE && !pR_rd_en && !pR_rd_empty) begin
+		  // drain the data left in the read fifo.
+		  pR_rd_en <= 1;
+	       end else begin
+		  pR_rd_en <= 0;
+	       end
+
+	       if(col_num == 0 && row_num == 0) begin
+	          dtypeo0 <= `DTYPE_FRAME_START;
+	          dvo0 <= 1;
+	       end else begin
+	          dvo0 <= 0;
+	          dtypeo0 <= 0;
+	       end
+	       if(next_col_num >= total_cols) begin
+	          col_num <= 0;
+	          if(next_row_num >= (num_vblank_rows >> 1)) begin
+	    	  row_num <= 0;
+	    	  rstate <= RSTATE_HBLANK0;
+	          end else begin
+	    	  row_num <= next_row_num;
+	          end
+	       end else begin
+	          col_num <= next_col_num;
+	       end
+	    end else if(rstate <= RSTATE_HBLANK0) begin
+	       pR_rd_en <= 0;
+	       dtypeo0 <= `DTYPE_ROW_START;
+	       if(col_num == 0) begin
+	          dvo0 <= 1;
+	       end else begin
+	          dvo0 <= 0;
+	       end
+	       if(next_col_num >= (num_hblank_cols >> 1)) begin
+	          col_num <= 0;
+	          rstate <= RSTATE_SEND_ROW;
+	       end else begin
+	          col_num <= next_col_num;
+	       end
+	    end else if(rstate <= RSTATE_SEND_ROW) begin
+	       pR_rd_en <= 1;
+	       dvo0    <= 1;
+	       dtypeo0 <= `DTYPE_PIXEL_MASK;
+	       if(next_col_num >= num_cols) begin
+	          col_num <= 0;
+	          rstate <= RSTATE_HBLANK1;
+	       end else begin
+	          col_num <= next_col_num;
+	       end
+	    end else if(rstate <= RSTATE_HBLANK1) begin
+	       pR_rd_en <= 0;
+	       dtypeo0 <= `DTYPE_ROW_END;
+	       if(col_num == 0) begin
+	          dvo0 <= 1;
+	       end else begin
+	          dvo0 <= 0;
+	       end
+	       if(next_col_num >= (num_hblank_cols >> 1)) begin
+	          col_num <= 0;
+	          if(next_row_num >= num_rows) begin
+	    	     row_num <= 0;
+	    	     rstate <= RSTATE_VBLANK1;
+	          end else begin
+	    	     row_num <= next_row_num;
+	    	     rstate <= RSTATE_HBLANK0;
+	          end
+	       end else begin
+	          col_num <= next_col_num;
+	       end
+	    end else if(rstate <= RSTATE_VBLANK1) begin
+	       pR_rd_en <= 0;
+	       if(col_num == 0 && row_num == 0) begin
+	          // send frame end signal
+	          dvo0 <= 1;
+	          dtypeo0 <= `DTYPE_FRAME_END;
+	       end else begin
+	          dvo0 <= 0;
+	          dtypeo0 <= 0;
+	       end
+	       
+	       if(next_col_num >= total_cols) begin
+	          col_num <= 0;
+	          if(next_row_num >= (num_vblank_rows >> 1)) begin
+	    	     row_num <= 0;
+	    	     rstate <= RSTATE_VBLANK0;
+	          end else begin
+	    	     row_num <= next_row_num;
+	          end
+	       end else begin
+	          col_num <= next_col_num;
+	       end
+	    end else begin
+	       pR_rd_en <= 0;
+	       // shouldn't get to this state, but just in case
+	       rstate <= RSTATE_VBLANK0;
+	    end
 	 end
       end
    end
@@ -347,7 +321,8 @@ module stream2mig
    wire [29:0] frame_length_rounded  = (frame_length + 63) & 30'h3FFFFFC0;
    assign pW_cmd_instr = CMD_WRITE;
    wire wfifo_empty = wfifo_count == 0;
-   wire [29:0] next_waddr_base       = waddr_base + frame_length_rounded;
+   wire [29:0] next_waddr_base0      = waddr_base + frame_length_rounded;
+   wire [29:0] next_waddr_base       = (next_waddr_base0 >= max_addr) ? min_addr : next_waddr_base0;
    wire [29:0] next_pW_cmd_byte_addr = pW_cmd_byte_addr + 30'd64;
 
 
@@ -384,16 +359,10 @@ module stream2mig
 	 we <= 0;
 	 state <= STATE_WRITE_FRAME;
 	 frame_length <= 0;
-	 we_s <= 0;
-	 we_ss <= 0;
-	 we_sss <= 0;
 	 enable_w <= 0;
 	 
       end else begin // if (!wresetb)
-	 enable_w < = enable;
-	 we_s <= we;
-	 we_ss <= we_s;
-	 we_sss <= we_ss;
+	 enable_w <= enable;
 
 	 if(!enable_w && wfifo_empty) begin
             pW_cmd_en        <= 0;
@@ -407,7 +376,10 @@ module stream2mig
 	    frame_length <= 0;
 
 	 end else begin
-
+	    if(we) begin
+	       waddr_base <= next_waddr_base;
+	    end
+	    
 	    if(dvi && dtypei == `DTYPE_HEADER_END) begin
 	       if(wwait) begin
 		  $display("Dropping frame because fifo is full.");
@@ -415,7 +387,6 @@ module stream2mig
 	       end else begin
 		  $display("Committing frame to dram");
 		  we <= 1;
-		  waddr_base <= next_waddr_base;
 	       end
 
 	    end else if(dvi && dtypei == `DTYPE_FRAME_START) begin
@@ -574,7 +545,7 @@ module framerateChangeFifoDualClk #(parameter ADDR_WIDTH=4, DATA_WIDTH=8)
       end
    end
 
-   stream2migDualPortRAM #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH))
+   framerateChangeDualPortRAM #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH))
       RAM(
 	  .clka(wclk),
 	  .clkb(rclk),
@@ -591,7 +562,7 @@ endmodule
     
 ///////////////////////////////////////////////////////////////////////////////
 // Dual-Port Block RAM with Different Clocks (from XST User Manual)
-module stream2migDualPortRAM
+module framerateChangeDualPortRAM
    #(parameter ADDR_WIDTH = 4, DATA_WIDTH=8)
    (
     input  clka,
