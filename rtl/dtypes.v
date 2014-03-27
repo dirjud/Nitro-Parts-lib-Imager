@@ -10,6 +10,7 @@
  `define DTYPE_HEADER_START  4
  `define DTYPE_HEADER_END    5
  `define DTYPE_HEADER        6
+ `define DTYPE_VROW_START    7
 
  `define DTYPE_PIXEL_MASK    8
  `define DTYPE_PIXEL         8

@@ -13,8 +13,10 @@ module framerate_change_mig
    input 		       enable, // syncronous to any clock
    input [DIM_WIDTH-1:0]       num_rows, 
    input [DIM_WIDTH-1:0]       num_cols,
-   input [DIM_WIDTH-1:0]       num_hblank_cols,
-   input [DIM_WIDTH-1:0]       num_vblank_rows,
+   input [DIM_WIDTH-1:0]       num_hblank0_cols,
+   input [DIM_WIDTH-1:0]       num_hblank1_cols,
+   input [DIM_WIDTH-1:0]       num_vblank0_rows,
+   input [DIM_WIDTH-1:0]       num_vblank1_rows,
    input [ADDR_WIDTH-1:0]      min_addr,
    input [ADDR_WIDTH-1:0]      max_addr,
    
@@ -101,7 +103,7 @@ module framerate_change_mig
      RSTATE_SEND_ROW = 2,
      RSTATE_HBLANK1 = 3,
      RSTATE_VBLANK1 = 4;
-   wire [DIM_WIDTH-1:0] total_cols = num_cols + num_hblank_cols;
+   wire [DIM_WIDTH-1:0] total_cols = num_cols + num_hblank0_cols + num_hblank1_cols;
    reg [DIM_WIDTH-1:0] row_num, col_num;
    wire [DIM_WIDTH-1:0] next_row_num = row_num + 1;
    wire [DIM_WIDTH-1:0] next_col_num = col_num + 1;
@@ -224,13 +226,16 @@ module framerate_change_mig
 	       if(col_num == 0 && row_num == 0) begin
 	          dtypeo0 <= `DTYPE_FRAME_START;
 	          dvo0 <= 1;
-	       end else begin
+	       end else if (col_num == 0) begin
+                  dvo0 <= 1;
+                  dtypeo0 <= `DTYPE_VROW_START;
+               end else begin
 	          dvo0 <= 0;
 	          dtypeo0 <= 0;
 	       end
 	       if(next_col_num >= total_cols) begin
 	          col_num <= 0;
-	          if(next_row_num >= (num_vblank_rows >> 1)) begin
+	          if(next_row_num >= num_vblank0_rows) begin
 	    	  row_num <= 0;
 	    	  rstate <= RSTATE_HBLANK0;
 	          end else begin
@@ -247,7 +252,7 @@ module framerate_change_mig
 	       end else begin
 	          dvo0 <= 0;
 	       end
-	       if(next_col_num >= (num_hblank_cols >> 1)) begin
+	       if(next_col_num >= num_hblank0_cols) begin
 	          col_num <= 0;
 	          rstate <= RSTATE_SEND_ROW;
 	       end else begin
@@ -271,7 +276,7 @@ module framerate_change_mig
 	       end else begin
 	          dvo0 <= 0;
 	       end
-	       if(next_col_num >= (num_hblank_cols >> 1)) begin
+	       if(next_col_num >= num_hblank1_cols) begin
 	          col_num <= 0;
 	          if(next_row_num >= num_rows) begin
 	    	     row_num <= 0;
@@ -296,7 +301,7 @@ module framerate_change_mig
 	       
 	       if(next_col_num >= total_cols) begin
 	          col_num <= 0;
-	          if(next_row_num >= (num_vblank_rows >> 1)) begin
+	          if(next_row_num >= num_vblank1_rows) begin
 	    	     row_num <= 0;
 	    	     rstate <= RSTATE_VBLANK0;
 	          end else begin
