@@ -294,7 +294,10 @@ module framerate_change_mig
 	          // send frame end signal
 	          dvo0 <= 1;
 	          dtypeo0 <= `DTYPE_FRAME_END;
-	       end else begin
+	       end else if (col_num == 0 ) begin
+                  dvo0 <= 1;
+                  dtypeo0 <= `DTYPE_VROW_START;
+               end else begin
 	          dvo0 <= 0;
 	          dtypeo0 <= 0;
 	       end
