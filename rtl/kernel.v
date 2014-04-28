@@ -9,7 +9,7 @@
 // 3x3 kernel of the image and drop a 1 pixel ring around the
 // image. To save space, the row buffers and kernel are output at
 // PIXEL_WIDTH bits whereas the the header is output on a seperate
-// channel called meader_datao that is the same width as DATA_WIDTH.
+// channel called meta_datao that is the same width as DATA_WIDTH.
 
 module kernel
   #(parameter KERNEL_SIZE = 3,
