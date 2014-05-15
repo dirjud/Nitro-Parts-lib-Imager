@@ -1,4 +1,6 @@
 `include "dtypes.v"
+`include "array.v"
+`include "terminals_defs.v"
 // Author: Lane Brooks
 // Date: 10/26/2013
 

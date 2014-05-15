@@ -4,6 +4,8 @@
 //       memory interface controller to DDR2 and other memory used by
 //       Xilinx. This module mates the two interfaces.
 `include "dtypes.v"
+`include "terminals_defs.v"
+
 module stream2mig
   #(parameter ADDR_WIDTH=30,
     parameter DI_DATA_WIDTH=16,

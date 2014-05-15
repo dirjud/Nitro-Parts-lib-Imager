@@ -69,9 +69,11 @@ module imager_rx
    reg fv_s, fv_ss, fv_sss, lv_s, lv_ss, dv_s, dv_ss;
    reg [PIXEL_WIDTH-1:0] datai_s, datai_ss;
 
+`ifndef IMAGER_RX_NOIOB
    // synthesis attribute IOB of fv_s  is "TRUE";
    // synthesis attribute IOB of lv_s  is "TRUE";
    // synthesis attribute IOB of datai is "TRUE";
+`endif
    
    reg [DIM_WIDTH-1:0] row_count, col_count;
    reg [DIM_WIDTH-1:0] num_rows, num_cols;

@@ -1,4 +1,5 @@
 `include "dtypes.v"
+`include "array.v"
 // Author: Lane Brooks
 // Date: 10/26/2013
 

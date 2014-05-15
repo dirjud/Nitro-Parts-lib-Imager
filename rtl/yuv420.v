@@ -1,4 +1,6 @@
 `include "dtypes.v"
+`include "array.v"
+`include "terminals_defs.v"
 // Author: Lane Brooks
 // Date  : 11/5/2013
 // Desc  : Converts yuv to yuv420 by subsampling the u an v channels. Does not convert the stream
