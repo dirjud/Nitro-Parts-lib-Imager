@@ -50,6 +50,8 @@ module lookup_map
    
    );
 
+   wire [PIXEL_WIDTH-1:0] y_lookup;
+
 
    // di registers
    always @(posedge di_clk) begin
@@ -76,7 +78,6 @@ module lookup_map
     end
    end 
 
-   wire [PIXEL_WIDTH-1:0] y_lookup;
    wire di_rowbuffer_we = di_write && di_term_addr == `TERM_LookupMap;
    wire [9:0] di_rowbuffer_addr = (di_write_mode || di_read_mode) && di_term_addr == `TERM_LookupMap ? di_reg_addr[9:0] : y[9:0];
 

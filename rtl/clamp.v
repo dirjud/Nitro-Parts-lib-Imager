@@ -1,7 +1,7 @@
 module clamp
-  #(DATAI_WIDTH=13,
-    DATAO_WIDTH=8,
-    SIGNED=1)
+  #(parameter DATAI_WIDTH=13,
+    parameter DATAO_WIDTH=8,
+    parameter SIGNED=1)
    (
     input [DATAI_WIDTH-1:0]  xi,
     output [DATAO_WIDTH-1:0] xo

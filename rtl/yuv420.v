@@ -11,7 +11,7 @@
 // This module also adds 128 to the U and V component to make them YUV compliant.
 
 module yuv420
-  #(RAW_PIXEL_SHIFT=0) // number of LSBs to drop in raw data stream to make it 8b.
+  #(parameter RAW_PIXEL_SHIFT=0) // number of LSBs to drop in raw data stream to make it 8b.
   (input clk,
    input 			 resetb,
    input [15:0] 		 image_type,
@@ -136,6 +136,7 @@ module yuv420
    reg [5:0] 		next_opos;
    wire [5:0] 		opos_plus_8  = opos + 8;
    wire [5:0] 		opos_plus_24 = opos + 24;
+   wire        flush_required = dv1 && dtype1 == `DTYPE_FRAME_END && (|opos);
    
    always @(obuf, raw_data, y1, u1, v1, u_ave, v_ave, opos_plus_8, opos_plus_24) begin
       if(flush_required) begin
@@ -163,7 +164,6 @@ module yuv420
    wire [31:0] datao1 = next_obuf >> next_opos2;
    /* verilator lint_on WIDTH */
 
-   wire        flush_required = dv1 && dtype1 == `DTYPE_FRAME_END && (|opos);
    reg 	       flushed;
    
    always @(posedge clk or negedge resetb) begin
