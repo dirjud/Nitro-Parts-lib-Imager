@@ -16,8 +16,8 @@ module yuv2rgb
    input dvi,
    input [`DTYPE_WIDTH-1:0] dtypei,
    input [PIXEL_WIDTH-1:0] y,
-   input [PIXEL_WIDTH-1:0] u,
-   input [PIXEL_WIDTH-1:0] v,
+   input signed [PIXEL_WIDTH:0] u,
+   input signed [PIXEL_WIDTH:0] v,
    input [15:0] meta_datai,
 
    output reg dvo,
@@ -29,9 +29,9 @@ module yuv2rgb
    
    );
 
-   wire [PIXEL_WIDTH-1:0] r1 = clamp(dot_product(298,   0,  409));
-   wire [PIXEL_WIDTH-1:0] g1 = clamp(dot_product(298, -99, -209));
-   wire [PIXEL_WIDTH-1:0] b1 = clamp(dot_product(298, 519,    0));
+   wire [PIXEL_WIDTH-1:0] r1 = clamp(dot_product(y,u,v,298,   0,  409));
+   wire [PIXEL_WIDTH-1:0] g1 = clamp(dot_product(y,u,v,298, -99, -209));
+   wire [PIXEL_WIDTH-1:0] b1 = clamp(dot_product(y,u,v,298, 519,    0));
 
    always @(posedge clk or negedge resetb) begin
       if(!resetb) begin
@@ -45,8 +45,8 @@ module yuv2rgb
 	 dvo        <= dvi;
 	 dtypeo     <= dtypei;
          r          <= (enable) ? r1 : y;
-         g          <= (enable) ? g1 : u;
-         b          <= (enable) ? b1 : v;
+         g          <= (enable) ? g1[7:0] : u[7:0];
+         b          <= (enable) ? b1[7:0] : v[7:0];
 	 meta_datao <= meta_datai;
       end
    end
@@ -57,6 +57,10 @@ module yuv2rgb
       // portion and the lower eight bits are fractional portion. In
       // other words, the integer coeficients are effectively divided
       // by 256.
+      input [PIXEL_WIDTH-1:0] yi;
+      input signed [PIXEL_WIDTH:0] ui;
+      input signed [PIXEL_WIDTH:0] vi;
+
       input signed [10:0] c0;
       input signed [10:0] c1;
       input signed [10:0] c2;
@@ -66,9 +70,9 @@ module yuv2rgb
       reg signed [PIXEL_WIDTH+10:0] a2;
       reg signed [PIXEL_WIDTH+12:0] x1;
       begin
-	 a0 = r * c0;
-	 a1 = g * c1;
-	 a2 = b * c2;
+	 a0 = yi * c0;
+	 a1 = ui * c1;
+	 a2 = vi * c2;
 	 x1 = { {2{a0[PIXEL_WIDTH+10]}}, a0} +  // sign-extend
 	      { {2{a1[PIXEL_WIDTH+10]}}, a1} + 
 	      { {2{a2[PIXEL_WIDTH+10]}}, a2} + 
