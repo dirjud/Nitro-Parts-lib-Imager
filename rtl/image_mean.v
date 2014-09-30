@@ -83,38 +83,42 @@ module image_mean
 	 pix_count  <= 0;
 	 image_accum_count<= 0;
       end else begin
-	 if (dtypei == `DTYPE_FRAME_START) begin
-	    accum[0] <= 0;
-	    accum[1] <= 0;
-	    accum[2] <= 0;
-	    accum[3] <= 0;
-	    row      <= 0;
-	    col      <= 0;
-	    pix_count<= 0;
-	 end else if(dtypei == `DTYPE_ROW_END) begin
-	    col      <= 0;
-	    row      <= row + 1;
-	 end else if(dtypei == `DTYPE_PIXEL_MASK) begin
-	    col      <= col + 1;
-	    if(valid_pixel) begin
-	       /* verilator lint_off WIDTH */
-	       accum[accum_addr] <= accum[accum_addr] + datai;
-	       /* verilator lint_on WIDTH */
-	       if(accum_addr == 0) begin
-		  pix_count <= pix_count + 1;
+	 if(dvi) begin
+	    if (dtypei == `DTYPE_FRAME_START) begin
+	       accum[0] <= 0;
+	       accum[1] <= 0;
+	       accum[2] <= 0;
+	       accum[3] <= 0;
+	       row      <= 0;
+	       col      <= 0;
+	       pix_count<= 0;
+	    end else if(dtypei == `DTYPE_ROW_END) begin
+	       col      <= 0;
+	       row      <= row + 1;
+	    end else if(|(dtypei & `DTYPE_PIXEL_MASK)) begin
+	       col      <= col + 1;
+	       if(valid_pixel) begin
+		  /* verilator lint_off WIDTH */
+		  accum[accum_addr] <= accum[accum_addr] + datai;
+		  /* verilator lint_on WIDTH */
+		  if(accum_addr == 0) begin
+		     pix_count <= pix_count + 1;
+		  end
 	       end
 	    end
-	 end
 	 
-	 if(dtypei == `DTYPE_ROW_END) begin
-	    if(row == window_row_end) begin
-	       done <= 1;
+	    if(dtypei == `DTYPE_ROW_END) begin
+	       if(row == window_row_end) begin
+		  done <= 1;
+	       end
+	    end else begin
+	       done <= 0;
 	    end
 	 end else begin
 	    done <= 0;
 	 end
-
-	 if (dtypei == `DTYPE_FRAME_START) begin
+	 
+	 if (dvi && dtypei == `DTYPE_FRAME_START) begin
 	    busy <= 1;
 	 end else if(done) begin
 	    busy <= 0;
