@@ -65,6 +65,7 @@ module image_mean
    reg [NUM_COLS_WIDTH-1:0] 		  col;
    wire 			  valid_pixel = (col >= window_col_start) && (col < window_col_end) && (row >= window_row_start) && (row < window_row_end);
    reg [NUM_ROWS_WIDTH+NUM_COLS_WIDTH-3:0] pix_count;
+   wire [NUM_ROWS_WIDTH-1:0] 		   next_row = row + 1;
    
    always @(posedge pixclk or negedge resetb) begin
       if(!resetb) begin
@@ -94,7 +95,7 @@ module image_mean
 	       pix_count<= 0;
 	    end else if(dtypei == `DTYPE_ROW_END) begin
 	       col      <= 0;
-	       row      <= row + 1;
+	       row      <= next_row;
 	    end else if(|(dtypei & `DTYPE_PIXEL_MASK)) begin
 	       col      <= col + 1;
 	       if(valid_pixel) begin
@@ -108,7 +109,7 @@ module image_mean
 	    end
 	 
 	    if(dtypei == `DTYPE_ROW_END) begin
-	       if(row == window_row_end) begin
+	       if(next_row == window_row_end) begin
 		  done <= 1;
 	       end
 	    end else begin
