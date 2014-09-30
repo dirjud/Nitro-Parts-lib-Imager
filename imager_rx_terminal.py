@@ -176,6 +176,84 @@ di = DeviceInterface(
                 di_write.  So each lookup value should be packed into whatever
                 size data type your write bus is. (16 or 32 bits)
                 """
-            )
-         ],
-    )
+            ),
+        Terminal(
+            name="ImageMean",
+            regAddrWidth=16,
+            regDataWidth=32,
+            comment="""
+            Terminal for image mean module. Controls the window and has the
+            read only result register.
+                """,
+            register_list = [
+                Register (
+                    name="window_row_start",
+                    width=12,
+                    init=0,
+                    type="int",
+                    mode="write",
+                    comment="Start row for image mean window",
+                    ),
+                Register (
+                    name="window_row_end",
+                    width=12,
+                    init=720,
+                    type="int",
+                    mode="write",
+                    comment="End row for image mean window",
+                    ),
+                Register (
+                    name="window_col_start",
+                    width=12,
+                    init=0,
+                    type="int",
+                    mode="write",
+                    comment="Start column for image mean window",
+                    ),
+                Register (
+                    name="window_col_end",
+                    width=12,
+                    init=1280,
+                    type="int",
+                    mode="write",
+                    comment="End column for image mean window",
+                    ),
+                Register(
+                    name="image_accum00",
+                    mode="read",
+                    type="int",
+                    width=32,
+                    comment="Image accum 00",
+                ),
+                Register(
+                    name="image_accum01",
+                    mode="read",
+                    type="int",
+                    width=32,
+                    comment="Image accum 01",
+                ),
+                Register(
+                    name="image_accum10",
+                    mode="read",
+                    type="int",
+                    width=32,
+                    comment="Image accum 10",
+                ),
+                Register(
+                    name="image_accum11",
+                    mode="read",
+                    type="int",
+                    width=32,
+                    comment="Image accum 11",
+                ),
+                Register(
+                    name="image_accum_count",
+                    mode="read",
+                    type="int",
+                    width=22,
+                    comment="Image accum count",
+                ),
+            ],
+        ),
+    ],
+)
