@@ -42,14 +42,15 @@ module image_mean
    input [PIXEL_WIDTH-1:0]    datai,
 
    output reg 		      done,
-   output reg 		      busy
-   );
+   output reg 		      busy,
 
-   reg [ACCUM_WIDTH-1:0] 			  image_accum00;
-   reg [ACCUM_WIDTH-1:0] 			  image_accum01;
-   reg [ACCUM_WIDTH-1:0] 			  image_accum10;
-   reg [ACCUM_WIDTH-1:0] 			  image_accum11;
-   reg [NUM_ROWS_WIDTH+NUM_COLS_WIDTH-3:0] 	  image_accum_count;
+   output reg [ACCUM_WIDTH-1:0] 			  image_accum00,
+   output reg [ACCUM_WIDTH-1:0] 			  image_accum01,
+   output reg [ACCUM_WIDTH-1:0] 			  image_accum10,
+   output reg [ACCUM_WIDTH-1:0] 			  image_accum11,
+   output reg [NUM_ROWS_WIDTH+NUM_COLS_WIDTH-3:0] 	  image_accum_count
+
+   );
    
 
 `include "ImageMeanTerminalInstance.v"   
