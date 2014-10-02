@@ -12,41 +12,34 @@ def verify_checksum(img):
     return  checksum == img["header"]["checksum"]
 
 def decode_header(di, raw_header, extra=None):
-    #import pdb
-    #pdb.set_trace()
-    last_addr = 0
-    regs = []
-    for reg in di["Image"].values():
-        if(reg.name != "image_data"):
-            regs.append(reg)
-            if(reg.addr > last_addr):
-                last_addr = reg.addr
-                last_reg = reg
-    header_length = 2*(last_addr + (last_reg.width-1)/16+1)
-
+    
     # Convert raw header to a dict using info from the di tree.
     header = dict(nitroAPIVersion=nitro.version,
                   )
     if extra:
         header.update(extra)
 
-    regs.sort(cmp=lambda x,y: 1 if x.addr > y.addr else -1)
-    for reg in regs:
-        w = reg.width
-        header[reg.name] = 0
-        i = 0
-        while w > 0:
-            header[reg.name] += struct.unpack("<H", raw_header[:2])[0] << i
-            raw_header = raw_header[2:]
-            i += 16
-            w -= 16
+    if type(raw_header) == numpy.ndarray:
+        u16header=raw_header.view(dtype=numpy.uint16)
+    elif type(raw_header) == str:
+        u16header = numpy.fromstring(raw_header,dtype=numpy.uint16) # in case raw_header isn't a numpy array
+    else:
+        u8header = numpy.asarray(raw_header,dtype=numpy.uint8)
+        u16header = u8header.view(numpy.uint16)
 
-#        else: # assume is 32b
-#            header[reg.name], = struct.unpack("<I", raw_header[:4])
-#            raw_header = raw_header[4:]
-            
-        if len(raw_header)==0: break
-
+    for reg in di['Image'].values():
+        if reg.name=='image_data': continue
+        addr = reg.addr
+        width = reg.width
+        val = 0
+        shift=0
+        while width>0:
+            val = val|(u16header[addr]<<(shift*16))
+            addr += 1
+            shift += 1
+            width -= 16
+        header[reg.name]=val
+   
     header["timeStamp"] = time.time()
     return header
 
