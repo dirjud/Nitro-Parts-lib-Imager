@@ -235,7 +235,6 @@ module imager_rx
 	    dtypeo <= `DTYPE_FRAME_START;
 	    datao  <= frame_count[DATA_WIDTH-1:0];
 	    checksum <= 0;
-	    flags_ss <= flags_s;
 	 end else if(fv_falling_s) begin
 	    // `DTYPE_FRAME_END get third priority. Shouldn't be able to
 	    // miss this either.
@@ -244,7 +243,7 @@ module imager_rx
 	    datao  <= 0;
 	    header_mode <= 1;
 	    header_addr <= 0;
-	    
+	    flags_ss <= flags_s;
 	 end else if(lv_rising) begin
 	    dvo    <= 1;
 	    dtypeo <= `DTYPE_ROW_START;
