@@ -12,51 +12,52 @@ module stream2mig
     parameter STREAM_DATA_WIDTH=16
     )
   (
-   input 		       enable, // syncronous to rclk
+   input 			  enable, // syncronous to rclk
 
-   input 		       wresetb,
-   input 		       clki,
-   input 		       dvi,
-   input [`DTYPE_WIDTH-1:0]    dtypei,
-   input [STREAM_DATA_WIDTH-1:0] datai,
+   input 			  wresetb,
+   input 			  clki,
+   input 			  dvi,
+   input [`DTYPE_WIDTH-1:0] 	  dtypei,
+   input [STREAM_DATA_WIDTH-1:0]  datai,
+
+   input [7:0]                    num_buffers, // should default to 2			  
+   output 			  pW_rd_en,
+   input [31:0] 		  pW_rd_data,
+   input 			  pW_rd_empty,
+   output reg [31:0] 		  pW_wr_data,
+   output reg 			  pW_wr_en,
+   output reg 			  pW_cmd_en,
+   output [2:0] 		  pW_cmd_instr,
+   output reg [5:0] 		  pW_cmd_bl,
+   output reg [ADDR_WIDTH-1:0] 	  pW_cmd_byte_addr,
+   input 			  pW_cmd_full,
+   input 			  pW_cmd_empty,
+   output reg 			  pW_busy,
    
-   output 		       pW_rd_en,
-   input [31:0] 	       pW_rd_data,
-   input 		       pW_rd_empty,
-   output reg [31:0] 	       pW_wr_data,
-   output reg 		       pW_wr_en,
-   output reg 		       pW_cmd_en,
-   output [2:0] 	       pW_cmd_instr,
-   output reg [5:0] 	       pW_cmd_bl,
-   output reg [ADDR_WIDTH-1:0] pW_cmd_byte_addr,
-   input 		       pW_cmd_full,
-   input 		       pW_cmd_empty,
-   output reg		       pW_busy,
-   
-   input 		       rresetb,
-   input 		       rclk,
-   input 		       di_read_mode,
-   input 		       di_read,
-   output reg 		       di_read_rdy,
+   input 			  rresetb,
+   input 			  rclk,
+   input 			  di_read_mode,
+   input 			  di_read,
+   output reg 			  di_read_rdy,
    output reg [DI_DATA_WIDTH-1:0] di_reg_datao,
 
-   output reg 		       pR_rd_en,
-   input [31:0] 	       pR_rd_data,
-   input 		       pR_rd_empty,
-   output [31:0] 	       pR_wr_data,
-   output 		       pR_wr_en,
-   output reg 		       pR_cmd_en,
-   output reg [2:0] 	       pR_cmd_instr,
-   output reg [5:0] 	       pR_cmd_bl,
-   output reg [ADDR_WIDTH-1:0] pR_cmd_byte_addr,
-   input 		       pR_cmd_full,
-   input 		       pR_cmd_empty,
-   output reg 		       pR_busy
+   output reg 			  pR_rd_en,
+   input [31:0] 		  pR_rd_data,
+   input 			  pR_rd_empty,
+   output [31:0] 		  pR_wr_data,
+   output 			  pR_wr_en,
+   output reg 			  pR_cmd_en,
+   output reg [2:0] 		  pR_cmd_instr,
+   output reg [5:0] 		  pR_cmd_bl,
+   output reg [ADDR_WIDTH-1:0] 	  pR_cmd_byte_addr,
+   input 			  pR_cmd_full,
+   input 			  pR_cmd_empty,
+   output reg 			  pR_busy
    
    );
 
    
-   parameter FIFO_WIDTH=2;
+   parameter FIFO_WIDTH=8;
    parameter ADDR_BLOCK_WIDTH=24;
    
 
@@ -65,6 +66,7 @@ module stream2mig
    reg[5:0] rfifo_count, wfifo_count;
 
    reg 	    re, we;
+   reg 	    we_s, we_ss;
    wire [ADDR_BLOCK_WIDTH-1:0] rdata;
    wire 		 wfull, rempty;
    
@@ -72,15 +74,14 @@ module stream2mig
    assign wdata = waddr_base[29:6];
    
    wire [FIFO_WIDTH-1:0]       wFreeSpace, rUsedSpace;
-   wire 		       wwait = wFreeSpace < 2;
-   reg 			       we_s, we_ss, we_sss;
+   wire 		       wwait = wFreeSpace <= (255 - num_buffers);
    
    stream2migFifoDualClk #(.ADDR_WIDTH(FIFO_WIDTH), 
 			   .DATA_WIDTH(ADDR_BLOCK_WIDTH))
    fifoDualClk
      (.wclk(clki),
       .rclk(rclk),
-      .we(we_sss),
+      .we(we_ss),
       .re(re),
       .resetb(wresetb),
       .flush(!enable),
@@ -112,7 +113,7 @@ module stream2mig
 	 pR_rd_en           = pR_rd_en_reg;
 	 di_read_rdy        = di_read_rdy_reg;
       end else begin
-	 pR_rd_en           = (rfirst_word || di_read || (!enable && pR_rd_en_reg)) && !pR_rd_empty;
+	 pR_rd_en           = (rfirst_word || di_read || (pR_cmd_instr != CMD_READ && pR_rd_en_reg)) && !pR_rd_empty;
 	 di_read_rdy        = !pR_rd_empty && !pR_rd_empty_s;
       end
    end
@@ -161,10 +162,9 @@ module stream2mig
 	       end
 	    end
          end else begin
+	    pR_rd_en_reg <= !pR_rd_empty && !pR_rd_en_reg; // drain any data left in the read fifo when not in read_mode
             rword_sel <= 0;
-             if(DI_DATA_WIDTH == 16) begin
-		rfirst_word <= 1;
-	     end
+            rfirst_word  <= 1;
          end
       end
    end
@@ -174,7 +174,6 @@ module stream2mig
    wire [23:0] next_rpos    = next_pR_cmd_byte_addr[29:6];
    reg 	       rwait;
 
-   reg 	read_done;
    always @(posedge rclk or negedge rresetb) begin
       if(!rresetb) begin
          pR_cmd_en <= 0;
@@ -184,12 +183,10 @@ module stream2mig
 	 pR_busy <= 0;
          rfifo_count <= 0;
 	 re <= 0;
-	 read_done <= 0;
 	 rwait <= 1;
 	 
       end else begin
 	 rwait <= rempty;
-	 read_done <= next_rpos == rdata; // goes high when finished with current read buffer		  
 
 	 if(!enable) begin
             pR_cmd_en    <= 0;
@@ -202,19 +199,23 @@ module stream2mig
 
          end else if(pR_cmd_instr == CMD_IDLE) begin
             if(di_read_mode) begin 
-               pR_cmd_instr <= CMD_READ;
+	       if(!rwait) begin
+		  pR_cmd_byte_addr <= { rdata, 6'b0 };
+		  pR_cmd_instr <= CMD_READ;
+	       end
 	       pR_busy <= 1;
             end else begin
 	       pR_busy <= 0;
 	    end
             pR_cmd_en <= 0;
 	    re <= 0;
+            rfifo_count  <= 0;
 	    
          end else if(pR_cmd_instr == CMD_READ) begin
             if(!di_read_mode) begin
+	       re <= 1;
                pR_cmd_instr <= CMD_IDLE;
                pR_cmd_en    <= 0;
-	       re <= 0;
             end else begin
                pR_cmd_bl <= 15;
                if(!pR_cmd_full && !pR_cmd_en && rfifo_count < 32 && !rwait) begin
@@ -224,9 +225,7 @@ module stream2mig
                end
                if(pR_cmd_en) begin
                   pR_cmd_byte_addr <= next_pR_cmd_byte_addr;
-		  re <= read_done;
                end else begin
-		  re <= 0;
 	       end
 
                if(pR_cmd_en && pR_rd_en) begin
@@ -308,7 +307,6 @@ module stream2mig
 
    reg [1:0]   state;
    parameter STATE_WRITE_FRAME=0, STATE_WRITE_HEADER=1, STATE_HEADER_END=2, STATE_FRAME_END=3;
-
    always @(posedge clki or negedge wresetb) begin
       if(!wresetb) begin
          pW_cmd_en <= 0;
@@ -320,12 +318,9 @@ module stream2mig
 	 state <= STATE_WRITE_FRAME;
 	 frame_length <= 0;
 	 we_s <= 0;
-	 we_ss <= 0;
-	 we_sss <= 0;
       end else begin
 	 we_s <= we;
-	 we_ss <= we_s;
-	 we_sss <= we_ss;
+	 we_ss<= we_s;
 
 	 if(!enable_s && wfifo_empty) begin
 
@@ -341,7 +336,10 @@ module stream2mig
 	    frame_length <= 0;
 
 	 end else begin
-
+	    if(we_ss) begin
+	       waddr_base <= next_waddr_base;
+	    end
+	       
 	    if(dvi && dtypei == `DTYPE_HEADER_END) begin
 	       if(wwait) begin
 		  $display("Dropping frame because fifo is full.");
@@ -349,7 +347,6 @@ module stream2mig
 	       end else begin
 		  $display("Committing frame to dram");
 		  we <= 1;
-		  waddr_base       <= next_waddr_base;
 	       end
 
 	    end else if(dvi && dtypei == `DTYPE_FRAME_START) begin
