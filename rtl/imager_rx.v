@@ -152,10 +152,15 @@ module imager_rx
    /* verilator lint_on WIDTH */
    wire [PIXEL_WIDTH-1:0] datai_s_mux = (mode_test_pat) ? test_pat : datai_s;
    reg 			  left_justify_s;
+   /* verilator lint_off LITENDIAN */
    wire [DATA_WIDTH-PIXEL_WIDTH-1:0] zero_padding = 0;
-   wire [DATA_WIDTH-1:0] datai_formatted = left_justify_s ? { datai_ss, zero_padding } : { zero_padding, datai_ss };
+   /* verilator lint_on LITENDIAN */
+   /* verilator lint_off WIDTH */
+   wire [DATA_WIDTH-1:0] datai_formatted = (DATA_WIDTH == PIXEL_WIDTH) ? datai_ss :
+			 left_justify_s ? { datai_ss, zero_padding } : { zero_padding, datai_ss };
+   /* verilator lint_on WIDTH */
 
-   
+   reg 			 header_addr0_s;
    always @(posedge clki or negedge resetb_clki) begin
       if(!resetb_clki) begin
 	 fv_s          <= 0;
@@ -185,6 +190,7 @@ module imager_rx
 	 left_justify_s <= 0;
 	 flags_s        <= 0;
 	 flags_ss       <= 0;
+	 header_addr0_s <= 0;
       end else begin // if (!resetb_clki)
 	 flags_s <= flags;
 	 left_justify_s <= mode_left_justify;
@@ -201,6 +207,7 @@ module imager_rx
 	 fv_falling_s  <= fv_falling;
 	 enable_s <= enable;
 	 header_stall_s <= header_stall;
+	 header_addr0_s <= header_addr[0];
 	 
 	 if(!enable_s || wait_for_fv_to_drop) begin
 	    dvo      <= 0;
@@ -225,7 +232,7 @@ module imager_rx
 	    dvo    <= 1;
 	    dtypeo <= `DTYPE_PIXEL;
 	    datao  <= datai_formatted;
-	    checksum <= checksum + datai_formatted;
+	    checksum <= checksum + datai_formatted[15:0];
 	 end else if(fv_rising) begin
 	    // `DTYPE_FRAME_START gets second priority. Since dv
 	    // is delayed one cycle beyond fv_rising, it should not
@@ -233,7 +240,9 @@ module imager_rx
 	    // priority
 	    dvo    <= 1;
 	    dtypeo <= `DTYPE_FRAME_START;
-	    datao  <= frame_count[DATA_WIDTH-1:0];
+	    /* verilator lint_off WIDTH */
+	    datao  <= frame_count;//[DATA_WIDTH-1:0];
+	    /* verilator lint_on WIDTH */
 	    checksum <= 0;
 	 end else if(fv_falling_s) begin
 	    // `DTYPE_FRAME_END get third priority. Shouldn't be able to
@@ -247,7 +256,9 @@ module imager_rx
 	 end else if(lv_rising) begin
 	    dvo    <= 1;
 	    dtypeo <= `DTYPE_ROW_START;
+	    /* verilator lint_off WIDTH */
 	    datao  <= row_count;
+	    /* verilator lint_on WIDTH */
 
 	 end else if(lv_falling_s) begin
 	    dvo    <= 1;
@@ -267,10 +278,25 @@ module imager_rx
 	    datao  <= 0;
 
 	 end else if(header_mode == 2) begin
-	    header_addr <= header_addr + 1;
-	    dvo <= 1;
 	    dtypeo <= `DTYPE_HEADER;
-	    datao <= header_data;
+	    if(DATA_WIDTH >= 32) begin
+	       header_addr <= header_addr + 1;
+	       dvo <= header_addr0_s;
+	       /* verilator lint_off WIDTH */
+	       if(header_addr0_s) begin
+		  datao[31:16] <= header_data;
+	       end else begin
+		  datao[15:0]  <= header_data;
+	       end
+	       /* verilator lint_on WIDTH */
+	    end else begin
+	       header_addr <= header_addr + 1;
+	       dvo <= 1;
+	       /* verilator lint_off WIDTH */
+	       datao <= header_data;
+	       /* verilator lint_on WIDTH */
+	    end
+
 	    if(header_addr >= `Image_image_data) begin
 	       header_mode <= 3;
 	    end
