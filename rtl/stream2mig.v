@@ -20,7 +20,9 @@ module stream2mig
    input [`DTYPE_WIDTH-1:0] 	  dtypei,
    input [STREAM_DATA_WIDTH-1:0]  datai,
 
-   input [7:0]                    num_buffers, // should default to 2			  
+   input [7:0] 			  num_buffers, // should default to 2
+   input 			  capture_header_only,
+   
    output 			  pW_rd_en,
    input [31:0] 		  pW_rd_data,
    input 			  pW_rd_empty,
@@ -241,7 +243,7 @@ module stream2mig
    end
 
    reg enable_s;
-   wire dtype_needs_written = (|(dtypei & `DTYPE_PIXEL_MASK)) || (dtypei == `DTYPE_HEADER);
+   wire dtype_needs_written = (dtypei == `DTYPE_HEADER) || ((!capture_header_only) && (|(dtypei & `DTYPE_PIXEL_MASK)));
 
    reg [29:0] frame_length;
    wire [29:0] frame_length_rounded  = (frame_length + 63) & 30'h3FFFFFC0;
@@ -364,7 +366,7 @@ module stream2mig
 		  pW_cmd_byte_addr <= next_pW_cmd_byte_addr;
                end
 
-	       if(dvi && |(dtypei & `DTYPE_PIXEL_MASK)) begin
+	       if(dvi && |(dtypei & `DTYPE_PIXEL_MASK) && !capture_header_only) begin
 		  if(STREAM_DATA_WIDTH == 16) begin
 		     frame_length <= frame_length + 2;
 		  end else begin
@@ -398,7 +400,7 @@ module stream2mig
 	       end
 	    end
 
-	    if(state == STATE_HEADER_END || state == STATE_FRAME_END) begin
+	    if((dvi && dtypei == `DTYPE_FRAME_END) || state == STATE_HEADER_END || state == STATE_FRAME_END) begin
 	       // when write_mode is done, then we need to drain whatever
 	       // is left over in the write fifo.
                if(!wfifo_empty) begin
