@@ -75,7 +75,7 @@ module defect_filter
         end else if (state == SEND_ROW) begin
             if (dvi && (|(dtypei&`DTYPE_PIXEL_MASK))) begin
                 datai_s <= datai;
-                datai_ss <= datai_s;
+                datai_ss <= datao;
                 dvo <= 1;
                 if (pixelbuf == 0) begin
                     dtypeo <= `DTYPE_ROW_START;
