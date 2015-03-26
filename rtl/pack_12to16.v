@@ -1,3 +1,7 @@
+// This module takes a 12bit image stream and packs it into 16bits.
+// This is useful for not wasting bandwidth when transmitting a 12 bit
+// data stream over a 16 bit channel.
+
 `include "terminals_defs.v"
 `include "dtypes.v"
 

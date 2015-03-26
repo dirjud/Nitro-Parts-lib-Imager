@@ -1,3 +1,10 @@
+// Frame downsampler drops frames from the image stream. The input
+// parameter *downsample_amount* specifies the downsample rate. If it
+// is set to 1, then no frames are dropped. If it is set to 2, then
+// every other frame is dropped. If it is set to 3, then 2 out of
+// every three frames are dropped, and so forth. Set
+// *downsample_amount* to 0 or 1 to effectively disable this module.
+
 `include "terminals_defs.v"
 `include "dtypes.v"
 

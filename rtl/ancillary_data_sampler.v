@@ -1,3 +1,21 @@
+// The ancillary data sampler samples data at a fixed rate into a fifo
+// and then dumps the contents of that fifo into the image header
+// whenever an image header streams by. This can be used to tag images
+// with arbitrary ancillary data.
+//
+// The width of the image stream and the width of ancillary data may
+// not match as both or set as parameters to this module. Therefore,
+// this module will pack the ancillary data to match the width of the
+// data stream.
+//
+// Data is presented on the *anc_datai* input port and is sampled at a
+// rate fixed rate based off the image stream clock. The set input
+// port *anc_clk_div* to specify the sampling rate as a divider of the
+// image stream clock.
+//
+// The data is packed into the *anc_data* location of the image header
+// for the user to unpack and use as necessary.
+
 `include "dtypes.v"
 `include "terminals_defs.v"
 

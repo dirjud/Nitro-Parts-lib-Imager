@@ -1,54 +1,51 @@
-/**
- *  Defect filter is a simple filter attempting to correct single pixels that
- *  vary widely from the surrounding pixels.  Usually this is from a hot or
- *  dark pixel.
- *
- *  This is a horizontal only filter, comparing the center pixel with the left 
- *  and right pixels for differences greater than the programmable threshold
- *  levels.  If the levels are exceeded, the pixel is replaced with the
- *  average of the two surrounding pixels.
- *
- *  Algorithm:
- *
- *     for each row ->
- *       incoming pixel1 -> store
- *       incoming pixel2 -> store
- *       loop row pixels ->
- *         incoming pixel3 ->
- *            average = (pixel1 + pixel3)/2
- *            left_delta = pixel2-pixel1
- *            right_delta = pixel2-pixel3
- *            if (left_delta > threshold_upper && right_delta > threshold_upper) ||
- *               (left_delta > threshold_lower && right_delta > threshold_lower) ->           
- *               pixel2 = average 
- *
- *
- *         output pixel2
- *         incoming pixel4 -> 
- *            pixel1 = pixel2
- *            pixel2 = pixel3
- *            pixel3 = pixel4
- *
- *     Note the first and last columns of each row are not corrected.
- *
- *  Standard Inputs:
- *      Interface conforms to dvi/dvo input/output.  See imager module.
- *
- *  Threshold limits:
- *     threshold_upper.  If the center pixel is brighter (bigger value) than
- *          the left/right pixels then this value is used to determine if the
- *          pixel should be averaged.
- *     threshold_lower.  If the center pixel is darker (lower value) than the
- *          left/right pixels, then this value is used.
- *
- *  Filter Count output:
- *      The output reg filter_count is the number of filtered pixels for each
- *      frame.  It stays the same until the end of the frame, at which
- *      time it is updated with the number of pixels that were corrected for
- *      that frame.  The filter count is updated even if the enable input is
- *      not asserted. 
- **/
-
+//  Defect filter is a simple filter attempting to correct single
+//  pixels that vary widely from the surrounding pixels.  Usually this
+//  is from a hot or dark pixel.
+//
+//  This is a horizontal only filter, comparing the center pixel with the left 
+//  and right pixels for differences greater than the programmable threshold
+//  levels.  If the levels are exceeded, the pixel is replaced with the
+//  average of the two surrounding pixels.
+//
+//  Algorithm::
+//
+//     for each row ->
+//       incoming pixel1 -> store
+//       incoming pixel2 -> store
+//       loop row pixels ->
+//         incoming pixel3 ->
+//            average = (pixel1 + pixel3)/2
+//            left_delta = pixel2-pixel1
+//            right_delta = pixel2-pixel3
+//            if (left_delta > threshold_upper && right_delta > threshold_upper) ||
+//               (left_delta > threshold_lower && right_delta > threshold_lower) ->           
+//               pixel2 = average 
+//
+//
+//         output pixel2
+//         incoming pixel4 -> 
+//            pixel1 = pixel2
+//            pixel2 = pixel3
+//            pixel3 = pixel4
+//
+//  Note the first and last columns of each row are not corrected.
+//
+//  Standard Inputs:
+//      Interface conforms to dvi/dvo input/output.  See imager module.
+//
+//  Threshold limits:
+//     threshold_upper.  If the center pixel is brighter (bigger value) than
+//          the left/right pixels then this value is used to determine if the
+//          pixel should be averaged.
+//     threshold_lower.  If the center pixel is darker (lower value) than the
+//          left/right pixels, then this value is used.
+//
+//  Filter Count output:
+//      The output reg filter_count is the number of filtered pixels for each
+//      frame.  It stays the same until the end of the frame, at which
+//      time it is updated with the number of pixels that were corrected for
+//      that frame.  The filter count is updated even if the enable input is
+//      not asserted. 
 
 `include "dtypes.v"
 
