@@ -51,14 +51,17 @@
 
 module defect_filter
  #(
-     parameter DATA_WIDTH=16
+     parameter DATA_WIDTH=16,
+     parameter DIM_WIDTH=11
   )
 (
     input clk,
     input resetb,
     input en,
     input test_en,
-    input [DATA_WIDTH-1:0]             test_data,
+    input [DIM_WIDTH-1:0]             test_col,
+    input [DIM_WIDTH-1:0]             test_row, 
+    input [DATA_WIDTH-1:0]            test_data,
 
     input                              dvi,
     input [DATA_WIDTH-1:0]             datai,
@@ -75,10 +78,11 @@ module defect_filter
 
     reg [DATA_WIDTH-1:0] datai_s, datai_ss, datao1;
 
+    wire [DATA_WIDTH-1:0] next_pixel = test_en && col == test_col && row == test_row ? test_data : datai;
 
-    wire [DATA_WIDTH:0] outer_sum = datai + datai_ss;
+    wire [DATA_WIDTH:0] outer_sum = next_pixel + datai_ss;
     wire [DATA_WIDTH-1:0] outer_ave = outer_sum[DATA_WIDTH:1];
-    wire signed [DATA_WIDTH-1:0] diff1 = datai_s - datai; // if pos then right pixel < middle 
+    wire signed [DATA_WIDTH-1:0] diff1 = datai_s - next_pixel; // if pos then right pixel < middle 
     wire signed [DATA_WIDTH-1:0] diff2 = datai_s - datai_ss; // if pos then left pixel < middle
     wire signed [DATA_WIDTH-1:0] neg_threshold_lower = (~threshold_lower) + 1;
 
@@ -90,12 +94,12 @@ module defect_filter
                SEND_ROW=1,
                SEND_ROW_END=2;
     reg [1:0] state;
-    reg [1:0] pixelbuf;
+
+    reg [DIM_WIDTH-1:0] row, col;
 
     always @(posedge clk or negedge resetb) begin
         if(!resetb) begin
             state <= SEND_ALL;
-            pixelbuf <= 0;
 
             datai_s <= 0;
             datai_ss <= 0;
@@ -104,35 +108,37 @@ module defect_filter
             dvo <= 0;
             filter_count <= 0;
             filter_count_cur <= 0;
+            row <= 0;
+            col <= 0;
         end else begin
 
         if (state == SEND_ALL) begin
             if (dvi && dtypei == `DTYPE_ROW_START) begin
                 dvo <= 0;
                 state <= SEND_ROW;
-                pixelbuf <=0;
+                col <=0;
             end else begin
                 dvo <= dvi;
                 dtypeo <= dtypei;
                 datao <= datai;
                 if (dvi && dtypei == `DTYPE_FRAME_START) begin
                     filter_count_cur <= 0;
+                    row <= 0;
                 end else if (dvi && dtypei == `DTYPE_FRAME_END) begin
                     filter_count <= filter_count_cur;
                 end
             end
         end else if (state == SEND_ROW) begin
             if (dvi && (|(dtypei&`DTYPE_PIXEL_MASK))) begin
-                datai_s <= datai;
-                datai_ss <= datao;
+                col <= col + 1;
+                datai_s <= next_pixel; 
+                datai_ss <= col == 0 ? datai : datai_s; // on first col just use first pixel twice.
                 dvo <= 1;
-                if (pixelbuf == 0) begin
+                if (col == 0) begin
                     dtypeo <= `DTYPE_ROW_START;
-                    pixelbuf <= pixelbuf + 1;
-                end else if (pixelbuf == 1) begin
+                end else if (col == 1) begin
                     dtypeo <= `DTYPE_PIXEL;
                     datao <= datai_s;
-                    pixelbuf <= pixelbuf + 1;
                 end else begin
                     dtypeo <= `DTYPE_PIXEL;
                     datao <= en && filter_en ? outer_ave : datai_s;
@@ -147,6 +153,7 @@ module defect_filter
 
         end else if (state == SEND_ROW_END) begin
             dvo <= 1;
+            row <= row + 1;
             dtypeo <= `DTYPE_ROW_END;
             state <= SEND_ALL;
         end
