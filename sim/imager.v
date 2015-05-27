@@ -17,6 +17,15 @@ module imager
     input [NUM_ROWS_WIDTH-1:0] num_virtual_rows,
     input [NUM_COLS_WIDTH-1:0] num_active_cols,
     input [NUM_COLS_WIDTH-1:0] num_virtual_cols,
+                      // THE following two inputs are for simulating
+                      // varying amounts of exposure for an image 
+                      // sensor that has a sync signal
+                      // for when the frame is valid.
+                      // sync is active low and will assert
+                      // low at strobe_row_start and remain low for
+                      // sync_rows number of rows.
+    input [NUM_ROWS_WIDTH:0] sync_row_start,
+    input [NUM_ROWS_WIDTH-1:0] sync_rows,
     input [31:0] noise_seed,// seed for the pseudo random noise. When
 			    // this is non-zero, it will cause the
 			    // same image to be generated over and
@@ -28,7 +37,8 @@ module imager
     
     output reg [DATA_WIDTH-1:0] dat,
     output reg fv,
-    output reg lv
+    output reg lv,
+    output reg sync 
     );
 
    reg [DATA_WIDTH-1:0] image_buf[0:4095][0:4095] /* verilator public */;
@@ -48,6 +58,8 @@ module imager
    wire [NUM_COLS_WIDTH:0] total_cols = num_active_cols + num_virtual_cols;
    reg [15:0] 		   frame_count;
    
+   reg [NUM_ROWS_WIDTH-1:0] sync_row;
+   wire [NUM_ROWS_WIDTH:0] sync_row_end = sync_row_start + sync_rows;
    
    /* verilator lint_off WIDTH */
    wire [DATA_WIDTH-1:0] dat_sel = (mode == 0) ? noise[DATA_WIDTH-1:0] :
@@ -69,6 +81,8 @@ module imager
          dat       <= 0;
          noise     <= 1;
 	 frame_count <= 0;
+         sync    <= 1;
+         sync_row <= 0;
       end else begin
          // generate pseudo random noise
 	 if(!fv_wire) begin
@@ -94,10 +108,17 @@ module imager
 	       col_count <= 0;
 	       if(next_row_count >= total_rows) begin
 		  row_count <= 0;
+                  sync_row <= 0;
 		  frame_count <= frame_count + 1;
 	       end else begin
 		  row_count <= next_row_count;
-	       end
+                  sync_row <= sync_row+1;
+                  if (next_row_count == sync_row_start) begin
+                      sync <= 0;
+                  end else if (next_row_count == sync_row_end) begin
+                      sync <= 1;
+                  end
+               end
 	    end else begin
 	       col_count <= next_col_count;
 	    end
