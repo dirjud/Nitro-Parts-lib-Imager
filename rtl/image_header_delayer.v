@@ -64,6 +64,8 @@ module image_header_delayer
 	    datao   <= datai;
 	    stalled1 <= 0;
 	    stall2_count <= 0;
+            waddr   <= 0;
+	    raddr   <= 0;
 
 	 end else begin
 	    if (dvi) begin
