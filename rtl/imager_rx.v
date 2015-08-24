@@ -191,6 +191,9 @@ module imager_rx
 	 flags_s        <= 0;
 	 flags_ss       <= 0;
 	 header_addr0_s <= 0;
+         dvo            <= 0;
+         dtypeo         <= 0;
+         datao          <= 0;
       end else begin // if (!resetb_clki)
 	 flags_s <= flags;
 	 left_justify_s <= mode_left_justify;
