@@ -59,8 +59,8 @@ module stream2mig
    );
 
    
-   parameter FIFO_WIDTH=8;
-   parameter ADDR_BLOCK_WIDTH=24;
+   localparam FIFO_WIDTH=8;
+   localparam ADDR_BLOCK_WIDTH=24;
    
 
    reg 			       rword_sel, rfirst_word, wword_sel;
@@ -79,8 +79,8 @@ module stream2mig
    wire [FIFO_WIDTH-1:0]       wFreeSpace, rUsedSpace;
    wire 		       wwait = wFreeSpace <= (255 - num_buffers);
    
-   stream2migFifoDualClk #(.ADDR_WIDTH(FIFO_WIDTH), 
-			   .DATA_WIDTH(ADDR_BLOCK_WIDTH*2))
+   fifo_dualclk #(.ADDR_WIDTH(FIFO_WIDTH), 
+		  .DATA_WIDTH(ADDR_BLOCK_WIDTH*2))
    fifoDualClk
      (.wclk(clki),
       .rclk(rclk),
@@ -437,7 +437,7 @@ module stream2mig
 	           end
 	        end
 
-	        if((dvi && dtypei == `DTYPE_FRAME_END) || state == STATE_HEADER_END || state == STATE_FRAME_END) begin
+	        if((dvi && dtypei == `DTYPE_FRAME_END) || state == STATE_HEADER_END || state == STATE_FRAME_END || !enable_s) begin
 	           // when write_mode is done, then we need to drain whatever
 	           // is left over in the write fifo.
                    if(!wfifo_empty) begin
@@ -472,135 +472,3 @@ module stream2mig
    end
 endmodule
 
-///////////////////////////////////////////////////////////////////////////////
-module stream2migFifoDualClk #(parameter ADDR_WIDTH=4, DATA_WIDTH=8)
-   (
-    input wclk,
-    input rclk, 
-    input we,
-    input re,
-    input resetb,
-    input flush,
-    output full,
-    output empty,
-    input  [DATA_WIDTH-1:0] wdata,
-    output [DATA_WIDTH-1:0] rdata,
-    output [ADDR_WIDTH-1:0] wFreeSpace,
-    output [ADDR_WIDTH-1:0] rUsedSpace
-    );
-
-   reg 			    wreset, rreset;
-   always @(posedge wclk or negedge resetb) begin
-      if(!resetb) begin
-	 wreset <= 1;
-      end else begin
-	 wreset <= flush;
-      end
-   end
-   always @(posedge rclk or negedge resetb) begin
-      if(!resetb) begin
-	 rreset <= 1;
-      end else begin
-	 rreset <= flush;
-      end
-   end
-
-   reg [ADDR_WIDTH-1:0]    waddr, raddr, nextWaddr;
-   wire [ADDR_WIDTH-1:0]   nextRaddr = raddr + 1;
-   wire [ADDR_WIDTH-1:0]   raddr_pre;
-   reg [ADDR_WIDTH-1:0]    raddr_ss;
-
-   assign full       = (nextWaddr == raddr_ss);
-   assign wFreeSpace = raddr_ss - nextWaddr;
-
-   always @(posedge wclk) begin
-      raddr_ss  <= raddr;
-   end
-      
-   always @(posedge wclk or posedge wreset) begin
-      if(wreset) begin
-	 waddr      <= 0;
-	 nextWaddr  <= 1;
-      end else begin
-	 if(we) begin
-`ifdef SIM	    
-	    if(full) $display("%m(%t) Writing to fifo when full.",$time);
-`endif	    
-	    waddr     <= nextWaddr;
-	    nextWaddr <= nextWaddr + 1;
-	 end
-      end
-   end
-   
-   reg [ADDR_WIDTH-1:0] waddr_ss;
-    
-   assign raddr_pre  = (re) ? nextRaddr : raddr;
-   assign empty      = (raddr == waddr_ss);
-   assign rUsedSpace = waddr_ss - raddr;
-   
-   always @(posedge rclk) begin
-      waddr_ss  <= waddr;
-   end
-
-   always @(posedge rclk or posedge rreset) begin
-      if(rreset) begin
-	 raddr <= 0;
-      end else begin
-	 raddr <= raddr_pre;
-	 if(re) begin
-`ifdef SIM
-	    if(empty) $display("%m(%t) Reading from fifo when empty",$time);
-`endif	    
-	 end
-      end
-   end
-
-   stream2migDualPortRAM #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH))
-      RAM(
-	  .clka(wclk),
-	  .clkb(rclk),
-	  .wea(we),
-	  .addra(waddr),
-	  .addrb(raddr_pre),
-	  .dia(wdata),
-	  .doa(),
-	  .dob(rdata)
-	  );
-   
-endmodule
-
-    
-///////////////////////////////////////////////////////////////////////////////
-// Dual-Port Block RAM with Different Clocks (from XST User Manual)
-module stream2migDualPortRAM
-   #(parameter ADDR_WIDTH = 4, DATA_WIDTH=8)
-   (
-    input  clka,
-    input  clkb,
-    input  wea,
-    input  [ADDR_WIDTH-1:0] addra,
-    input  [ADDR_WIDTH-1:0] addrb,
-    input  [DATA_WIDTH-1:0] dia,
-    output [DATA_WIDTH-1:0] doa,
-    output [DATA_WIDTH-1:0] dob
-    );
-
-   reg [DATA_WIDTH-1:0]     RAM [(1<<ADDR_WIDTH)-1:0];
-   reg [ADDR_WIDTH-1:0]     read_addra;
-   reg [ADDR_WIDTH-1:0]     read_addrb;
-   initial
-   begin
-        // verilator lint_off WIDTH
-        RAM[0] = 8'hcc; // debug for uninitialized value.
-        // verilator lint_on WIDTH
-   end
-   always @(posedge clka) begin
-      if (wea == 1'b1) RAM[addra] <= dia;
-      read_addra <= addra;
-   end
-   always @(posedge clkb) begin
-      read_addrb <= addrb;
-   end
-   assign doa = RAM[read_addra];
-   assign dob = RAM[read_addrb];
-endmodule
