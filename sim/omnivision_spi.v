@@ -24,7 +24,7 @@ module omnivision_spi
    reg 			   fv_s;
    reg [2:0] 		   header_count;
    
-   wire [7:0] 		   mode = 8h'2a; // 8bit raw
+   wire [7:0] 		   mode = 8'h2a; // 8bit raw
    
    always @(posedge pixclk or negedge resetb) begin
       if(!resetb) begin
@@ -36,9 +36,9 @@ module omnivision_spi
 	 fv_s <= fv;
 	 
 	 if(enable) begin
-	    if(fv && !fv_s || header_count) begin // send header
+	    if((fv && !fv_s) || (|header_count)) begin // send header
 	       header_count <= header_count + 1;	       
-	       case(header_count) begin
+	       case(header_count)
 		  0: sr <= 8'hFF;
 		  1: sr <= 8'hFF;
 		  2: sr <= 8'h00;
