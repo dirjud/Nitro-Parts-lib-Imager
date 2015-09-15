@@ -45,17 +45,19 @@ module imager
    reg [31:0] noise;
    reg [NUM_ROWS_WIDTH:0] row_count;
    reg [NUM_COLS_WIDTH:0] col_count;
-
+   reg [NUM_ROWS_WIDTH-1:0] num_active_rows_s;
+   reg [NUM_COLS_WIDTH-1:0] num_active_cols_s;
+ 
    wire [NUM_ROWS_WIDTH:0] next_row_count = row_count + 1;
    wire [NUM_COLS_WIDTH:0] next_col_count = col_count + 1;
    
-   wire fv_wire = (row_count < {1'b0, num_active_rows});
+   wire fv_wire = (row_count < {1'b0, num_active_rows_s});
    wire [NUM_COLS_WIDTH-1:0] hblank_fp = num_virtual_cols >> 1;
-   wire 		     lv_wire = fv_wire && (col_count >= {1'b0, hblank_fp}) && (col_count < num_active_cols + hblank_fp);
+   wire 		     lv_wire = fv_wire && (col_count >= {1'b0, hblank_fp}) && (col_count < num_active_cols_s + hblank_fp);
    
 
-   wire [NUM_ROWS_WIDTH:0] total_rows = num_active_rows + num_virtual_rows;
-   wire [NUM_COLS_WIDTH:0] total_cols = num_active_cols + num_virtual_cols;
+   wire [NUM_ROWS_WIDTH:0] total_rows = num_active_rows_s + num_virtual_rows;
+   wire [NUM_COLS_WIDTH:0] total_cols = num_active_cols_s + num_virtual_cols;
    reg [15:0] 		   frame_count;
    
    reg [NUM_ROWS_WIDTH-1:0] sync_row;
@@ -83,6 +85,7 @@ module imager
 	 frame_count <= 0;
          sync    <= 1;
          sync_row <= 0;
+         num_active_rows_s <= 0;
       end else begin
          // generate pseudo random noise
 	 if(!fv_wire) begin
@@ -99,8 +102,14 @@ module imager
             dat            <= 0;
             row_count      <= 0;
             col_count      <= 0;
-         end else begin
-	    lv  <= lv_wire;
+            num_active_rows_s <= num_active_rows;
+            num_active_cols_s <= num_active_cols;
+        end else begin
+            if(row_count == 0 && col_count == 0) begin
+                num_active_cols_s <= num_active_cols;
+                num_active_rows_s <= num_active_rows;
+            end
+            lv  <= lv_wire;
 	    fv  <= fv_wire;
 	    dat <= lv_wire ? dat_sel : 0;
 
