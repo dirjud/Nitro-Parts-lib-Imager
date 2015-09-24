@@ -177,7 +177,7 @@ module stream2mig
    wire [23:0] next_frame_pos    = rdata[23:0];
    wire [23:0] cur_frame_pos     = rdata[47:24];
    reg 	       rwait, need_re;
-   reg  [23:0] read_ok_pos;
+   reg  [27:0] read_ok_pos;
    reg  [27:0] cur_read_pos; 
 
    always @(posedge rclk or negedge rresetb) begin
@@ -215,7 +215,7 @@ module stream2mig
 		  pR_cmd_byte_addr <= { cur_frame_pos, 6'b0 };
 		  pR_cmd_instr <= CMD_READ;
                   re <= 1;
-                  read_ok_pos <= next_frame_pos;
+                  read_ok_pos <= { next_frame_pos, 4'b0 };
                   cur_read_pos <= { cur_frame_pos, 4'b0 };
 	       end
 	       pR_busy <= 1;
@@ -236,17 +236,17 @@ module stream2mig
 
                if (need_re && !rwait) begin
                    re <= 1;
-                   read_ok_pos <= next_frame_pos;
+                   read_ok_pos <= {next_frame_pos, 4'b0};
                    need_re <= 0;
                end else begin
                    re <= 0;
-                   if (di_read && cur_read_pos == { read_ok_pos, 4'b0 } ) begin
+                   if (di_read && cur_read_pos == read_ok_pos ) begin
                        need_re <= 1;
                    end
                end
 
                pR_cmd_bl <= 15;
-               if(!pR_cmd_full && !pR_cmd_en && rfifo_count < 32 && (!rwait || pR_cmd_byte_addr[29:6] < read_ok_pos)) begin
+               if(!pR_cmd_full && !pR_cmd_en && rfifo_count < 32 && (!rwait || read_ok_pos - pR_cmd_byte_addr[29:2] > 0 )) begin
                   pR_cmd_en <= 1;
                end else begin
                   pR_cmd_en <= 0;
