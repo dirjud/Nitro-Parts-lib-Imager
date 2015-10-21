@@ -6,13 +6,15 @@ module imager
     input reset_n,
     input  clk,
     input enable, // when high, this imager will run.
-    input [2:0] mode, // 0: pseudo random noise (see noise_seed input)
+    input [3:0] mode, // 0: pseudo random noise (see noise_seed input)
                       // 1: horizontal gradient
                       // 2: vertical gradient
                       // 3: diagonal gradient
                       // 4: constant based on frame number
                       // 5: diagonal gradient offset based on frame number.
                       // 6: image from memory.    
+                      // 7: incrementing counter +1 each pixel.
+                      // 8: bayer red
     input [NUM_ROWS_WIDTH-1:0] num_active_rows,
     input [NUM_ROWS_WIDTH-1:0] num_virtual_rows,
     input [NUM_COLS_WIDTH-1:0] num_active_cols,
@@ -55,6 +57,7 @@ module imager
    wire [NUM_COLS_WIDTH-1:0] hblank_fp = num_virtual_cols >> 1;
    wire 		     lv_wire = fv_wire && (col_count >= {1'b0, hblank_fp}) && (col_count < num_active_cols_s + hblank_fp);
    
+   reg [DATA_WIDTH-1:0] pixel_count;
 
    wire [NUM_ROWS_WIDTH:0] total_rows = num_active_rows_s + num_virtual_rows;
    wire [NUM_COLS_WIDTH:0] total_cols = num_active_cols_s + num_virtual_cols;
@@ -62,15 +65,20 @@ module imager
    
    reg [NUM_ROWS_WIDTH-1:0] sync_row;
    wire [NUM_ROWS_WIDTH:0] sync_row_end = sync_row_start + sync_rows;
-   
+
    /* verilator lint_off WIDTH */
+   wire [DATA_WIDTH-1:0] bayer = ((row_count & 1) == 0) ? 0 :
+                                 ((col_count & 1) == 0 ? 0 : {DATA_WIDTH{1'b1}});
+   
    wire [DATA_WIDTH-1:0] dat_sel = (mode == 0) ? noise[DATA_WIDTH-1:0] :
 			           (mode == 1) ? row_count :
 			           (mode == 2) ? col_count :
 			           (mode == 3) ? row_count + col_count :
 			           (mode == 4) ? frame_count :
 			           (mode == 5) ? frame_count + col_count + row_count :
-			 image_buf[row_count][col_count];
+			           (mode == 6) ? image_buf[row_count][col_count] :
+                                   (mode == 7) ? pixel_count :
+                                   bayer;
    /* verilator lint_on WIDTH */
    
    
@@ -86,6 +94,7 @@ module imager
          sync    <= 1;
          sync_row <= 0;
          num_active_rows_s <= 0;
+         pixel_count <= 0;
       end else begin
          // generate pseudo random noise
 	 if(!fv_wire) begin
@@ -104,6 +113,7 @@ module imager
             col_count      <= 0;
             num_active_rows_s <= num_active_rows;
             num_active_cols_s <= num_active_cols;
+            pixel_count    <= 0;
         end else begin
             if(row_count == 0 && col_count == 0) begin
                 num_active_cols_s <= num_active_cols;
@@ -112,6 +122,9 @@ module imager
             lv  <= lv_wire;
 	    fv  <= fv_wire;
 	    dat <= lv_wire ? dat_sel : 0;
+            pixel_count <= lv_wire ? pixel_count + 1 :
+                           next_row_count >= total_rows ? 0 :
+                           pixel_count;
 
 	    if(next_col_count >= total_cols) begin
 	       col_count <= 0;
