@@ -1,4 +1,4 @@
-module omnivision_spi 
+module omnivision_spi_tx 
   #(parameter DATA_WIDTH=10)
    (
     input 		   resetb,
@@ -16,7 +16,8 @@ module omnivision_spi
     );
 
    wire 		   clk_hs;
-   PLL_sim pll_hs (pixclk, clk_hs, DATA_WIDTH, 2, 0);
+
+   PLL_sim pll_hs (.input_clk(pixclk), .output_clk(clk_hs), .pll_mult(4), .pll_div(1), .debug(1));
 
 
    reg [7:0]    sr;
@@ -43,10 +44,10 @@ module omnivision_spi
 		  1: sr <= 8'hFF;
 		  2: sr <= 8'h00;
 		  3: sr <= mode;
-		  4: sr <= num_rows[15:8];
-		  5: sr <= num_rows[7:0];
-		  6: sr <= num_cols[15:8];
-		  7: sr <= num_cols[7:0];
+		  4: sr <= num_cols[7:0];
+		  5: sr <= num_cols[15:8];
+		  6: sr <= num_rows[7:0];
+		  7: sr <= num_rows[15:8];
 	       endcase
 	       dv <= 1;
 
@@ -67,25 +68,20 @@ module omnivision_spi
 
    reg [2:0] pos;
    reg [7:0] srs;
-   reg 	     dvs, dvss;
+   reg 	     dvs, dvss, dvsss;
+   wire [2:0] next_pos = (dvs != dv) ? 0 : pos + 2;
    
    always @(posedge clk_hs or negedge resetb) begin
       if(!resetb) begin
 	 pos <= 0;
 	 dvs <= 0;
-	 dvss<= 0;
 	 sdat <= 0;
 	 
       end else begin
 	 dvs  <= dv;
 	 dvss <= dvs;
 	 srs  <= sr;
-	 
-	 if(dvs != dv) begin
-	    pos <= 0;
-	 end else begin
-	    pos <= pos + 2;
-	 end
+	 pos  <= next_pos;
 
 	 if(dvs) begin
 	    sdat[1] <= srs[pos + 1];
@@ -96,6 +92,6 @@ module omnivision_spi
       end
    end // always @ (posedge clk_hs or negedge resetb)
 
-   assign sclk = (dvs == 0) ? 0 : !clk_hs;
+   assign sclk = (dvss == 0) ? 0 : !clk_hs;
    
 endmodule
