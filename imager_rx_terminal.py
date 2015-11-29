@@ -178,6 +178,22 @@ di = DeviceInterface(
                 """
             ),
         Terminal(
+            name="VignetteCol",
+            regAddrWidth=16,
+            regDataWidth=16,
+            comment="""
+                Column based gain correction factor.
+                """
+            ),
+        Terminal(
+            name="VignetteRow",
+            regAddrWidth=16,
+            regDataWidth=16,
+            comment="""
+                Row based gain correction factor.
+                """
+            ),
+        Terminal(
             name="ImageMean",
             regAddrWidth=16,
             regDataWidth=32,
