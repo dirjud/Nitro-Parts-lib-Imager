@@ -17,7 +17,7 @@ module omnivision_spi_tx
 
    wire 		   clk_hs;
 
-   PLL_sim pll_hs (.input_clk(pixclk), .output_clk(clk_hs), .pll_mult(4), .pll_div(1), .debug(1));
+   PLL_sim2 pll_hs (.input_clk(pixclk), .output_clk(clk_hs), .pll_mult(4), .pll_div(1), .debug(1));
 
 
    reg [7:0]    sr;
@@ -68,7 +68,9 @@ module omnivision_spi_tx
 
    reg [2:0] pos;
    reg [7:0] srs;
+/* verilator lint_off UNOPTFLAT */
    reg 	     dvs, dvss, dvsss;
+/* verilator lint_on UNOPTFLAT */
    wire [2:0] next_pos = (dvs != dv) ? 0 : pos + 2;
    
    always @(posedge clk_hs or negedge resetb) begin
