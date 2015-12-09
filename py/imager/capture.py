@@ -47,7 +47,7 @@ def verify_header(header):
     if(header["frame_start"] != 0xFFFFFFFE):
         raise Exception("Out of sync: header: start=0x%x len=%d type=0x%x count=%d" % (header["frame_start"], header["frame_length"], header["image_type"], header["frame_count"]))
 
-    if header["frame_length"] > 5e6:
+    if header["frame_length"] > 6e6:
         log.error("Header: %s" % str(header))
         raise Exception("Bad frame length: %d" % header['frame_length'])
 
