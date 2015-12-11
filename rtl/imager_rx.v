@@ -286,12 +286,14 @@ module imager_rx
 	       header_addr <= header_addr + 1;
 	       dvo <= header_addr0_s;
 	       /* verilator lint_off WIDTH */
+           /* verilator lint_off SELRANGE */
 	       if(header_addr0_s) begin
 		  datao[31:16] <= header_data;
 	       end else begin
 		  datao[15:0]  <= header_data;
 	       end
 	       /* verilator lint_on WIDTH */
+           /* verilator lint_on SELRANGE */
 	    end else begin
 	       header_addr <= header_addr + 1;
 	       dvo <= 1;
