@@ -3,20 +3,21 @@
 `include "terminals_defs.v"
 // Author: Lane Brooks
 // Date  : 11/5/2013
-// Desc  : Converts yuv to yuv420 by subsampling the u an v channels. Does not convert the stream
-// to planar (YUV420p) but instead adds the UV subsampled pixels after the two Y pixels on every
-// other row. In other words, the stream looks like this:
-// Y00 Y01 Y02 Y03 ... Y10 Y11 U11 V11 Y12 Y13 U13 V13 ...
+// Desc : Converts yuv to yuv420 by subsampling the u an v
+// channels. Does not convert the stream to planar (YUV420p) but
+// instead adds the UV subsampled pixels after the two Y pixels on
+// every other row. In other words, the stream looks like this: Y00
+// Y01 Y02 Y03 ... Y10 Y11 U11 V11 Y12 Y13 U13 V13 ...
 //
-// This module also adds 128 to the U and V component to make them YUV compliant.
+// This module assumes the U and V component are already offset to be
+// unsigned numbers.
 
 module yuv420
   #(parameter RAW_PIXEL_SHIFT=0) // number of LSBs to drop in raw data stream to make it 8b.
   (input clk,
    input 			 resetb,
    input [15:0] 		 image_type,
-   input 			 enable_yuv,
-   input 			 enable_yuv420,
+   input 			 enable,
    
    input 			 dvi,
    input [`DTYPE_WIDTH-1:0] 	 dtypei,
@@ -30,9 +31,6 @@ module yuv420
    output reg [31:0] 		 datao
 
    );
-   // Add 128 to u and v channels for yuv compliance reasons. if not enabled, pass rgb data as is.
-   wire [7:0] u0 = enable_yuv ? ui + 128 : ui;
-   wire [7:0] v0 = enable_yuv ? vi + 128 : vi;
    
    // Delay the stream one pipeline cycle to match that of the kernel module.
    reg [7:0] 		   y1, u1, v1;
@@ -49,15 +47,15 @@ module yuv420
 	 dv1        <= 0;
       end else begin
 	 y1         <= yi;
-	 u1         <= u0;
-	 v1         <= v0;
+	 u1         <= ui;
+	 v1         <= vi;
 	 dtype1     <= dtypei;
 	 meta_data1 <= meta_datai;
 	 dv1        <= dvi;
       end
    end
 
-   // Create a 2x2 kernel and the u and v downampling.
+   // Create a 2x2 kernel for the u and v downampling.
    parameter KERNEL_SIZE=2;
    wire dvo_kernel;
    wire [`DTYPE_WIDTH-1:0] dtypeo_kernel;
@@ -78,7 +76,7 @@ module yuv420
       .enable(1'b1),
       .dvi(dvi),
       .dtypei(dtypei),
-      .datai( { u0, v0 }),
+      .datai( { ui, vi }),
       
       .dvo(dvo_kernel),
       .meta_datao(),
@@ -145,7 +143,7 @@ module yuv420
       end else if(image_type == 0) begin // raw mode
 	 next_obuf = { obuf[OBUF_WIDTH-9:0],  raw_data };
 	 next_opos = opos_plus_8;
-      end else if(enable_yuv420 == 0) begin // pass all the yuv data
+      end else if(enable == 0) begin // pass all the yuv data
 	 next_obuf = { obuf[OBUF_WIDTH-25:0], y1, u1, v1  };
 	 next_opos = opos_plus_24;
       end else if(dump_uv == 1) begin // time to dump the u and v subsampled channels

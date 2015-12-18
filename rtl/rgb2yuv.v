@@ -16,7 +16,8 @@
 //
 // In summary this implements a matrix multiply that leaves the Y
 // channel as an unsigned number and the U and V channel as signed
-// numbers.
+// numbers. Use the uv_offset module as the last processing step
+// to add the offset to the U and V channels to make them customary.
 
 module rgb2yuv
   #(parameter PIXEL_WIDTH=8)

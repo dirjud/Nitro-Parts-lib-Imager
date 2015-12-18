@@ -40,29 +40,30 @@ module overlay
     parameter DATA_WIDTH=16,
     parameter DIM_WIDTH=11)
    (
-    input 		     clk,
-    input 		     resetb,
-    input 		     enable,
+    input 			  clk,
+    input 			  resetb,
+    input 			  enable,
 
-    input [DIM_WIDTH-1:0]    col_start,
-    input [DIM_WIDTH-1:0]    row_start,
-    input [DIM_WIDTH-1:0]    num_overlay_rows,
-    input [DIM_WIDTH-1:0]    num_overlay_cols,
-    input [PIXEL_WIDTH-1:0]  overlay0,
-    input [PIXEL_WIDTH-1:0]  overlay1,
-    input [PIXEL_WIDTH-1:0]  overlay2,
-    input [ALPHA_WIDTH-1:0]  overlayA,
-    output reg 		     overlay_adv,
-    output reg		     overlay_restart,
+    input [DIM_WIDTH-1:0] 	  col_start,
+    input [DIM_WIDTH-1:0] 	  row_start,
+    input [DIM_WIDTH-1:0] 	  num_overlay_rows,
+    input [DIM_WIDTH-1:0] 	  num_overlay_cols,
+    input [PIXEL_WIDTH-1:0] 	  overlay0,
+    input [PIXEL_WIDTH-1:0] 	  overlay1,
+    input [PIXEL_WIDTH-1:0] 	  overlay2,
+    input [ALPHA_WIDTH-1:0] 	  overlayA,
+    output 			  overlay_adv,
+    output reg 			  overlay_restart,
+    input [ALPHA_WIDTH-1:0] 	  global_alpha,
     
-    input 		     dvi,
-    input [`DTYPE_WIDTH-1:0] dtypei,
-    input [PIXEL_WIDTH-1:0]  data0i,
-    input [PIXEL_WIDTH-1:0]  data1i,
-    input [PIXEL_WIDTH-1:0]  data2i,
-    input [DATA_WIDTH-1:0]   meta_datai,
+    input 			  dvi,
+    input [`DTYPE_WIDTH-1:0] 	  dtypei,
+    input [PIXEL_WIDTH-1:0] 	  data0i,
+    input [PIXEL_WIDTH-1:0] 	  data1i,
+    input [PIXEL_WIDTH-1:0] 	  data2i,
+    input [DATA_WIDTH-1:0] 	  meta_datai,
     
-    output reg 		     dvo,
+    output reg 			  dvo,
     output reg [`DTYPE_WIDTH-1:0] dtypeo,
     output reg [PIXEL_WIDTH-1:0]  data0o,
     output reg [PIXEL_WIDTH-1:0]  data1o,
@@ -99,7 +100,11 @@ module overlay
 
    wire [DIM_WIDTH-1:0] row_end = row_start + num_overlay_rows;
    wire [DIM_WIDTH-1:0] col_end = col_start + num_overlay_cols;
-   
+   assign overlay_adv = dvi && dtypei == `DTYPE_PIXEL && row_pos >= row_start && row_pos < row_end && col_pos >= col_start && col_pos < col_end && enable;
+
+   wire [2*ALPHA_WIDTH-1:0] overlayA1 = overlayA * global_alpha;
+   wire [ALPHA_WIDTH-1:0]   overlayA2 = (&global_alpha) ? overlayA : overlayA1[2*ALPHA_WIDTH-1:ALPHA_WIDTH];
+
    always @(posedge clk or negedge resetb) begin
       if(!resetb) begin
 	 dvo        <= 0;
@@ -110,7 +115,7 @@ module overlay
 	 meta_datao <= 0;
 	 row_pos    <= 0;
 	 col_pos    <= 0;
-	 overlay_adv<= 0;
+	 overlay_restart <= 0;
       end else begin
 	 if(!enable) begin
 	    dvo        <= dvi        ;
@@ -121,8 +126,9 @@ module overlay
 	    meta_datao <= meta_datai ;
 	    row_pos    <= 0;
 	    col_pos    <= 0;
-	    overlay_adv<= 0;
+	    overlay_restart <= 0;
 	 end else begin
+	    
 	    if(dvi && dtypei == `DTYPE_FRAME_START) begin
 	       overlay_restart <= 1;
 	    end else begin
@@ -146,16 +152,14 @@ module overlay
 	    dvo        <= dvi;
 	    dtypeo     <= dtypei;
 	    meta_datao <= meta_datai;
-	    if(dvi && dtypei == `DTYPE_PIXEL && row_pos >= row_start && row_pos < row_end && col_pos >= col_start && col_pos < col_end) begin
-	       data0o     <= blend(data0i,overlay0,overlayA);
-	       data1o     <= blend(data1i,overlay1,overlayA);
-	       data2o     <= blend(data2i,overlay2,overlayA);
-	       overlay_adv<= 1;
+	    if(overlay_adv) begin
+	       data0o     <= blend(data0i,overlay0,overlayA2);
+	       data1o     <= blend(data1i,overlay1,overlayA2);
+	       data2o     <= blend(data2i,overlay2,overlayA2);
 	    end else begin
 	       data0o     <= data0i;
 	       data1o     <= data1i;
 	       data2o     <= data2i;
-	       overlay_adv<= 0;
 	    end
 	 end
       end
