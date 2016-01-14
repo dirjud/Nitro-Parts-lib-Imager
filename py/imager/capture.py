@@ -38,7 +38,7 @@ def decode_header(di, raw_header, extra=None):
             addr += 1
             shift += 1
             width -= 16
-        header[reg.name]=val
+        header[reg.name]=numpy.uint32(val) # NOTE newer versions of numpy cast the |= to an int32 instead of uint32
    
     header["timeStamp"] = time.time()
     return header
