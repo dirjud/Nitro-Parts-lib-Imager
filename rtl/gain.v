@@ -13,6 +13,7 @@
 // xxxx.xxxxxxxx in terms of where the decimal point ends up.
 //
 // In the event of overflow, the pixel is clamped.
+`include "dtypes.v"
 
 module gain
   #(parameter GAIN_WIDTH=8,
