@@ -55,11 +55,13 @@ module imager_rx
     input 			  resetb_clki,
     input 			  fv,
     input 			  lv,
-    input             dvi,
+    input 			  dvi,
     input [PIXEL_WIDTH-1:0] 	  datai,
 
     input 			  header_stall,
     input [15:0] 		  flags,
+    output reg [DIM_WIDTH-1:0] 	  num_rows,
+    output reg [DIM_WIDTH-1:0] 	  num_cols,
     
     output reg 			  dvo,
     output reg [DATA_WIDTH-1:0]   datao,
@@ -82,7 +84,6 @@ module imager_rx
 `endif
    
    reg [DIM_WIDTH-1:0] row_count, col_count;
-   reg [DIM_WIDTH-1:0] num_rows, num_cols;
    reg [31:0] frame_cycles_count, clks_per_frame;
    reg [15:0] checksum, frame_count, clks_per_row;
 
