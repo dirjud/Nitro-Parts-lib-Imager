@@ -129,7 +129,7 @@ module overlay
 	    overlay_restart <= 0;
 	 end else begin
 	    
-	    if(dvi && dtypei == `DTYPE_FRAME_START) begin
+	    if(dvi && dtypei == `DTYPE_FRAME_END) begin
 	       overlay_restart <= 1;
 	    end else begin
 	       overlay_restart <= 0;
