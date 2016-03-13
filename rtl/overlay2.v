@@ -41,10 +41,10 @@ module overlay2
       reg [10:0] xalpha0, xalpha1, cum;
       
       begin	 
-	 if(a0 == 0) begin
-	    blend = x1;
-	 end else if(a1 == 0) begin
+	 if(a1 == 0) begin
 	    blend = x0;
+	 end else if(a1 == 3'd7) begin
+	    blend = x1;
 	 end else begin
 	    xalpha0 = x0 * a0;
 	    xalpha1 = x1 * a1;
@@ -87,7 +87,7 @@ module overlay2
    wire [7:0] y1 = { y0, 1'b0 };
    wire [7:0] u1 = { u0, 2'b0 };
    wire [7:0] v1 = { v0, 2'b0 };
-   wire [2:0] a1 = 3'd7 - a0;
+   wire [2:0] a1 = 3'd0 - a0;
 
    wire [7:0] y2 = blend(data0i, a1, y1, a0);
    wire [7:0] u2 = blend(data1i, a1, u1, a0);
@@ -106,6 +106,12 @@ module overlay2
 	 overlay_restart <= 0;
 	 adv        <= 0;
       end else begin
+	 //if(dvi && dtypei == `DTYPE_PIXEL && row_pos == 4 && col_pos == 25  && enable) begin
+	 //   $display("y1=%d u1=%d v1=%d a0=%d", y1, u1, v1, a0);
+	 //   $display("d0=%d d1=%d d2=%d a1=%d", data0i, data1i, data2i, a1);
+	 //   $display("y2=%d u2=%d v2=%d", y2, u2, v2);
+	 //end
+	 
 	 if(!enable) begin
 	    dvo        <= dvi        ;
 	    dtypeo     <= dtypei     ;
