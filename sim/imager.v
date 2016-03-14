@@ -15,6 +15,12 @@ module imager
                       // 6: image from memory.    
                       // 7: incrementing counter +1 each pixel.
                       // 8: bayer red
+                      //
+    input [DATA_WIDTH-1:0]  bayer_red, // if mode==bayer, this is the value for the red pixels
+    input [DATA_WIDTH-1:0]  bayer_gr,  // if mode==bayer, this is the value for the green pixel on red rows
+    input [DATA_WIDTH-1:0]  bayer_blue,// if mode==bayer, this is the value for the blue pixels 
+    input [DATA_WIDTH-1:0]  bayer_gb,  // if mode==bayer, this is the value for the green pixel on blue rows
+
     input [NUM_ROWS_WIDTH-1:0] num_active_rows,
     input [NUM_ROWS_WIDTH-1:0] num_virtual_rows,
     input [NUM_COLS_WIDTH-1:0] num_active_cols,
@@ -67,8 +73,10 @@ module imager
    wire [NUM_ROWS_WIDTH:0] sync_row_end = sync_row_start + sync_rows;
 
    /* verilator lint_off WIDTH */
-   wire [DATA_WIDTH-1:0] bayer = ((row_count & 1) == 0) ? 0 :
-                                 ((col_count & 1) == 0 ? 0 : {DATA_WIDTH{1'b1}});
+   wire [DATA_WIDTH-1:0] bayer = (row_count & 1) == 0 ?
+                                  ( (col_count & 1) == 0 ? bayer_blue : bayer_gb ) :
+                                  ( (col_count & 1) == 0 ? bayer_gr : bayer_red ); 
+
    
    wire [DATA_WIDTH-1:0] dat_sel = (mode == 0) ? noise[DATA_WIDTH-1:0] :
 			           (mode == 1) ? row_count :
