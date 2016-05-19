@@ -226,6 +226,7 @@ module imager_rx
 	       wait_for_fv_to_drop <= 0;
 	    end else begin
 	       wait_for_fv_to_drop <= 1;
+               header_mode <= 0;
 	    end
 	 
 	 end else if(dv) begin 
