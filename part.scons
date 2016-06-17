@@ -1,0 +1,7 @@
+
+Import('env')
+
+xml=env.Diconv ( 'imager_rx.xml' ,'imager_rx_terminal.py' )
+env.Xml(xml)
+
+env.Py('lib/imager',Glob('py/imager/*'))
