@@ -2,3 +2,6 @@ imager_rx.xml
 *~
 *pyc
 *.swp
+rtl_auto
+*.so
+obj_dir
