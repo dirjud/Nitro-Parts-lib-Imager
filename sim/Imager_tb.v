@@ -93,6 +93,10 @@ module Imager_tb
       );
 
 `include "ImagerTerminalInstance.v"
+
+   wire [31:0] 	di_reg_datao_CCM;
+   wire 	di_read_rdy_CCM, di_write_rdy_CCM, di_CCM_en;
+   wire [15:0] 	di_transfer_status_CCM;
    
    always @(*) begin
       if(di_term_addr == `TERM_Imager) begin
@@ -105,6 +109,11 @@ module Imager_tb
 //	 di_read_rdy  = di_read_rdy_ROTATE;
 //	 di_write_rdy = di_write_rdy_ROTATE;
 //	 di_transfer_status = di_transfer_status_ROTATE;
+      end else if(di_CCM_en) begin
+	 di_reg_datao = di_reg_datao_CCM;
+	 di_read_rdy  =  di_read_rdy_CCM;
+	 di_write_rdy = di_write_rdy_CCM;
+	 di_transfer_status = di_transfer_status_CCM;
       end else begin
          di_reg_datao = 0;
          di_read_rdy  = 1;
@@ -142,6 +151,26 @@ module Imager_tb
       .lv(lv),
       .sync(sync)
     );
+
+
+   ccm_tb ccm_tb
+     (
+      .resetb(resetb),
+      .di_clk(clk),
+      .di_term_addr(di_term_addr),
+      .di_reg_addr(di_reg_addr),
+      .di_read_mode(di_read_mode),
+      .di_read_req(di_read_req),
+      .di_read(di_read),
+      .di_write_mode(di_write_mode),
+      .di_write(di_write),
+      .di_reg_datai(di_reg_datai),
+      .di_read_rdy(  di_read_rdy_CCM),
+      .di_reg_datao(di_reg_datao_CCM),
+      .di_write_rdy(di_write_rdy_CCM),
+      .di_transfer_status(di_transfer_status_CCM),
+      .di_en(di_CCM_en)
+      );
 
    
 //   rotate_tb rotate_tb
