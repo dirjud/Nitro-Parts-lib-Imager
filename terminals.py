@@ -86,7 +86,7 @@ di = DeviceInterface(
                 Register(
                     name="num_active_cols",
                     width=12,
-                    init=720,
+                    init=1280,
                     mode="write",
                     type="int",
                     comment="""Number of cols output by the imager""",
@@ -94,7 +94,7 @@ di = DeviceInterface(
                 Register(
                     name="num_virtual_cols",
                     width=12,
-                    init=10,
+                    init=100,
                     mode="write",
                     type="int",
                     comment="""Number of cols vblank cols output by the imager""",

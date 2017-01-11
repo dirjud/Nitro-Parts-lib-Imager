@@ -153,6 +153,50 @@ module Imager_tb
     );
 
 
+   imager_rx
+     #(
+       .PIXEL_WIDTH(DATA_WIDTH),
+       .DATA_WIDTH(16),
+       .DIM_WIDTH(12)
+       )
+   imager_rx
+     (
+      .di_clk(clk),
+      .resetb_di_clk(resetb),
+      .di_term_addr(di_term_addr),
+      .di_reg_addr(di_reg_addr),
+      .di_read_mode(di_read_mode),
+      .di_read_req(di_read_req),
+      .di_read(di_read),
+      .di_write_mode(di_write_mode),
+      .di_write(di_write),
+      .di_reg_datai(di_reg_datai),
+      .di_read_rdy(di_read_rdy_IMAGER_RX),
+      .di_reg_datao(di_reg_datao_IMAGER_RX),
+      .di_write_rdy(di_write_rdy_IMAGER_RX),
+      .di_transfer_status(di_transfer_status_IMAGER_RX),
+      .di_IMAGER_RX_en(di_IMAGER_RX_en)
+
+//    input 			  enable, // sync to di_clk
+//    
+//    input 			  clki,
+//    input 			  resetb_clki,
+//    input 			  fv,
+//    input 			  lv,
+//    input 			  dvi,
+//    input [PIXEL_WIDTH-1:0] 	  datai,
+//
+//    input 			  header_stall,
+//    input [15:0] 		  flags,
+//    output reg [DIM_WIDTH-1:0] 	  num_rows,
+//    output reg [DIM_WIDTH-1:0] 	  num_cols,
+//    
+//    output reg 			  dvo,
+//    output reg [DATA_WIDTH-1:0]   datao,
+//    output reg [`DTYPE_WIDTH-1:0] dtypeo
+      );
+
+
    ccm_tb ccm_tb
      (
       .resetb(resetb),
@@ -171,7 +215,6 @@ module Imager_tb
       .di_transfer_status(di_transfer_status_CCM),
       .di_en(di_CCM_en)
       );
-
    
 //   rotate_tb rotate_tb
 //     (
