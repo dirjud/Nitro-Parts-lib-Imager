@@ -6,6 +6,7 @@ NITRO_PARTS_DIR = ../..
 INC_PATHS = rtl_auto \
         $(NITRO_PARTS_DIR)/lib/imager/rtl \
 	$(NITRO_PARTS_DIR)/lib/VerilogTools/rtl \
+	$(NITRO_PARTS_DIR)/lib/xilinx \
 
 # INC_FILES specifies a list of files that are included in the verilog
 # and are thus dependancies of the simulation.  It is not strictly
@@ -20,9 +21,16 @@ INC_FILES =  \
 SIM_FILES = sim/Imager_tb.v \
 	$(NITRO_PARTS_DIR)/lib/HostInterface/models/fx3.v \
 	rtl_auto/ImagerTerminal.v \
+	rtl_auto/ImagerRxTerminal.v \
+	rtl_auto/ImageTerminal.v \
 	rtl_auto/CcmTestTerminal.v \
+	rtl/stream2di.v \
 	sim/ccm_tb.v \
 	rtl/ccm.v \
+	rtl_auto/RotateTestTerminal.v \
+	sim/rotate_tb.v \
+	rtl/rotate.v \
+	sim/sram.v \
 
 
 # VERILATOR specific options

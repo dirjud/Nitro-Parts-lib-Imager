@@ -22,9 +22,8 @@ class CcmTest(simtest):
 
     def _testMatrix(self, matrix):
         m = CCM.set_ccm(self.dev, matrix, term="CcmTest")
-        m = numpy.matrix(m).transpose()
-
-        m0 = numpy.matrix(matrix).transpose()
+        m = numpy.matrix(m)
+        m0 = numpy.matrix(matrix)
 
         self.assertTrue( abs(m0-m).max() < 1/64., "Matrix error")
         

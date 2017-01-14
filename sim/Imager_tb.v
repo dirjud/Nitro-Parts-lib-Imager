@@ -1,5 +1,6 @@
 `timescale 1ps/1ps
 `include "terminals_defs.v"
+`include "dtypes.v"
 
 module Imager_tb
   (
@@ -97,6 +98,20 @@ module Imager_tb
    wire [31:0] 	di_reg_datao_CCM;
    wire 	di_read_rdy_CCM, di_write_rdy_CCM, di_CCM_en;
    wire [15:0] 	di_transfer_status_CCM;
+
+   wire [31:0] 	di_reg_datao_ROTATE;
+   wire 	di_read_rdy_ROTATE, di_write_rdy_ROTATE, di_ROTATE_en;
+   wire [15:0] 	di_transfer_status_ROTATE;
+
+   wire [31:0] 	di_reg_datao_STREAM2DI;
+   wire 	di_read_rdy_STREAM2DI;
+   wire 	di_write_rdy_STREAM2DI = 0;
+   wire di_STREAM2DI_en;
+   wire [15:0] 	di_transfer_status_STREAM2DI = 0;
+
+   wire [15:0] 	di_reg_datao_IMAGER_RX;
+   wire 	di_read_rdy_IMAGER_RX, di_write_rdy_IMAGER_RX, di_IMAGER_RX_en;
+   wire [15:0] 	di_transfer_status_IMAGER_RX;
    
    always @(*) begin
       if(di_term_addr == `TERM_Imager) begin
@@ -104,11 +119,21 @@ module Imager_tb
  	 di_read_rdy  = 1;
 	 di_write_rdy = 1;
 	 di_transfer_status = 0;
-//      end else if(di_ROTATE_en) begin
-//	 di_reg_datao = di_reg_datao_ROTATE;
-//	 di_read_rdy  = di_read_rdy_ROTATE;
-//	 di_write_rdy = di_write_rdy_ROTATE;
-//	 di_transfer_status = di_transfer_status_ROTATE;
+      end else if(di_IMAGER_RX_en) begin
+	 di_reg_datao = {16'b0, di_reg_datao_IMAGER_RX};
+	 di_read_rdy  = di_read_rdy_IMAGER_RX;
+	 di_write_rdy = di_write_rdy_IMAGER_RX;
+	 di_transfer_status = di_transfer_status_IMAGER_RX;
+      end else if(di_ROTATE_en) begin
+	 di_reg_datao = di_reg_datao_ROTATE;
+	 di_read_rdy  = di_read_rdy_ROTATE;
+	 di_write_rdy = di_write_rdy_ROTATE;
+	 di_transfer_status = di_transfer_status_ROTATE;
+      end else if(di_STREAM2DI_en) begin
+	 di_reg_datao = di_reg_datao_STREAM2DI;
+	 di_read_rdy  = di_read_rdy_STREAM2DI;
+	 di_write_rdy = di_write_rdy_STREAM2DI;
+	 di_transfer_status = di_transfer_status_STREAM2DI;
       end else if(di_CCM_en) begin
 	 di_reg_datao = di_reg_datao_CCM;
 	 di_read_rdy  =  di_read_rdy_CCM;
@@ -122,6 +147,7 @@ module Imager_tb
       end
    end
 
+   /**************** Imager ********************/
    parameter DATA_WIDTH=10;
    wire [DATA_WIDTH-1:0] dat;
    wire 		 fv, lv, sync;
@@ -152,16 +178,17 @@ module Imager_tb
       .sync(sync)
     );
 
-
+   /**************** Imager RX ********************/
+   wire [`DTYPE_WIDTH-1:0] dtypeo_rx;
+   wire [15:0] 		   datao_rx;
+   wire 		   dvo_rx;
    imager_rx
-     #(
-       .PIXEL_WIDTH(DATA_WIDTH),
+     #(.PIXEL_WIDTH(DATA_WIDTH),
        .DATA_WIDTH(16),
-       .DIM_WIDTH(12)
+       .DIM_WIDTH(16)
        )
    imager_rx
-     (
-      .di_clk(clk),
+     (.di_clk(clk),
       .resetb_di_clk(resetb),
       .di_term_addr(di_term_addr),
       .di_reg_addr(di_reg_addr),
@@ -170,33 +197,32 @@ module Imager_tb
       .di_read(di_read),
       .di_write_mode(di_write_mode),
       .di_write(di_write),
-      .di_reg_datai(di_reg_datai),
+      .di_reg_datai(di_reg_datai[15:0]),
       .di_read_rdy(di_read_rdy_IMAGER_RX),
       .di_reg_datao(di_reg_datao_IMAGER_RX),
       .di_write_rdy(di_write_rdy_IMAGER_RX),
       .di_transfer_status(di_transfer_status_IMAGER_RX),
-      .di_IMAGER_RX_en(di_IMAGER_RX_en)
+      .di_IMAGER_RX_en(di_IMAGER_RX_en),
 
-//    input 			  enable, // sync to di_clk
-//    
-//    input 			  clki,
-//    input 			  resetb_clki,
-//    input 			  fv,
-//    input 			  lv,
-//    input 			  dvi,
-//    input [PIXEL_WIDTH-1:0] 	  datai,
-//
-//    input 			  header_stall,
-//    input [15:0] 		  flags,
-//    output reg [DIM_WIDTH-1:0] 	  num_rows,
-//    output reg [DIM_WIDTH-1:0] 	  num_cols,
-//    
-//    output reg 			  dvo,
-//    output reg [DATA_WIDTH-1:0]   datao,
-//    output reg [`DTYPE_WIDTH-1:0] dtypeo
+      .enable(enable),
+      .clki(clk),
+      .resetb_clki(resetb),
+      .fv(fv),
+      .lv(lv),
+      .dvi(1'b1),
+      .datai(dat),
+
+      .header_stall(0),
+      .flags(0),
+      .num_rows(),
+      .num_cols(),
+      .dvo(dvo_rx),
+      .datao(datao_rx),
+      .dtypeo(dtypeo_rx)
       );
 
 
+   /**************** CCM Test Bench ********************/
    ccm_tb ccm_tb
      (
       .resetb(resetb),
@@ -215,30 +241,76 @@ module Imager_tb
       .di_transfer_status(di_transfer_status_CCM),
       .di_en(di_CCM_en)
       );
-   
-//   rotate_tb rotate_tb
-//     (
-//      .resetb(resetb),
-//      .di_clk(clk),
-//      .di_term_addr(di_term_addr),
-//      .di_reg_addr(di_reg_addr),
-//      .di_read_mode(di_read_mode),
-//      .di_read_req(di_read_req),
-//      .di_read(di_read),
-//      .di_write_mode(di_write_mode),
-//      .di_write(di_write),
-//      .di_reg_datai(di_reg_datai),
-//      .di_read_rdy(di_read_rdy_ROTATE),
-//      .di_reg_datao(di_reg_datao_ROTATE),
-//      .di_write_rdy(di_write_rdy_ROTATE),
-//      .di_transfer_status(di_transfer_status_ROTATE),
-//      .di_en(di_ROTATE_en),
-//
-//      .img_clk(clk),
-//      .dvi(dvi),
-//      .dtypei(dtypei),
-//      .datai(datai)
-//      );
 
+
+   /**************** Rotate Test Bench ********************/
+   wire 		   dvo_rotate;
+   wire [15:0] 		   datao_rotate;
+   wire [`DTYPE_WIDTH-1:0] dtypeo_rotate;
+   rotate_tb #(.DATA_WIDTH(DATA_WIDTH))
+	       rotate_tb
+     (
+      .resetb(resetb),
+      .di_clk(clk),
+      .di_term_addr(di_term_addr),
+      .di_reg_addr(di_reg_addr),
+      .di_read_mode(di_read_mode),
+      .di_read_req(di_read_req),
+      .di_read(di_read),
+      .di_write_mode(di_write_mode),
+      .di_write(di_write),
+      .di_reg_datai(di_reg_datai),
+      .di_read_rdy(di_read_rdy_ROTATE),
+      .di_reg_datao(di_reg_datao_ROTATE),
+      .di_write_rdy(di_write_rdy_ROTATE),
+      .di_transfer_status(di_transfer_status_ROTATE),
+      .di_en(di_ROTATE_en),
+
+      .img_clk(clk),
+      .dvi(dvo_rx),
+      .dtypei(dtypeo_rx),
+      .datai(datao_rx),
+
+      .dvo(dvo_rotate),
+      .dtypeo(dtypeo_rotate),
+      .datao(datao_rotate)
+      );
+
+
+
+   /**************** MUX to SELECT Reading Port ********************/
+   reg [15:0] 		   datao_sel;
+   reg 			   dvo_sel;
+   reg [`DTYPE_WIDTH-1:0]  dtypeo_sel;
+   always @(posedge clk) begin
+      if(stream_sel == `Imager_stream_sel_RAW) begin
+	 datao_sel  <=  datao_rx;
+	 dtypeo_sel <= dtypeo_rx;
+	 dvo_sel    <=    dvo_rx;
+      end else if(stream_sel == `Imager_stream_sel_ROTATE) begin
+	 datao_sel  <=  datao_rotate;
+	 dtypeo_sel <= dtypeo_rotate;
+	 dvo_sel    <=    dvo_rotate;
+      end
+   end
+
+   /**************  STREAM 2 DI ***********************************/
+   assign di_STREAM2DI_en = di_term_addr == `TERM_STREAM;
+   stream2di stream2di
+     (
+      .enable(enable),
+      .resetb(resetb),
+      .clki(clk),
+      .dvi(dvo_sel),
+      .dtypei(dtypeo_sel),
+      .datai(datao_sel),
+      .rclk(clk),
+      .di_read_mode(di_read_mode && di_STREAM2DI_en),
+      .di_read(di_read && di_STREAM2DI_en),
+      .di_read_rdy(di_read_rdy_STREAM2DI),
+      .di_reg_datao(di_reg_datao_STREAM2DI)
+      );
+
+   
    
 endmodule

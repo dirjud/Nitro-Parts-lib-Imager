@@ -6,6 +6,12 @@ di = DeviceInterface(
     comment="""Imager Processing Test Terminals""",
     terminal_list = [
         Terminal(
+            name="STREAM",
+            regAddrWidth=16,
+            regDataWidth=32,
+            comment="Read image stream from this terminal",
+            ),
+        Terminal(
             name="Imager",
             regAddrWidth=16,
             regDataWidth=32,
@@ -123,6 +129,15 @@ di = DeviceInterface(
                     type="int",
                     comment="Noise seed when generating pseudo random noise.",
                 ),
+                Register(
+                    name="stream_sel",
+                    width=8,
+                    init=0,
+                    mode="write",
+                    type="int",
+                    valuemap=dict(RAW=0, ROTATE=1),
+                    comment="Selects what stream gets muxed into the 'STREAM' terminal for reading",
+                ),
             ],
         ),
         Terminal(
@@ -138,6 +153,22 @@ di = DeviceInterface(
                     type="int",
                     mode="write",
                     comment="Enables testing the rotate.v module",
+                ),
+                Register(
+                    name="sin_theta",
+                    width=10,
+                    init=0,
+                    type="int",
+                    mode="write",
+                    comment="0 to 360 degree rotation.",
+                ),
+                Register(
+                    name="cos_theta",
+                    width=10,
+                    init=256,
+                    type="int",
+                    mode="write",
+                    comment="0 to 360 degree rotation.",
                 ),
             ],
         ),
@@ -286,3 +317,7 @@ di = DeviceInterface(
         ),
     ]
 )
+
+for term in di:
+    di[term].addr += 100
+di = nitro.load_di("lib/imager/imager_rx.xml", di)
