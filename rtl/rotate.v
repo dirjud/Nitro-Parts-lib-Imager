@@ -76,8 +76,13 @@ module rotate
 
    wire out_of_bounds = (col_pos3 >= {3'b0, num_cols}) || (col_pos3 < 0) || (row_pos3 >= {3'b0, num_rows}) || (row_pos3 < 0);
 
-   wire [DIM_WIDTH-1:0] col_pos_rotated = col_pos3[DIM_WIDTH-1:0];
-   wire [DIM_WIDTH-1:0] row_pos_rotated = row_pos3[DIM_WIDTH-1:0];
+   // reduce to correct bitwidth
+   wire [DIM_WIDTH-1:0] col_4 = col_pos3[DIM_WIDTH-1:0];
+   wire [DIM_WIDTH-1:0] row_4 = row_pos3[DIM_WIDTH-1:0];
+
+   // select same bayer phase as the input image
+   wire [DIM_WIDTH-1:0] col_pos_rotated = { col_pos3[DIM_WIDTH-1:1], col_pos[0]};
+   wire [DIM_WIDTH-1:0] row_pos_rotated = { row_pos3[DIM_WIDTH-1:1], row_pos[0]};
    
    /* verilator lint_off WIDTH */
    wire [ADDR_WIDTH-1:0] row_start_addr = num_cols * row_pos_rotated + raddr_base;
