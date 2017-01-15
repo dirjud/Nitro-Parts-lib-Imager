@@ -9,7 +9,7 @@
 
 
 module rotate
-  #(parameter ADDR_WIDTH=21, DATA_WIDTH=24, ANGLE_WIDTH=8, DIM_WIDTH=11)
+  #(parameter ADDR_WIDTH=21, DATA_WIDTH=24, ANGLE_WIDTH=10, DIM_WIDTH=11)
   (input clk,
    input 			  resetb,
    input 			  enable,
@@ -55,9 +55,6 @@ module rotate
    wire [DIM_WIDTH-1:0] next_col_pos = col_pos + 1;
    wire [DIM_WIDTH-1:0] next_row_pos = row_pos + 1;
 
-   /* verilator lint_off WIDTH */
-   wire [ADDR_WIDTH-1:0] row_start_addr = num_cols * row_pos + raddr_base;
-   /* verilator lint_on WIDTH */
    wire [15:0] 		 sram_datai;
    reg 	frame_count; // toggles every frame to swap the read/write buffers
 
@@ -70,21 +67,23 @@ module rotate
    wire signed [DIM_WIDTH+ANGLE_WIDTH:0] row_pos1 = (col_pos0 * sin_theta) + (row_pos0 * cos_theta);
 
    // drop extra bits but keep the extra sign bit at the top
-   wire signed [DIM_WIDTH:0] col_pos2 = col_pos1[DIM_WIDTH+ANGLE_WIDTH:ANGLE_WIDTH];
-   wire signed [DIM_WIDTH:0] row_pos2 = row_pos1[DIM_WIDTH+ANGLE_WIDTH:ANGLE_WIDTH];
+   wire signed [DIM_WIDTH+2:0] col_pos2 = col_pos1[DIM_WIDTH+ANGLE_WIDTH:ANGLE_WIDTH-2];
+   wire signed [DIM_WIDTH+2:0] row_pos2 = row_pos1[DIM_WIDTH+ANGLE_WIDTH:ANGLE_WIDTH-2];
 
    // restore origin to upper right of image
-   wire signed [DIM_WIDTH:0] col_pos3 = col_pos2 + {1'b0, (num_cols >> 1)};
-   wire signed [DIM_WIDTH:0] row_pos3 = row_pos2 + {1'b0, (num_rows >> 1)} ;
+   wire signed [DIM_WIDTH+2:0] col_pos3 = col_pos2 + {3'b0, (num_cols >> 1)};
+   wire signed [DIM_WIDTH+2:0] row_pos3 = row_pos2 + {3'b0, (num_rows >> 1)} ;
 
-   wire out_of_bounds = (col_pos3 > {1'b0, num_cols}) || (col_pos3 < 0) || (row_pos3 > {1'b0, num_rows}) || (row_pos3 < 0);
+   wire out_of_bounds = (col_pos3 >= {3'b0, num_cols}) || (col_pos3 < 0) || (row_pos3 >= {3'b0, num_rows}) || (row_pos3 < 0);
 
-   wire signed [DIM_WIDTH-1:0] col_pos4 = col_pos3[DIM_WIDTH-1:0];
-   wire signed [DIM_WIDTH-1:0] row_pos4 = row_pos3[DIM_WIDTH-1:0];
+   wire [DIM_WIDTH-1:0] col_pos_rotated = col_pos3[DIM_WIDTH-1:0];
+   wire [DIM_WIDTH-1:0] row_pos_rotated = row_pos3[DIM_WIDTH-1:0];
    
+   /* verilator lint_off WIDTH */
+   wire [ADDR_WIDTH-1:0] row_start_addr = num_cols * row_pos_rotated + raddr_base;
+   /* verilator lint_on WIDTH */
+   reg 			 ob, ob0;
    
-   
-
    always @(posedge clk or negedge resetb) begin
       if(!resetb) begin
 	 ceb  <= 1;
@@ -102,12 +101,17 @@ module rotate
 	 waddr <= 0;
 	 row_pos <= 0;
 	 col_pos <= 0;
-	 num_cols <= 0;
+	 num_cols <= 1280;
 	 frame_count <= 0;
 	 raddr_base <= 0;
+	 num_rows <= 720;
+	 ob <= 0;
+	 ob0 <= 0;
       end else begin
 	 ram_databus0 <= sram_datai;
-
+	 ob0 <= out_of_bounds;
+	 ob <= ob0;
+	 
 	 // do a three clock cycle pipeline delay to give time to turn around
 	 // data through the RAM
 	 dvo1 <= dvi;
@@ -150,13 +154,15 @@ module rotate
 	    end else if(row_end) begin
 	       row_pos  <= next_row_pos;
 	       num_cols <= col_pos;
+	    end else if(frame_end) begin
+	       num_rows <= row_pos;
 	    end
 	    /* verilator lint_off WIDTH */
-	    raddr <= row_start_addr + num_cols - col_pos;
+	    raddr <= row_start_addr + col_pos_rotated;
 	    /* verilator lint_on WIDTH */
 
 	    if(pixel_valid2) begin
-	       datao <= 16'h03ff;//ram_databus0;
+	       datao <= (ob) ? 0 : ram_databus0;
 	    end else begin
 	       datao <= datao2;
 	    end
@@ -184,13 +190,14 @@ module rotate
    //   IOBUF soei(.IO(oeb), .O(oeb_buf), .T(0), .I(0));
 
 
-   IOBUF databus_buffer[15:0]
-     (.T(c),//oeb_buf),//c),
-      .I(datao1),
-      .O(sram_datai),
-      .IO(ram_databus));
-   //   assign ram_databus = oeb_buf ? datao1 : {16{1'bz}};
-
+//   IOBUF databus_buffer[15:0]
+//     (.T(c),//oeb_buf),//c),
+//      .I(datao1),
+//      .O(sram_datai),
+//      .IO(ram_databus));
+   assign ram_databus = c ? datao1 : {16{1'bz}};
+   assign sram_datai = ram_databus;
+   
    // synthesis attribute IOB of datao1 is "TRUE";
    // synthesis attribute IOB of ram_databus is "TRUE";
    // synthesis attribute IOB of ram_databus0 is "TRUE";

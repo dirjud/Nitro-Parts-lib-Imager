@@ -50,7 +50,7 @@ module rotate_tb
 	 di_en = 0;
       end
    end
-   parameter ADDR_WIDTH=19;
+   parameter ADDR_WIDTH=21;
    wire [ADDR_WIDTH-1:0] addr;
    wire        ceb, oeb, web;
    wire [15:0] ram_databus;
