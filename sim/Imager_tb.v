@@ -33,9 +33,13 @@ module Imager_tb
    wire di_read, di_read_mode, pt_di_read_rdy, di_read_req;
    wire di_write, di_write_mode, pt_di_write_rdy;
    
-   reg 	       resetb = 0;
+   reg [3:0]   rst_cnt;
+   wire        resetb = &rst_cnt;
+   initial rst_cnt = 0;
    always @(negedge clk) begin
-      resetb <= 1;
+      if(!resetb) begin
+	 rst_cnt <= rst_cnt + 1;
+      end
    end
    wire scl, sda;
 

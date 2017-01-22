@@ -28,7 +28,17 @@ def sin_cos_from_table(angle, table):
 
     return sin, cos
 
-def plot(bit_depth=8, N=64):
+
+def set_rotation(angle, dev, term, bit_depth=8, sin_reg="sin_theta", cos_reg="cos_theta"):
+    """ Provide the angle in degrees"""
+    theta = angle/180. * math.pi
+    sin_theta = int(round(math.sin(theta) * (2**bit_depth)))
+    cos_theta = int(round(math.cos(theta) * (2**bit_depth)))
+    dev.set(term, sin_reg, sin_theta)
+    dev.set(term, cos_reg, cos_theta)
+    return sin_theta/(2.0**bit_depth), cos_theta/(2.0**bit_depth)
+
+def _plot(bit_depth=8, N=64):
     table = gen_lookup_table(bit_depth=bit_depth, N=N)
     sin = []
     cos = []

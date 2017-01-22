@@ -6,6 +6,7 @@ NITRO_PARTS_DIR = ../..
 INC_PATHS = rtl_auto \
         $(NITRO_PARTS_DIR)/lib/imager/rtl \
 	$(NITRO_PARTS_DIR)/lib/VerilogTools/rtl \
+	$(NITRO_PARTS_DIR)/lib/VerilogTools/sim \
 	$(NITRO_PARTS_DIR)/lib/xilinx \
 
 # INC_FILES specifies a list of files that are included in the verilog
