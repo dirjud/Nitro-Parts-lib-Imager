@@ -155,6 +155,14 @@ di = DeviceInterface(
                     comment="Enables testing the rotate.v module",
                 ),
                 Register(
+                    name="enable2rams",
+                    width=1,
+                    init=0,
+                    type="int",
+                    mode="write",
+                    comment="Enables testing the rotate2rams.v module",
+                ),
+                Register(
                     name="sin_theta",
                     width=10,
                     init=0,

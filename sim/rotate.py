@@ -55,36 +55,42 @@ class RotateTest(simtest):
         
         y = (numpy.arange(0,num_cols).repeat(num_rows).reshape(num_cols,num_rows).transpose() + numpy.arange(0,num_rows).repeat(num_cols).reshape(num_rows,num_cols) + 50) & 0x3FF
         yd = (y >> 2).astype(numpy.uint8)
+
+        self.dev.set("RotateTest", "enable2rams", 1)
+        self.dev.set("Imager", "enable", 1)
+
+        angles =  numpy.linspace(0,360, 17)
+        sincos = []
         
-        for angle in numpy.linspace(0,360, 17)[:16]:
-            #print "Testing angle=", angle
+        for idx, angle in enumerate(angles + [0]): # add a dummy at end to get entire sequence
+            print "Setting angle=", angle
+
             sin_theta, cos_theta = rot.set_rotation(angle, self.dev, "RotateTest", bit_depth=8)
+            sincos.append((sin_theta, cos_theta))
             
-            self.dev.set("RotateTest", "enable", 1)
-            self.dev.set("Imager", "enable", 1)
-            x0 = numpy.zeros([num_rows, num_cols], dtype=numpy.uint16)
-            self.dev.read("STREAM", 0, x0)
-            x1 = numpy.zeros([num_rows, num_cols], dtype=numpy.uint16)
-            self.dev.read("STREAM", 0, x1)
-            yR = _rotate(y, sin_theta, cos_theta)
+            x = numpy.zeros([num_rows, num_cols], dtype=numpy.uint16)
+            self.dev.read("STREAM", 0, x)
+
+            xd =(x>> 2).astype(numpy.uint8)
+
+            if idx<1:
+                # throw away the first image through the pipeline
+                continue
             
-            if False:
-                x0d =(x0>> 2).astype(numpy.uint8)
-                x1d =(x1>> 2).astype(numpy.uint8)
+            yR = _rotate(y, sincos[-2][0], sincos[-2][1])
+            
+            if True:
+                xd =(x>> 2).astype(numpy.uint8)
                 yRd = (yR>>2).astype(numpy.uint8)
-                pylab.figure(figsize=(5,12))
-                pylab.subplot(411)
-                pylab.imshow(yd, matplotlib.cm.gray, interpolation='nearest')
-                pylab.subplot(412)
-                pylab.imshow(x0d, matplotlib.cm.gray, interpolation='nearest')
-                pylab.subplot(413)
-                pylab.imshow(x1d, matplotlib.cm.gray, interpolation='nearest')
-                pylab.subplot(414)
+                pylab.figure(figsize=(5,6))
+                pylab.subplot(211)
+                pylab.imshow(xd, matplotlib.cm.gray, interpolation='nearest')
+                pylab.subplot(212)
                 pylab.imshow(yRd, matplotlib.cm.gray, interpolation='nearest')
-                pylab.show()
 
-            self.assertTrue((x1==yR).all(), "Angle=%d failed" % angle)
+            self.assertTrue((x==yR).all(), "Angle=%d failed" % angle)
 
+        pylab.show()
 
 #if __name__ == "__main__":
 #    rt = RotateTest()

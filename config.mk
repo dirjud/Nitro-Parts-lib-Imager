@@ -31,6 +31,7 @@ SIM_FILES = sim/Imager_tb.v \
 	rtl_auto/RotateTestTerminal.v \
 	sim/rotate_tb.v \
 	rtl/rotate.v \
+	rtl/rotate2rams.v \
 	sim/sram.v \
 
 
