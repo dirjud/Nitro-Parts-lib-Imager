@@ -88,6 +88,8 @@ class RotateTest(simtest):
                 pylab.subplot(212)
                 pylab.imshow(yRd, matplotlib.cm.gray, interpolation='nearest')
 
+            #import pdb
+            #pdb.set_trace()
             self.assertTrue((x==yR).all(), "Angle=%d failed" % angle)
 
         pylab.show()
