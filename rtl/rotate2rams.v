@@ -72,7 +72,8 @@ module rotate2rams
    wire signed [DIM_WIDTH+2:0] row_pos4 = { row_pos3[DIM_WIDTH+2:1], row_pos[0]};
 
    // check for out of bounds
-   wire out_of_bounds = (col_pos4 >= {3'b0, num_cols}) || (col_pos4 < 0) || (row_pos4 >= {3'b0, num_rows}) || (row_pos4 < 0) || (raddr >= (1<<19));
+   wire out_of_bounds = (col_pos4 >= {3'b0, num_cols}) || (col_pos4 < 0) || (row_pos4 >= {3'b0, num_rows}) || (row_pos4 < 0);
+// || (raddr >= (1<<19));
 
    // reduce to correct bitwidth
    wire [DIM_WIDTH-1:0] col_pos_rotated = col_pos4[DIM_WIDTH-1:0];
@@ -199,8 +200,8 @@ module rotate2rams
 	    end else if(pixel_valid0) begin
 	       //web0  <=  frame_count;
 	       //web1  <= ~frame_count;
-	       web0_internal  <=  frame_count || (row_pos > 409);
-	       web1_internal  <= ~frame_count || (row_pos > 409);
+	       web0_internal  <=  frame_count;// || (row_pos > 409);
+	       web1_internal  <= ~frame_count;// || (row_pos > 409);
 	       oeb0  <= ~frame_count;
 	       oeb1  <=  frame_count;
 	       oeb0_internal  <= ~frame_count;
