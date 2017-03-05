@@ -8,7 +8,8 @@
 module stream2di
   #(parameter ADDR_WIDTH=22,
     parameter DI_DATA_WIDTH=32,
-    parameter STREAM_DATA_WIDTH=16
+    parameter STREAM_DATA_WIDTH=16,
+    parameter PIXEL_WIDTH=10
     )
   (
    input 			 enable, // syncronous to rclk
@@ -17,7 +18,8 @@ module stream2di
    input 			 clki,
    input 			 dvi,
    input [`DTYPE_WIDTH-1:0] 	 dtypei,
-   input [STREAM_DATA_WIDTH-1:0] datai,
+   input [PIXEL_WIDTH-1:0] 	 datai,
+   input [STREAM_DATA_WIDTH-1:0] meta_datai,
 
    input 			 rclk,
    input 			 di_read_mode,
@@ -81,9 +83,11 @@ module stream2di
 	    if(dvi && |(dtypei & `DTYPE_PIXEL_MASK)) begin
 	       phase <= !phase;
 	       if(phase == 0) begin
+		  /* verilator lint_off WIDTH */
 		  datai_s <= datai;
 	       end else begin
 		  buffer[waddr][wbuf] <= { datai, datai_s };
+		  /* verilator lint_on WIDTH */
 		  waddr <= waddr + 1;
 	       end
 

@@ -69,7 +69,7 @@ class RotateTest(simtest):
             sincos.append((sin_theta, cos_theta))
             
             x = numpy.zeros([num_rows, num_cols], dtype=numpy.uint16)
-            self.dev.read("STREAM", 0, x)
+            self.dev.read("STREAM_OUTPUT", 0, x)
 
             xd =(x>> 2).astype(numpy.uint8)
 

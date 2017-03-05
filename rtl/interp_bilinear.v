@@ -34,7 +34,7 @@ module interp_bilinear
    wire [`DTYPE_WIDTH-1:0] dtypeo_kernel;
    wire [PIXEL_WIDTH-1:0]  k[0:KERNEL_SIZE-1][0:KERNEL_SIZE-1];
    wire [PIXEL_WIDTH*KERNEL_SIZE*KERNEL_SIZE-1:0] kernel_datao;
-   `UNPACK_2DARRAY(PIXEL_WIDTH, KERNEL_SIZE, KERNEL_SIZE, k, kernel_datao)
+   `UNPACK_2DARRAY(pk_idx, PIXEL_WIDTH, KERNEL_SIZE, KERNEL_SIZE, k, kernel_datao)
    wire [15:0] 		   meta_datao_kernel;
    
    kernel #(.KERNEL_SIZE(KERNEL_SIZE),
@@ -50,7 +50,8 @@ module interp_bilinear
       .enable(enable),
       .dvi(dvi),
       .dtypei(dtypei),
-      .datai(datai),
+      .datai(datai[PIXEL_WIDTH-1:0]),
+      .meta_datai(datai),
       
       .dvo(dvo_kernel),
       .meta_datao(meta_datao_kernel),

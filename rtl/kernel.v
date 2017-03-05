@@ -9,9 +9,7 @@
 // will drop a KERNEL_SIZE-1 pixels from the rows and cols of the
 // image.  For exmaple, if KERNEL_SIZE is set to 3, this will output a
 // 3x3 kernel of the image and drop a 1 pixel ring around the
-// image. To save space, the row buffers and kernel are output at
-// PIXEL_WIDTH bits whereas the the header is output on a seperate
-// channel called meta_datao that is the same width as DATA_WIDTH.
+// image.
 
 module kernel
   #(parameter KERNEL_SIZE = 3,
@@ -25,7 +23,8 @@ module kernel
 
    input 					    dvi,
    input [`DTYPE_WIDTH-1:0] 			    dtypei,
-   input [DATA_WIDTH-1:0] 			    datai,
+   input [PIXEL_WIDTH-1:0] 			    datai,
+   input [DATA_WIDTH-1:0] 			    meta_datai,
    input 					    enable,
    
    output reg 					    dvo,
@@ -35,8 +34,8 @@ module kernel
    );
 
    reg [PIXEL_WIDTH-1:0] datao [0:KERNEL_SIZE-1][0:KERNEL_SIZE-1];
-`PACK_2DARRAY(PIXEL_WIDTH, KERNEL_SIZE, KERNEL_SIZE, datao, kernel_datao)
-   
+`PACK_2DARRAY(pk_idx, PIXEL_WIDTH, KERNEL_SIZE, KERNEL_SIZE, datao, kernel_datao)
+
    reg [31:0] row, col;
    
    reg [NUM_COLS_WIDTH-1:0] col_addr;
@@ -88,8 +87,7 @@ module kernel
 	 end
       end
    endgenerate
-   
-   
+
    always @(posedge clk) begin
       if(!resetb) begin
 	 row_addr <= 0;
@@ -161,10 +159,10 @@ module kernel
 	    ((header_addr == `Image_num_cols) || 
 	     (header_addr == `Image_num_rows))) begin
 	    /* verilator lint_off WIDTH */
-	    meta_datao <= datai - BORDER_SIZE;
+	    meta_datao <= meta_datai - BORDER_SIZE;
 	    /* verilator lint_on WIDTH */
 	 end else begin
-	    meta_datao <= datai;
+	    meta_datao <= meta_datai;
 	 end
       end
    end

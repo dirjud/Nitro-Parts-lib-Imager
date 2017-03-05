@@ -86,15 +86,16 @@ module rotate_tb
 
       );
 
-   sram #(.ADDR_WIDTH(ADDR_WIDTH),
-	  .DATA_WIDTH(16))
-   sram
-     (.ceb(ceb),
-      .oeb(oeb),
-      .web(web),
-      .addr(addr),
-      .data(ram_databus)
-      );
+// A Verilator is having problems with sram bus
+//   sram #(.ADDR_WIDTH(ADDR_WIDTH),
+//	  .DATA_WIDTH(16))
+//   sram
+//     (.ceb(ceb),
+//      .oeb(oeb),
+//      .web(web),
+//      .addr(addr),
+//      .data(ram_databus)
+//      );
 
 
    /************************************************************************/
@@ -128,23 +129,24 @@ module rotate_tb
       .ram_databus1(ram_databus1)
       );
 
-   sram #(.ADDR_WIDTH(ADDR2_WIDTH),
-	  .DATA_WIDTH(16))
-   sram0
-     (.ceb(1'b0),
-      .oeb(oeb0),
-      .web(web0),
-      .addr(addr0),
-      .data(ram_databus0)
-      );
-   sram #(.ADDR_WIDTH(ADDR2_WIDTH),
-	  .DATA_WIDTH(16))
-   sram1
-     (.ceb(1'b0),
-      .oeb(oeb1),
-      .web(web1),
-      .addr(addr1),
-      .data(ram_databus1)
-      );
-
+// A Verilator is having problems with sram bus
+//   sram #(.ADDR_WIDTH(ADDR2_WIDTH),
+//	  .DATA_WIDTH(16))
+//   sram0
+//     (.ceb(1'b0),
+//      .oeb(oeb0),
+//      .web(web0),
+//      .addr(addr0),
+//      .data(ram_databus0)
+//      );
+//   sram #(.ADDR_WIDTH(ADDR2_WIDTH),
+//	  .DATA_WIDTH(16))
+//   sram1
+//     (.ceb(1'b0),
+//      .oeb(oeb1),
+//      .web(web1),
+//      .addr(addr1),
+//      .data(ram_databus1)
+//      );
+//
 endmodule

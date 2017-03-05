@@ -61,7 +61,7 @@ module yuv420
    wire [`DTYPE_WIDTH-1:0] dtypeo_kernel;
    wire [15:0]  k[0:KERNEL_SIZE-1][0:KERNEL_SIZE-1];
    wire [16*KERNEL_SIZE*KERNEL_SIZE-1:0] kernel_datao;
-   `UNPACK_2DARRAY(16, KERNEL_SIZE, KERNEL_SIZE, k, kernel_datao)
+   `UNPACK_2DARRAY(pk_idx, 16, KERNEL_SIZE, KERNEL_SIZE, k, kernel_datao)
    wire [15:0] 		   meta_datao_kernel;
    kernel #(.KERNEL_SIZE(KERNEL_SIZE),
 	    .PIXEL_WIDTH(16),
@@ -77,6 +77,7 @@ module yuv420
       .dvi(dvi),
       .dtypei(dtypei),
       .datai( { ui, vi }),
+      .meta_datai(0),
       
       .dvo(dvo_kernel),
       .meta_datao(),
