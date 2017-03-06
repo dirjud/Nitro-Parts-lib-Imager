@@ -56,7 +56,7 @@ VSIM_SIM_FILES = sim/isim_tests.v
 
 # SIM_DEFS specifies and `defines you want to set from the command
 # line
-SIM_DEFS= x512Mb sg25 x16 TRACE SIM
+SIM_DEFS= x512Mb sg25 x16 TRACE SIM IMAGER_CALLBACKS
 SIM_DEFS += $(DEFS)
 
 
