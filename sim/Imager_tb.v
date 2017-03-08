@@ -135,6 +135,10 @@ module Imager_tb
    wire [31:0] 	di_reg_datao_INTERP;
    wire [15:0] 	di_transfer_status_INTERP;
 
+   wire 	di_RGB2YUV_en, di_read_rdy_RGB2YUV, di_write_rdy_RGB2YUV;
+   wire [31:0] 	di_reg_datao_RGB2YUV;
+   wire [15:0] 	di_transfer_status_RGB2YUV;
+   
    always @(*) begin
       if(di_term_addr == `TERM_Imager) begin
 	 di_reg_datao = ImagerTerminal_reg_datao;
@@ -181,6 +185,11 @@ module Imager_tb
 	 di_read_rdy  =  di_read_rdy_INTERP;
 	 di_write_rdy = di_write_rdy_INTERP;
 	 di_transfer_status = di_transfer_status_INTERP;
+      end else if(di_RGB2YUV_en) begin
+	 di_reg_datao = di_reg_datao_RGB2YUV;
+	 di_read_rdy  =  di_read_rdy_RGB2YUV;
+	 di_write_rdy = di_write_rdy_RGB2YUV;
+	 di_transfer_status = di_transfer_status_RGB2YUV;
       end else begin
          di_reg_datao = 0;
          di_read_rdy  = 1;
@@ -410,8 +419,43 @@ module Imager_tb
       .meta_datao(meta_datao_interp));
    
 
+   /**************** RGB2YUV Test Bench ********************/
+   wire 		          dvo_rgb2yuv;
+   wire [PIXEL_WIDTH-1:0] 	    y_rgb2yuv, u_rgb2yuv, v_rgb2yuv;
+   wire [15:0] 		   meta_datao_rgb2yuv;
+   wire [`DTYPE_WIDTH-1:0]     dtypeo_rgb2yuv;
+   rgb2yuv_tb #(.PIXEL_WIDTH(PIXEL_WIDTH))
+   rgb2yuv_tb
+     (
+      .resetb(resetb),
+      .di_clk          (di_clk),         
+      .di_term_addr	 (di_term_addr),	 
+      .di_reg_addr	 (di_reg_addr),	 
+      .di_read_mode	 (di_read_mode),	 
+      .di_read_req	 (di_read_req),	 
+      .di_read	 (di_read),	 
+      .di_write_mode	 (di_write_mode),	 
+      .di_write	 (di_write),	 
+      .di_reg_datai	 (di_reg_datai),	 
+      .di_read_rdy       (di_read_rdy_RGB2YUV),       
+      .di_reg_datao	    (di_reg_datao_RGB2YUV),	    
+      .di_write_rdy	    (di_write_rdy_RGB2YUV),	    
+      .di_transfer_status(di_transfer_status_RGB2YUV),
+      .di_en	    (di_RGB2YUV_en),		    
+      .img_clk(clk),
+      .dvi(dvo_interp),
+      .dtypei(dtypeo_interp),
+      .r(r_interp),
+      .g(g_interp),
+      .b(b_interp),
+      .dvo(dvo_rgb2yuv),
+      .dtypeo(dtypeo_rgb2yuv),
+      .y(y_rgb2yuv),
+      .u(u_rgb2yuv),
+      .v(v_rgb2yuv),
+      .meta_datao(meta_datao_rgb2yuv));
 
-   
+
    /**************** MUX to SELECT Reading Port ********************/
    reg [15:0] 		   datao0_sel, datao1_sel, datao2_sel;
    reg [15:0] 		   meta_datao_sel;
@@ -479,6 +523,20 @@ module Imager_tb
 	 meta_datao_sel <=  meta_datao_interp;
 	 dtypeo_sel     <=      dtypeo_interp;
 	 dvo_sel        <=         dvo_interp;
+      end else if(stream_sel == `Imager_stream_sel_RGB2YUV) begin
+	 datai0_sel     <=          r_interp;
+	 datai1_sel     <=          g_interp;
+	 datai2_sel     <=          b_interp;
+	 meta_datai_sel <= meta_datao_interp;
+	 dtypei_sel     <=     dtypeo_interp;
+	 dvi_sel        <=        dvo_interp;
+	 
+	 datao0_sel     <=          y_rgb2yuv;
+	 datao1_sel     <=          u_rgb2yuv;
+	 datao2_sel     <=          v_rgb2yuv;
+	 meta_datao_sel <= meta_datao_rgb2yuv;
+	 dtypeo_sel     <=     dtypeo_rgb2yuv;
+	 dvo_sel        <=        dvo_rgb2yuv;
       end
    end
    /* verilator lint_on WIDTH */
@@ -524,6 +582,5 @@ module Imager_tb
       .di_read_rdy(di_read_rdy_STREAM2DI_OUTPUT),
       .di_reg_datao(di_reg_datao_STREAM2DI_OUTPUT)
       );
-   
-   
+
 endmodule

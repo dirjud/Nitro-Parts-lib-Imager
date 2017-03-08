@@ -150,7 +150,7 @@ di = DeviceInterface(
                     init=0,
                     mode="write",
                     type="int",
-                    valuemap=dict(RAW=0, ROTATE=1, FILTER2D=2, INTERP_BILINEAR=3),
+                    valuemap=dict(RAW=0, ROTATE=1, FILTER2D=2, INTERP_BILINEAR=3, RGB2YUV=4, ),
                     comment="Selects what stream gets muxed into the 'STREAM' terminal for reading",
                 ),
             ],
@@ -487,6 +487,23 @@ di = DeviceInterface(
                 
             ],
         ),
+        Terminal(
+            name="Rgb2YuvTest",
+            regAddrWidth=16,
+            regDataWidth=32,
+            comment="Test the rgb2yuv module",
+            register_list = [
+                Register(
+                    name="enable",
+                    width=1,
+                    init=0,
+                    type="int",
+                    mode="write",
+                    comment="Enables the rgb2yuv module",
+                ),
+            ],
+        ),
+
         
     ]
 )

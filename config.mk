@@ -42,6 +42,9 @@ SIM_FILES = sim/Imager_tb.v \
 	rtl_auto/InterpBilinearTestTerminal.v \
 	rtl/interp_bilinear.v \
 	sim/interp_bilinear_tb.v \
+	rtl_auto/Rgb2YuvTestTerminal.v \
+	rtl/rgb2yuv.v \
+	sim/rgb2yuv_tb.v \
 
 
 # VERILATOR specific options
