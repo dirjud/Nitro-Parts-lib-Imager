@@ -9,7 +9,8 @@
 module interp_bilinear
   #(parameter PIXEL_WIDTH = 10,
     parameter DATA_WIDTH  = 16,
-    parameter MAX_COLS    = 1288
+    parameter MAX_COLS    = 1288,
+    parameter BLOCK_RAM   = 1
     )
   (input clk,
    input 			 resetb,
@@ -41,7 +42,7 @@ module interp_bilinear
 	    .PIXEL_WIDTH(PIXEL_WIDTH),
 	    .DATA_WIDTH(16),
 	    .MAX_COLS(1288),
-	    .NUM_COLS_WIDTH(11)
+	    .BLOCK_RAM(BLOCK_RAM)
 	    )
    kernel
      (

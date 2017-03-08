@@ -16,7 +16,7 @@ module kernel
     parameter PIXEL_WIDTH = 10,
     parameter DATA_WIDTH  = 16,
     parameter MAX_COLS    = 1288,
-    parameter NUM_COLS_WIDTH = 11
+    parameter BLOCK_RAM   = 1
     )
   (input clk,
    input 					    resetb,
@@ -32,6 +32,8 @@ module kernel
    output reg [`DTYPE_WIDTH-1:0] 		    dtypeo,
    output [KERNEL_SIZE*KERNEL_SIZE*PIXEL_WIDTH-1:0] kernel_datao
    );
+
+   parameter NUM_COLS_WIDTH = $clog2(MAX_COLS);
 
    reg [PIXEL_WIDTH-1:0] datao [0:KERNEL_SIZE-1][0:KERNEL_SIZE-1];
 `PACK_2DARRAY(pk_idx, PIXEL_WIDTH, KERNEL_SIZE, KERNEL_SIZE, datao, kernel_datao)
@@ -61,11 +63,7 @@ module kernel
    
    generate
       for(x=0; x<KERNEL_SIZE-2; x=x+1) begin
-	 rowbuffer #(.ADDR_WIDTH(NUM_COLS_WIDTH),
-		     .MAX_COLS(MAX_COLS),
-		     .PIXEL_WIDTH(PIXEL_WIDTH)
-		     )
-	 rowbuffer
+	 rowbuffer #(.MAX_COLS(MAX_COLS), .PIXEL_WIDTH(PIXEL_WIDTH), .BLOCK_RAM(BLOCK_RAM)) rowbuffer
 	   (.raddr(raddr),
 	    .waddr(waddr),
 	    .we(we_s),
@@ -76,11 +74,7 @@ module kernel
       end
    endgenerate
 
-   rowbuffer #(.ADDR_WIDTH(NUM_COLS_WIDTH),
-	       .MAX_COLS(MAX_COLS),
-	       .PIXEL_WIDTH(PIXEL_WIDTH)
-	       )
-   rowbufferN
+   rowbuffer #(.MAX_COLS(MAX_COLS), .PIXEL_WIDTH(PIXEL_WIDTH), .BLOCK_RAM(BLOCK_RAM)) rowbufferN
      (.raddr(raddr),
       .waddr(raddr),
       .we(we),
@@ -128,7 +122,9 @@ module kernel
 	 header_addr <= 0;
 	 meta_datao <= 0;
 	 for (row=0; row<KERNEL_SIZE; row=row+1) begin
-	    datao[row][col] <= 0;
+	    for (col=0; col<KERNEL_SIZE-1; col=col+1) begin
+	       datao[row][col] <= 0;
+	    end
 	 end
 	 
       end else begin

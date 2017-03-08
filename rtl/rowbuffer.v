@@ -1,7 +1,8 @@
 module rowbuffer
-  #(parameter ADDR_WIDTH=11,
-    parameter PIXEL_WIDTH=10,
-    parameter MAX_COLS=1288
+  #(parameter PIXEL_WIDTH=10,
+    parameter MAX_COLS=1288,
+    parameter BLOCK_RAM=1,
+    parameter ADDR_WIDTH=$clog2(MAX_COLS)
     )
   (
    input [ADDR_WIDTH-1:0] raddr,
@@ -12,20 +13,34 @@ module rowbuffer
    output reg [PIXEL_WIDTH-1:0] datao
    );
 
-   reg [PIXEL_WIDTH-1:0]    data[0:MAX_COLS-1];
-   
-   always @(posedge clk) begin
-      if (we) begin
-	 data[waddr] <= datai;
+
+   generate
+      if(BLOCK_RAM==1) begin
+
+	 (* RAM_STYLE="BLOCK" *)
+	 reg [PIXEL_WIDTH-1:0]    data[0:MAX_COLS-1];
+	 always @(posedge clk) begin
+	    if (we) begin
+	       data[waddr] <= datai;
+	    end
+	    datao <= data[raddr];
+	 end
+
+      end else begin
+
+	 (* RAM_STYLE="DISTRIBUTED" *)
+	 reg [PIXEL_WIDTH-1:0]    data[0:MAX_COLS-1];
+	 always @(posedge clk) begin
+	    if (we) begin
+	       data[waddr] <= datai;
+	    end
+	 end
+	 wire [PIXEL_WIDTH-1:0] datao_p = data[raddr];
+	 always @(posedge clk) begin
+	    datao <= datao_p;
+	 end
+//	 assign datao = data[raddr];
       end
-      datao <= data[raddr];
-   end
-
-
-   wire [PIXEL_WIDTH-1:0] d0 = data[0];
-   wire [PIXEL_WIDTH-1:0] d1 = data[1];
-   wire [PIXEL_WIDTH-1:0] d2 = data[2];
-   wire [PIXEL_WIDTH-1:0] d3 = data[3];
-   wire [PIXEL_WIDTH-1:0] d4 = data[4];
+   endgenerate
    
 endmodule

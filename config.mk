@@ -5,8 +5,8 @@ NITRO_PARTS_DIR = ../..
 # the SIM_LIBS variable.
 INC_PATHS = rtl_auto \
         $(NITRO_PARTS_DIR)/lib/imager/rtl \
-	$(NITRO_PARTS_DIR)/lib/VerilogTools/rtl \
 	$(NITRO_PARTS_DIR)/lib/VerilogTools/sim \
+	$(NITRO_PARTS_DIR)/lib/VerilogTools/rtl \
 	$(NITRO_PARTS_DIR)/lib/xilinx \
 
 # INC_FILES specifies a list of files that are included in the verilog
@@ -48,7 +48,7 @@ SIM_FILES = sim/Imager_tb.v \
 	rtl_auto/LookupMapTestTerminal.v \
 	rtl/lookup_map.v \
 	sim/lookup_map_tb.v \
-
+	rtl/rowbuffer.v \
 
 # VERILATOR specific options
 #VERILATOR_ARGS=-Wno-UNOPTFLAT

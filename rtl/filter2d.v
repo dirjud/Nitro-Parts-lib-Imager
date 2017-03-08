@@ -21,7 +21,7 @@ module filter2d
     parameter COEFF_FRAC_WIDTH=8,
     parameter COEFF_SIGNED=0,  // are the coeffecients signed=1, or unsigned=0
     parameter MAX_COLS=1288,
-    parameter MAX_COLS_WIDTH=11
+    parameter BLOCK_RAM=1
     )
   (
    input 			       clk,
@@ -42,6 +42,8 @@ module filter2d
    
    );
 
+   parameter MAX_COLS_WIDTH=$clog2(MAX_COLS);
+
    wire dvo_kernel;
    wire [`DTYPE_WIDTH-1:0] dtypeo_kernel;
    wire [PIXEL_WIDTH*KERNEL_SIZE*KERNEL_SIZE-1:0] kernel_datao;
@@ -51,7 +53,7 @@ module filter2d
 	    .PIXEL_WIDTH(PIXEL_WIDTH),
 	    .DATA_WIDTH(16),
 	    .MAX_COLS(MAX_COLS),
-	    .NUM_COLS_WIDTH(MAX_COLS_WIDTH)
+	    .BLOCK_RAM(BLOCK_RAM)
 	    )
    kernel
      (

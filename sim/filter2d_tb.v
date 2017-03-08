@@ -6,8 +6,8 @@ module filter2d_tb
     COEFF_WIDTH=8,
     COEFF_FRAC_WIDTH=6,
     COEFF_SIGNED=1,
-    MAX_COLS=1288,
-    MAX_COLS_WIDTH=11)
+    MAX_COLS=1288
+    )
    (
     input 		      resetb,
 
@@ -39,8 +39,7 @@ module filter2d_tb
     output [PIXEL_WIDTH-1:0]  datao,
     output [15:0] 	      meta_datao
    );
-
-
+   
 `include "Filter2dTestTerminalInstance.v"
 
    always @(*) begin
@@ -65,7 +64,7 @@ module filter2d_tb
 	      .COEFF_FRAC_WIDTH(COEFF_FRAC_WIDTH),
 	      .COEFF_SIGNED(COEFF_SIGNED),
 	      .MAX_COLS(MAX_COLS),
-	      .MAX_COLS_WIDTH(MAX_COLS_WIDTH)
+	      .BLOCK_RAM(0)
 	      )
      filter2d
      (.clk(di_clk),
