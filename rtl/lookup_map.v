@@ -80,19 +80,20 @@ module lookup_map
    end 
 
    wire di_rowbuffer_we = di_write && di_term_addr == `TERM_LookupMap;
-   wire [9:0] di_rowbuffer_addr = (di_write_mode || di_read_mode) && di_term_addr == `TERM_LookupMap ? di_reg_addr[9:0] : y[9:0];
 
    rowbuffer
      #(.ADDR_WIDTH(10),
        .PIXEL_WIDTH(PIXEL_WIDTH),
        .MAX_COLS(1024))
-   rowbuffer (
-    .addr(di_rowbuffer_addr),
-    .we(di_rowbuffer_we),
-    .clk(di_clk),
-    .datai(di_reg_datai[PIXEL_WIDTH-1:0]),
-    .datao(y_lookup)
-   );
+   rowbuffer 
+     (
+      .waddr(di_reg_addr[PIXEL_WIDTH-1:0]),
+      .we(di_rowbuffer_we),
+      .raddr(y[PIXEL_WIDTH-1:0]),
+      .clk(di_clk),
+      .datai(di_reg_datai[PIXEL_WIDTH-1:0]),
+      .datao(y_lookup)
+      );
 
    always @(*) begin
       yo  = (enable) ? y_lookup : y_s;

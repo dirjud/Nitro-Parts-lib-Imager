@@ -45,6 +45,9 @@ SIM_FILES = sim/Imager_tb.v \
 	rtl_auto/Rgb2YuvTestTerminal.v \
 	rtl/rgb2yuv.v \
 	sim/rgb2yuv_tb.v \
+	rtl_auto/LookupMapTestTerminal.v \
+	rtl/lookup_map.v \
+	sim/lookup_map_tb.v \
 
 
 # VERILATOR specific options

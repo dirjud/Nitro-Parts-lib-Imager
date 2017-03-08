@@ -138,6 +138,10 @@ module Imager_tb
    wire 	di_RGB2YUV_en, di_read_rdy_RGB2YUV, di_write_rdy_RGB2YUV;
    wire [31:0] 	di_reg_datao_RGB2YUV;
    wire [15:0] 	di_transfer_status_RGB2YUV;
+
+   wire 	di_LOOKUP_MAP_en, di_read_rdy_LOOKUP_MAP, di_write_rdy_LOOKUP_MAP;
+   wire [31:0] 	di_reg_datao_LOOKUP_MAP;
+   wire [15:0] 	di_transfer_status_LOOKUP_MAP;
    
    always @(*) begin
       if(di_term_addr == `TERM_Imager) begin
@@ -190,6 +194,11 @@ module Imager_tb
 	 di_read_rdy  =  di_read_rdy_RGB2YUV;
 	 di_write_rdy = di_write_rdy_RGB2YUV;
 	 di_transfer_status = di_transfer_status_RGB2YUV;
+      end else if(di_LOOKUP_MAP_en) begin
+	 di_reg_datao = di_reg_datao_LOOKUP_MAP;
+	 di_read_rdy  =  di_read_rdy_LOOKUP_MAP;
+	 di_write_rdy = di_write_rdy_LOOKUP_MAP;
+	 di_transfer_status = di_transfer_status_LOOKUP_MAP;
       end else begin
          di_reg_datao = 0;
          di_read_rdy  = 1;
@@ -455,6 +464,41 @@ module Imager_tb
       .v(v_rgb2yuv),
       .meta_datao(meta_datao_rgb2yuv));
 
+   /**************** Lookup Map Test Bench ********************/
+   wire 		          dvo_lookup_map;
+   wire [PIXEL_WIDTH-1:0] 	    y_lookup_map, u_lookup_map, v_lookup_map;
+   wire [15:0] 		   meta_datao_lookup_map;
+   wire [`DTYPE_WIDTH-1:0]     dtypeo_lookup_map;
+   lookup_map_tb #(.PIXEL_WIDTH(PIXEL_WIDTH))
+   lookup_map_tb
+     (
+      .resetb(resetb),
+      .di_clk          (di_clk),         
+      .di_term_addr	 (di_term_addr),	 
+      .di_reg_addr	 (di_reg_addr),	 
+      .di_read_mode	 (di_read_mode),	 
+      .di_read_req	 (di_read_req),	 
+      .di_read	 (di_read),	 
+      .di_write_mode	 (di_write_mode),	 
+      .di_write	 (di_write),	 
+      .di_reg_datai	 (di_reg_datai),	 
+      .di_read_rdy              (di_read_rdy_LOOKUP_MAP),       
+      .di_reg_datao	       (di_reg_datao_LOOKUP_MAP),	    
+      .di_write_rdy	       (di_write_rdy_LOOKUP_MAP),	    
+      .di_transfer_status(di_transfer_status_LOOKUP_MAP),
+      .di_en	    (di_LOOKUP_MAP_en),		    
+      .img_clk(clk),
+      .dvi(      dvo_rgb2yuv),
+      .dtypei(dtypeo_rgb2yuv),
+      .yi(         y_rgb2yuv),
+      .ui(         u_rgb2yuv),
+      .vi(         v_rgb2yuv),
+      .dvo(              dvo_lookup_map),
+      .dtypeo(        dtypeo_lookup_map),
+      .yo(                 y_lookup_map),
+      .uo(                 u_lookup_map),
+      .vo(                 v_lookup_map),
+      .meta_datao(meta_datao_lookup_map));
 
    /**************** MUX to SELECT Reading Port ********************/
    reg [15:0] 		   datao0_sel, datao1_sel, datao2_sel;
@@ -537,6 +581,20 @@ module Imager_tb
 	 meta_datao_sel <= meta_datao_rgb2yuv;
 	 dtypeo_sel     <=     dtypeo_rgb2yuv;
 	 dvo_sel        <=        dvo_rgb2yuv;
+      end else if(stream_sel == `Imager_stream_sel_LOOKUP_MAP) begin
+	 datai0_sel     <=          y_rgb2yuv;
+	 datai1_sel     <=          u_rgb2yuv;
+	 datai2_sel     <=          v_rgb2yuv;
+	 meta_datai_sel <= meta_datao_rgb2yuv;
+	 dtypei_sel     <=     dtypeo_rgb2yuv;
+	 dvi_sel        <=        dvo_rgb2yuv;
+	 
+	 datao0_sel     <=          y_lookup_map;
+	 datao1_sel     <=          u_lookup_map;
+	 datao2_sel     <=          v_lookup_map;
+	 meta_datao_sel <= meta_datao_lookup_map;
+	 dtypeo_sel     <=     dtypeo_lookup_map;
+	 dvo_sel        <=        dvo_lookup_map;
       end
    end
    /* verilator lint_on WIDTH */
