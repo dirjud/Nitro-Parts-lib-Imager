@@ -48,6 +48,15 @@ di = DeviceInterface(
                     """,
                 ),
                 Register(
+                    name="capture",
+                    mode="write",
+                    type="int",
+                    subregs=[
+                        SubReg(name="modei", width=1, init=0, comment="""0: 16b single channel. 1: 16b three channels""",),
+                        SubReg(name="modeo", width=1, init=0, comment="""0: 16b single channel. 1: 16b three channels""",),
+                        ],
+                ),
+                Register(
                     name="bayer_red",
                     width=10,
                     init=0,
@@ -141,7 +150,7 @@ di = DeviceInterface(
                     init=0,
                     mode="write",
                     type="int",
-                    valuemap=dict(RAW=0, ROTATE=1, FILTER2D=2),
+                    valuemap=dict(RAW=0, ROTATE=1, FILTER2D=2, INTERP_BILINEAR=3),
                     comment="Selects what stream gets muxed into the 'STREAM' terminal for reading",
                 ),
             ],
@@ -451,6 +460,31 @@ di = DeviceInterface(
                     mode="write",
                     comment="COEFF 0",
                 ),
+            ],
+        ),
+        Terminal(
+            name="InterpBilinearTest",
+            regAddrWidth=16,
+            regDataWidth=32,
+            comment="Test for bilinear interpolation module",
+            register_list = [
+                Register(
+                    name="enable",
+                    width=1,
+                    init=0,
+                    type="int",
+                    mode="write",
+                    comment="Enables the interp_bilinear module",
+                ),
+                Register(
+                    name="phase",
+                    width=2,
+                    init=0,
+                    type="int",
+                    mode="write",
+                    comment="Interpolation Phase",
+                ),
+                
             ],
         ),
         

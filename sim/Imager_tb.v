@@ -131,6 +131,10 @@ module Imager_tb
    wire 	di_read_rdy_IMAGER_RX, di_write_rdy_IMAGER_RX, di_IMAGER_RX_en;
    wire [15:0] 	di_transfer_status_IMAGER_RX;
    
+   wire 	di_INTERP_en, di_read_rdy_INTERP, di_write_rdy_INTERP;
+   wire [31:0] 	di_reg_datao_INTERP;
+   wire [15:0] 	di_transfer_status_INTERP;
+
    always @(*) begin
       if(di_term_addr == `TERM_Imager) begin
 	 di_reg_datao = ImagerTerminal_reg_datao;
@@ -172,6 +176,11 @@ module Imager_tb
 	 di_read_rdy  =  di_read_rdy_FILTER2D;
 	 di_write_rdy = di_write_rdy_FILTER2D;
 	 di_transfer_status = di_transfer_status_FILTER2D;
+      end else if(di_INTERP_en) begin
+	 di_reg_datao = di_reg_datao_INTERP;
+	 di_read_rdy  =  di_read_rdy_INTERP;
+	 di_write_rdy = di_write_rdy_INTERP;
+	 di_transfer_status = di_transfer_status_INTERP;
       end else begin
          di_reg_datao = 0;
          di_read_rdy  = 1;
@@ -366,58 +375,127 @@ module Imager_tb
       .meta_datao(meta_datao_filter2d)
       );
 
+   /**************** Interp Bilinear Test Bench ********************/
+   wire 		          dvo_interp;
+   wire [PIXEL_WIDTH-1:0] 	    r_interp, g_interp, b_interp;
+   wire [15:0] 		   meta_datao_interp;
+   wire [`DTYPE_WIDTH-1:0]     dtypeo_interp;
+   interp_bilinear_tb #(.PIXEL_WIDTH(PIXEL_WIDTH))
+   interp_bilinear_tb
+     (
+      .resetb(resetb),
+      .di_clk          (di_clk),         
+      .di_term_addr	 (di_term_addr),	 
+      .di_reg_addr	 (di_reg_addr),	 
+      .di_read_mode	 (di_read_mode),	 
+      .di_read_req	 (di_read_req),	 
+      .di_read	 (di_read),	 
+      .di_write_mode	 (di_write_mode),	 
+      .di_write	 (di_write),	 
+      .di_reg_datai	 (di_reg_datai),	 
+      .di_read_rdy       (di_read_rdy_INTERP),       
+      .di_reg_datao	    (di_reg_datao_INTERP),	    
+      .di_write_rdy	    (di_write_rdy_INTERP),	    
+      .di_transfer_status(di_transfer_status_INTERP),
+      .di_en	    (di_INTERP_en),		    
+      .img_clk(clk),
+      .dvi(dvo_rx),
+      .dtypei(dtypeo_rx),
+      .datai(datao_rx),
+      .dvo(dvo_interp),
+      .dtypeo(dtypeo_interp),
+      .r(r_interp),
+      .g(g_interp),
+      .b(b_interp),
+      .meta_datao(meta_datao_interp));
+   
 
 
+   
    /**************** MUX to SELECT Reading Port ********************/
-   reg [PIXEL_WIDTH-1:0]   datao_sel;
+   reg [15:0] 		   datao0_sel, datao1_sel, datao2_sel;
    reg [15:0] 		   meta_datao_sel;
    reg 			   dvo_sel;
    reg [`DTYPE_WIDTH-1:0]  dtypeo_sel;
-   reg [PIXEL_WIDTH-1:0]   datai_sel;
+   reg [15:0] 		   datai0_sel, datai1_sel, datai2_sel;
    reg [15:0] 		   meta_datai_sel;
    reg 			   dvi_sel;
    reg [`DTYPE_WIDTH-1:0]  dtypei_sel;
+   /* verilator lint_off WIDTH */
    always @(posedge clk) begin
       if(stream_sel == `Imager_stream_sel_RAW) begin
-	 datai_sel      <=  datao_rx[PIXEL_WIDTH-1:0];
+	 datai0_sel     <=  datao_rx;
+	 datai1_sel     <=  0;
+	 datai2_sel     <=  0;
 	 meta_datai_sel <=  datao_rx;
 	 dtypei_sel     <= dtypeo_rx;
 	 dvi_sel        <=    dvo_rx;
-	 datao_sel      <=  datao_rx[PIXEL_WIDTH-1:0];
+	 
+	 datao0_sel     <=  datao_rx;
+	 datao1_sel     <=  0;
+	 datao2_sel     <=  0;
 	 meta_datao_sel <=  datao_rx;
 	 dtypeo_sel     <= dtypeo_rx;
 	 dvo_sel        <=    dvo_rx;
       end else if(stream_sel == `Imager_stream_sel_ROTATE) begin
-	 datai_sel      <=  datao_rx[PIXEL_WIDTH-1:0];
+	 datai0_sel     <=  datao_rx;
+	 datai1_sel     <=  0;
+	 datai2_sel     <=  0;
 	 meta_datai_sel <=  datao_rx;
 	 dtypei_sel     <= dtypeo_rx;
 	 dvi_sel        <=    dvo_rx;
-	 datao_sel      <=  datao_rotate[PIXEL_WIDTH-1:0];
+	 
+	 datao0_sel     <=  datao_rotate;
+	 datao1_sel     <=  0;
+	 datao2_sel     <=  0;
 	 meta_datao_sel <=  datao_rotate;
 	 dtypeo_sel     <= dtypeo_rotate;
 	 dvo_sel        <=    dvo_rotate;
       end else if(stream_sel == `Imager_stream_sel_FILTER2D) begin
-	 datai_sel      <=  datao_rx[PIXEL_WIDTH-1:0];
+	 datai0_sel     <=  datao_rx;
+	 datai1_sel     <=  0;
+	 datai2_sel     <=  0;
 	 meta_datai_sel <=  datao_rx;
 	 dtypei_sel     <= dtypeo_rx;
 	 dvi_sel        <=    dvo_rx;
-	 datao_sel      <=  datao_filter2d[PIXEL_WIDTH-1:0];
+	 
+	 datao0_sel     <=  datao_filter2d;
+	 datao1_sel     <=  0;
+	 datao2_sel     <=  0;
 	 meta_datao_sel <=  meta_datao_filter2d;
 	 dtypeo_sel     <= dtypeo_filter2d;
 	 dvo_sel        <=    dvo_filter2d;
+      end else if(stream_sel == `Imager_stream_sel_INTERP_BILINEAR) begin
+	 datai0_sel     <=  datao_rx;
+	 datai1_sel     <=  0;
+	 datai2_sel     <=  0;
+	 meta_datai_sel <=  datao_rx;
+	 dtypei_sel     <= dtypeo_rx;
+	 dvi_sel        <=    dvo_rx;
+	 
+	 datao0_sel     <=           r_interp;
+	 datao1_sel     <=           g_interp;
+	 datao2_sel     <=           b_interp;
+	 meta_datao_sel <=  meta_datao_interp;
+	 dtypeo_sel     <=      dtypeo_interp;
+	 dvo_sel        <=         dvo_interp;
       end
    end
-
+   /* verilator lint_on WIDTH */
+   
    /**************  STREAM 2 DI ***********************************/
    assign di_STREAM2DI_INPUT_en = di_term_addr == `TERM_STREAM_INPUT;
-   stream2di #(.PIXEL_WIDTH(PIXEL_WIDTH)) stream2di_input
+   stream2di stream2di_input
      (
       .enable(enable),
       .resetb(resetb),
+      .mode(capture_modei),
       .clki(clk),
       .dvi(dvi_sel),
       .dtypei(dtypei_sel),
-      .datai(datai_sel),
+      .datai0(datai0_sel),
+      .datai1(datai1_sel),
+      .datai2(datai2_sel),
       .meta_datai(meta_datai_sel),
       .rclk(clk),
       .di_read_mode(di_read_mode && di_STREAM2DI_INPUT_en),
@@ -428,14 +506,17 @@ module Imager_tb
 
    /**************  STREAM 2 DI ***********************************/
    assign di_STREAM2DI_OUTPUT_en = di_term_addr == `TERM_STREAM_OUTPUT;
-   stream2di #(.PIXEL_WIDTH(PIXEL_WIDTH)) stream2di_output
+   stream2di stream2di_output
      (
       .enable(enable),
       .resetb(resetb),
+      .mode(capture_modeo),
       .clki(clk),
       .dvi(dvo_sel),
       .dtypei(dtypeo_sel),
-      .datai(datao_sel),
+      .datai0(datao0_sel),
+      .datai1(datao1_sel),
+      .datai2(datao2_sel),
       .meta_datai(meta_datao_sel),
       .rclk(clk),
       .di_read_mode(di_read_mode && di_STREAM2DI_OUTPUT_en),

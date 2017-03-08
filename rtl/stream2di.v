@@ -8,8 +8,7 @@
 module stream2di
   #(parameter ADDR_WIDTH=22,
     parameter DI_DATA_WIDTH=32,
-    parameter STREAM_DATA_WIDTH=16,
-    parameter PIXEL_WIDTH=10
+    parameter STREAM_DATA_WIDTH=16
     )
   (
    input 			 enable, // syncronous to rclk
@@ -18,9 +17,11 @@ module stream2di
    input 			 clki,
    input 			 dvi,
    input [`DTYPE_WIDTH-1:0] 	 dtypei,
-   input [PIXEL_WIDTH-1:0] 	 datai,
+   input [15:0] 		 datai0,
+   input [15:0] 		 datai1,
+   input [15:0] 		 datai2,
    input [STREAM_DATA_WIDTH-1:0] meta_datai,
-
+   input 			 mode, // 0 just datai0, 1 - datai0/datai1,datai2
    input 			 rclk,
    input 			 di_read_mode,
    input 			 di_read,
@@ -29,28 +30,6 @@ module stream2di
    );
 
    reg [31:0] 			  buffer[0:(1<<ADDR_WIDTH)-1][0:1];
-
-   wire [31:0] buffer0_0 = buffer[0][0];
-   wire [31:0] buffer1_0 = buffer[1][0];
-   wire [31:0] buffer2_0 = buffer[2][0];
-   wire [31:0] buffer3_0 = buffer[3][0];
-   wire [31:0] buffer4_0 = buffer[4][0];
-   wire [31:0] buffer5_0 = buffer[5][0];
-   wire [31:0] buffer6_0 = buffer[6][0];
-   wire [31:0] buffer7_0 = buffer[7][0];
-   wire [31:0] buffer8_0 = buffer[8][0];
-   wire [31:0] buffer9_0 = buffer[9][0];
-   wire [31:0] buffer0_1 = buffer[0][1];
-   wire [31:0] buffer1_1 = buffer[1][1];
-   wire [31:0] buffer2_1 = buffer[2][1];
-   wire [31:0] buffer3_1 = buffer[3][1];
-   wire [31:0] buffer4_1 = buffer[4][1];
-   wire [31:0] buffer5_1 = buffer[5][1];
-   wire [31:0] buffer6_1 = buffer[6][1];
-   wire [31:0] buffer7_1 = buffer[7][1];
-   wire [31:0] buffer8_1 = buffer[8][1];
-   wire [31:0] buffer9_1 = buffer[9][1];
-
 
    reg [ADDR_WIDTH-1:0] 	  waddr, raddr;
    reg 				  wbuf, rbuf;
@@ -81,14 +60,27 @@ module stream2di
 	 end else if(wstate == WCAPTURE) begin
 
 	    if(dvi && |(dtypei & `DTYPE_PIXEL_MASK)) begin
-	       phase <= !phase;
-	       if(phase == 0) begin
-		  /* verilator lint_off WIDTH */
-		  datai_s <= datai;
-	       end else begin
-		  buffer[waddr][wbuf] <= { datai, datai_s };
-		  /* verilator lint_on WIDTH */
-		  waddr <= waddr + 1;
+	       if(mode==0) begin
+		  phase <= !phase;
+		  if(phase == 0) begin
+		     /* verilator lint_off WIDTH */
+		     datai_s <= datai0;
+		  end else begin
+		     buffer[waddr][wbuf] <= { datai0, datai_s };
+		     /* verilator lint_on WIDTH */
+		     waddr <= waddr + 1;
+		  end
+	       end else if(mode == 1) begin
+		  phase <= !phase;
+		  if(phase == 0) begin
+		     buffer[waddr][wbuf] = { datai1, datai0 };
+		     waddr <= waddr + 1;
+		     datai_s <= datai2;
+		  end else begin
+		     buffer[waddr][wbuf] <= { datai0, datai_s  };
+		     buffer[waddr+1][wbuf] <= { datai2, datai1 };
+		     waddr <= waddr + 2;
+		  end
 	       end
 
 	    end else if(dvi && dtypei == `DTYPE_FRAME_END) begin

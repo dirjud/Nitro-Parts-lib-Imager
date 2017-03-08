@@ -51,6 +51,7 @@ module lookup_map
    );
 
    wire [PIXEL_WIDTH-1:0] y_lookup;
+   reg [PIXEL_WIDTH-1:0] y_s;
 
 
    // di registers
@@ -93,18 +94,22 @@ module lookup_map
     .datao(y_lookup)
    );
 
+   always @(*) begin
+      yo  = (enable) ? y_lookup : y_s;
+   end
+
   always @(posedge pixclk or negedge resetb) begin
       if(!resetb) begin
 	 dvo        <= 0;
 	 dtypeo     <= 0;
 	 meta_datao <= 0;
-	 yo         <= 0;
+	 y_s        <= 0;
 	 uo         <= 0;
 	 vo         <= 0;
       end else begin
 	 dvo        <= dvi;
 	 dtypeo     <= dtypei;
-         yo         <= (enable) ? y_lookup : y;
+	 y_s        <= y;
          uo         <= u;
          vo         <= v;
 	 meta_datao <= meta_datai;

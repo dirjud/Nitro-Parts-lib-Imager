@@ -9,8 +9,7 @@
 module interp_bilinear
   #(parameter PIXEL_WIDTH = 10,
     parameter DATA_WIDTH  = 16,
-    parameter MAX_COLS    = 1288,
-    parameter NUM_COLS_WIDTH = 11
+    parameter MAX_COLS    = 1288
     )
   (input clk,
    input 			 resetb,
@@ -29,6 +28,7 @@ module interp_bilinear
    output reg [DATA_WIDTH-1:0] 	 meta_datao
    );
 
+   parameter NUM_COLS_WIDTH = $clog2(MAX_COLS);
    parameter KERNEL_SIZE=3;
    wire dvo_kernel;
    wire [`DTYPE_WIDTH-1:0] dtypeo_kernel;

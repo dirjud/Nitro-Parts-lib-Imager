@@ -32,10 +32,10 @@ module dot_product
    `UNPACK_1DARRAY(idx3,  DATA_WIDTH, LENGTH, sdatai, datai)
    
    parameter MULT_WIDTH = COEFF_WIDTH + DATA_WIDTH;
-   reg signed [MULT_WIDTH-1:0] ssmult[0:LENGTH-1];
-   reg signed [MULT_WIDTH-1:0] sumult[0:LENGTH-1];
-   reg signed [MULT_WIDTH-1:0] usmult[0:LENGTH-1];
-   reg [MULT_WIDTH-1:0]        uumult[0:LENGTH-1];
+   wire signed [MULT_WIDTH-1:0] ssmult[0:LENGTH-1];
+   wire signed [MULT_WIDTH-1:0] sumult[0:LENGTH-1];
+   wire signed [MULT_WIDTH-1:0] usmult[0:LENGTH-1];
+   wire [MULT_WIDTH-1:0]        uumult[0:LENGTH-1];
 
    function [DATA_WIDTH-1:0] abs_data;
       input [DATA_WIDTH-1:0]   data;

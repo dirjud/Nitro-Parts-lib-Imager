@@ -39,6 +39,9 @@ SIM_FILES = sim/Imager_tb.v \
 	rtl_auto/Filter2dTestTerminal.v \
 	sim/filter2d_tb.v \
 	rtl/filter2d.v \
+	rtl_auto/InterpBilinearTestTerminal.v \
+	rtl/interp_bilinear.v \
+	sim/interp_bilinear_tb.v \
 
 
 # VERILATOR specific options
