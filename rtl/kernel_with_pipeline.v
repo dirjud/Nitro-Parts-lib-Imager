@@ -27,9 +27,9 @@ module kernel_with_pipeline
     input [PIPELINE_DATA_WIDTH-1:0] 		     pipeline_datai,
     input [DATA_WIDTH-1:0] 			     meta_datai,
     input 					     enable,
-    output reg 					     dvo,
-    output reg [DATA_WIDTH-1:0] 		     meta_datao,
-    output reg [`DTYPE_WIDTH-1:0] 		     dtypeo,
+    output 					     dvo,
+    output [DATA_WIDTH-1:0] 			     meta_datao,
+    output [`DTYPE_WIDTH-1:0] 			     dtypeo,
     output [KERNEL_SIZE*KERNEL_SIZE*PIXEL_WIDTH-1:0] kernel_datao,
     output [PIPELINE_DATA_WIDTH-1:0] 		     pipeline_datao
     );
