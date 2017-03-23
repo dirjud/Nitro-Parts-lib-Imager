@@ -357,42 +357,6 @@ module Imager_tb
       );
 
 
-   /**************** Filter2d Test Bench ********************/
-   wire 		   dvo_filter2d;
-   wire [PIXEL_WIDTH-1:0]  datao_filter2d;
-   wire [15:0] 		   meta_datao_filter2d;
-   wire [`DTYPE_WIDTH-1:0] dtypeo_filter2d;
-   filter2d_tb #(.PIXEL_WIDTH(PIXEL_WIDTH))
-   filter2d_tb
-     (
-      .resetb(resetb),
-      .di_clk(clk),
-      .di_term_addr(di_term_addr),
-      .di_reg_addr(di_reg_addr),
-      .di_read_mode(di_read_mode),
-      .di_read_req(di_read_req),
-      .di_read(di_read),
-      .di_write_mode(di_write_mode),
-      .di_write(di_write),
-      .di_reg_datai(di_reg_datai),
-      .di_read_rdy(di_read_rdy_FILTER2D),
-      .di_reg_datao(di_reg_datao_FILTER2D),
-      .di_write_rdy(di_write_rdy_FILTER2D),
-      .di_transfer_status(di_transfer_status_FILTER2D),
-      .di_en(di_FILTER2D_en),
-
-      .img_clk(clk),
-      .dvi(dvo_rx),
-      .dtypei(dtypeo_rx),
-      .meta_datai(datao_rx),
-      .datai(datao_rx[PIXEL_WIDTH-1:0]),
-
-      .dvo(dvo_filter2d),
-      .dtypeo(dtypeo_filter2d),
-      .datao(datao_filter2d),
-      .meta_datao(meta_datao_filter2d)
-      );
-
    /**************** Interp Bilinear Test Bench ********************/
    wire 		          dvo_interp;
    wire [PIXEL_WIDTH-1:0] 	    r_interp, g_interp, b_interp;
@@ -464,6 +428,47 @@ module Imager_tb
       .v(v_rgb2yuv),
       .meta_datao(meta_datao_rgb2yuv));
 
+   /**************** Filter2d Test Bench ********************/
+   wire 		   dvo_filter2d;
+   wire [PIXEL_WIDTH-1:0]  y_filter2d, u_filter2d, v_filter2d;
+   wire [15:0] 		   meta_datao_filter2d;
+   wire [`DTYPE_WIDTH-1:0] dtypeo_filter2d;
+   filter2d_tb #(.PIXEL_WIDTH(PIXEL_WIDTH))
+   filter2d_tb
+     (
+      .resetb(resetb),
+      .di_clk(clk),
+      .di_term_addr(di_term_addr),
+      .di_reg_addr(di_reg_addr),
+      .di_read_mode(di_read_mode),
+      .di_read_req(di_read_req),
+      .di_read(di_read),
+      .di_write_mode(di_write_mode),
+      .di_write(di_write),
+      .di_reg_datai(di_reg_datai),
+      .di_read_rdy(di_read_rdy_FILTER2D),
+      .di_reg_datao(di_reg_datao_FILTER2D),
+      .di_write_rdy(di_write_rdy_FILTER2D),
+      .di_transfer_status(di_transfer_status_FILTER2D),
+      .di_en(di_FILTER2D_en),
+
+      .img_clk(clk),
+      .dvi(               dvo_rgb2yuv),
+      .dtypei(         dtypeo_rgb2yuv),
+      .meta_datai( meta_datao_rgb2yuv),
+      .yi(                  y_rgb2yuv),
+      .ui(                  u_rgb2yuv),
+      .vi(                  v_rgb2yuv),
+
+      .dvo(              dvo_filter2d),
+      .dtypeo(        dtypeo_filter2d),
+      .yo(                 y_filter2d),
+      .uo(                 u_filter2d),
+      .vo(                 v_filter2d),
+      .meta_datao(meta_datao_filter2d)
+      );
+
+   
    /**************** Lookup Map Test Bench ********************/
    wire 		          dvo_lookup_map;
    wire [PIXEL_WIDTH-1:0] 	    y_lookup_map, u_lookup_map, v_lookup_map;
@@ -540,16 +545,16 @@ module Imager_tb
 	 dtypeo_sel     <= dtypeo_rotate;
 	 dvo_sel        <=    dvo_rotate;
       end else if(stream_sel == `Imager_stream_sel_FILTER2D) begin
-	 datai0_sel     <=  datao_rx;
-	 datai1_sel     <=  0;
-	 datai2_sel     <=  0;
-	 meta_datai_sel <=  datao_rx;
-	 dtypei_sel     <= dtypeo_rx;
-	 dvi_sel        <=    dvo_rx;
+	 datai0_sel     <=          y_rgb2yuv;
+	 datai1_sel     <=          u_rgb2yuv;
+	 datai2_sel     <=          v_rgb2yuv;
+	 meta_datai_sel <= meta_datao_rgb2yuv;
+	 dtypei_sel     <=     dtypeo_rgb2yuv;
+	 dvi_sel        <=        dvo_rgb2yuv;
 	 
-	 datao0_sel     <=  datao_filter2d;
-	 datao1_sel     <=  0;
-	 datao2_sel     <=  0;
+	 datao0_sel     <=  y_filter2d;
+	 datao1_sel     <=  u_filter2d;
+	 datao2_sel     <=  v_filter2d;
 	 meta_datao_sel <=  meta_datao_filter2d;
 	 dtypeo_sel     <= dtypeo_filter2d;
 	 dvo_sel        <=    dvo_filter2d;

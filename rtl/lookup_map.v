@@ -51,7 +51,6 @@ module lookup_map
    );
 
    wire [PIXEL_WIDTH-1:0] y_lookup;
-   reg [PIXEL_WIDTH-1:0] y_s;
 
 
    // di registers
@@ -80,37 +79,32 @@ module lookup_map
    end 
 
    wire di_rowbuffer_we = di_write && di_term_addr == `TERM_LookupMap;
+   wire [9:0] di_rowbuffer_addr = (di_write_mode || di_read_mode) && di_term_addr == `TERM_LookupMap ? di_reg_addr[9:0] : y[9:0];
 
    rowbuffer
      #(.ADDR_WIDTH(10),
        .PIXEL_WIDTH(PIXEL_WIDTH),
        .MAX_COLS(1024))
-   rowbuffer 
-     (
-      .waddr(di_reg_addr[PIXEL_WIDTH-1:0]),
-      .we(di_rowbuffer_we),
-      .raddr(y[PIXEL_WIDTH-1:0]),
-      .clk(di_clk),
-      .datai(di_reg_datai[PIXEL_WIDTH-1:0]),
-      .datao(y_lookup)
-      );
-
-   always @(*) begin
-      yo  = (enable) ? y_lookup : y_s;
-   end
+   rowbuffer (
+    .addr(di_rowbuffer_addr),
+    .we(di_rowbuffer_we),
+    .clk(di_clk),
+    .datai(di_reg_datai[PIXEL_WIDTH-1:0]),
+    .datao(y_lookup)
+   );
 
   always @(posedge pixclk or negedge resetb) begin
       if(!resetb) begin
 	 dvo        <= 0;
 	 dtypeo     <= 0;
 	 meta_datao <= 0;
-	 y_s        <= 0;
+	 yo         <= 0;
 	 uo         <= 0;
 	 vo         <= 0;
       end else begin
 	 dvo        <= dvi;
 	 dtypeo     <= dtypei;
-	 y_s        <= y;
+         yo         <= (enable) ? y_lookup : y;
          uo         <= u;
          vo         <= v;
 	 meta_datao <= meta_datai;

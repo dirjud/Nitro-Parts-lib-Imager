@@ -39,7 +39,6 @@ module kernel
 `PACK_2DARRAY(pk_idx, PIXEL_WIDTH, KERNEL_SIZE, KERNEL_SIZE, datao, kernel_datao)
 
    reg [31:0] row, col;
-   
    reg [NUM_COLS_WIDTH-1:0] col_addr;
    reg [KERNEL_SIZE-1:0] row_addr; // this should be a width of LOG2_KERNEL_SIZE
 
@@ -51,22 +50,22 @@ module kernel
 
    reg [5:0] header_addr;
 
-
    reg [PIXEL_WIDTH-1:0] rowbufi[0:KERNEL_SIZE-2];
    wire [PIXEL_WIDTH-1:0] rowbufo[0:KERNEL_SIZE-2];
 
    wire we = dvi && |(dtypei & `DTYPE_PIXEL_MASK);
-   reg 	we_s;
-   wire [NUM_COLS_WIDTH-1:0] raddr = col_addr;
-   reg [NUM_COLS_WIDTH-1:0]  waddr;
+   
    genvar 		 x;
    
    generate
-      for(x=0; x<KERNEL_SIZE-2; x=x+1) begin
-	 rowbuffer #(.MAX_COLS(MAX_COLS), .PIXEL_WIDTH(PIXEL_WIDTH), .BLOCK_RAM(BLOCK_RAM)) rowbuffer
-	   (.raddr(raddr),
-	    .waddr(waddr),
-	    .we(we_s),
+      for(x=0; x<KERNEL_SIZE-1; x=x+1) begin
+	 rowbuffer #(.ADDR_WIDTH(NUM_COLS_WIDTH),
+		     .MAX_COLS(MAX_COLS),
+		     .PIXEL_WIDTH(PIXEL_WIDTH)
+		     )
+	 rowbuffer
+	   (.addr(col_addr),
+	    .we(we),
 	    .clk(clk),
 	    .datai(rowbufi[x]),
 	    .datao(rowbufo[x])
@@ -74,16 +73,6 @@ module kernel
       end
    endgenerate
 
-   rowbuffer #(.MAX_COLS(MAX_COLS), .PIXEL_WIDTH(PIXEL_WIDTH), .BLOCK_RAM(BLOCK_RAM)) rowbufferN
-     (.raddr(raddr),
-      .waddr(raddr),
-      .we(we),
-      .clk(clk),
-      .datai(rowbufi[KERNEL_SIZE-2]),
-      .datao(rowbufo[KERNEL_SIZE-2])
-      );
-
-   
    // Currently, the data in the rows moves from one row buffer to the next.
    // An alternative way to implement this is to only actively write into
    // one row buffer at a time and use pointer muxing to swap the buffers
@@ -99,20 +88,6 @@ module kernel
       end
    endgenerate
 
-
-   // Set the last column equal to the output of the row buffers (except the
-   // last row and last col, which is set equal to datai)
-   always @(*) begin
-      for(row=0; row<KERNEL_SIZE-1; row=row+1) begin
-	 datao[row][KERNEL_SIZE-1] = rowbufo[row];
-      end
-   end
-   always @(posedge clk) begin
-      datao[KERNEL_SIZE-1][KERNEL_SIZE-1] <= datai;
-      waddr <= raddr;
-      we_s  <= we;
-   end
-   
    always @(posedge clk) begin
       if(!resetb) begin
 	 row_addr <= 0;
@@ -122,7 +97,7 @@ module kernel
 	 header_addr <= 0;
 	 meta_datao <= 0;
 	 for (row=0; row<KERNEL_SIZE; row=row+1) begin
-	    for (col=0; col<KERNEL_SIZE-1; col=col+1) begin
+	    for(col=0; col<KERNEL_SIZE; col=col+1) begin
 	       datao[row][col] <= 0;
 	    end
 	 end
@@ -161,10 +136,10 @@ module kernel
 		  end
 	       end
 
-//	       datao[KERNEL_SIZE-1][KERNEL_SIZE-1] <= datai[PIXEL_WIDTH-1:0];
-//	       for(row=0; row<KERNEL_SIZE-1; row=row+1) begin
-//		  datao[row][KERNEL_SIZE-1] <= rowbufo[row];
-//	       end
+	       datao[KERNEL_SIZE-1][KERNEL_SIZE-1] <= datai[PIXEL_WIDTH-1:0];
+	       for(row=0; row<KERNEL_SIZE-1; row=row+1) begin
+		  datao[row][KERNEL_SIZE-1] <= rowbufo[row];
+	       end
 
 	    end else begin
 	       dvo <= 1;

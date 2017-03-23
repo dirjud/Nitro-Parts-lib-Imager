@@ -38,6 +38,7 @@ SIM_FILES = sim/Imager_tb.v \
 	rtl/dot_product.v \
 	rtl_auto/Filter2dTestTerminal.v \
 	sim/filter2d_tb.v \
+	rtl/kernel_with_pipeline.v \
 	rtl/filter2d.v \
 	rtl_auto/InterpBilinearTestTerminal.v \
 	rtl/interp_bilinear.v \

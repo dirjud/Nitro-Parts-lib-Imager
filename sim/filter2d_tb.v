@@ -31,12 +31,16 @@ module filter2d_tb
     input 		      img_clk,
     input 		      dvi,
     input [`DTYPE_WIDTH-1:0]  dtypei,
-    input [PIXEL_WIDTH-1:0]   datai,
+    input [PIXEL_WIDTH-1:0]   yi,
+    input [PIXEL_WIDTH-1:0]   ui,
+    input [PIXEL_WIDTH-1:0]   vi,
     input [15:0] 	      meta_datai,
 
     output 		      dvo,
     output [`DTYPE_WIDTH-1:0] dtypeo,
-    output [PIXEL_WIDTH-1:0]  datao,
+    output [PIXEL_WIDTH-1:0]  yo,
+    output [PIXEL_WIDTH-1:0]  uo,
+    output [PIXEL_WIDTH-1:0]  vo,
     output [15:0] 	      meta_datao
    );
    
@@ -64,6 +68,7 @@ module filter2d_tb
 	      .COEFF_FRAC_WIDTH(COEFF_FRAC_WIDTH),
 	      .COEFF_SIGNED(COEFF_SIGNED),
 	      .MAX_COLS(MAX_COLS),
+	      .PIPELINE_DATA_WIDTH(2*PIXEL_WIDTH),
 	      .BLOCK_RAM(0)
 	      )
      filter2d
@@ -73,12 +78,14 @@ module filter2d_tb
       .coeffs({c0,c1,c2,c1,c0}),
       .dvi(dvi),
       .dtypei(dtypei),
-      .datai(datai),
+      .datai(yi),
+      .pipeline_datai({ui,vi}),
       .meta_datai(meta_datai),
       
       .dvo(dvo),
       .dtypeo(dtypeo),
-      .datao(datao),
+      .datao(yo),
+      .pipeline_datao({uo,vo}),
       .meta_datao(meta_datao)
       );
 endmodule

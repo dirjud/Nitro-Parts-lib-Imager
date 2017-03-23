@@ -32,7 +32,7 @@ class InterpBilinearTest(basetest.simtest):
             m = abs(z[2:-2,2:-2].astype(numpy.int16) - y[1:-1,1:-1]).max()
             self.assertTrue(m<2, str(phase) + " failed")
 
-            if False:
+            if True:
                 pylab.figure()
                 ax = pylab.subplot(311)
                 basetest.raw_plot_img(x, 10)

@@ -19,10 +19,13 @@ class Filter2dTest(basetest.simtest):
         self.dev.set("Imager", "num_active_rows", num_rows)
         self.dev.set("Imager", "num_virtual_rows", 24) # give enough time to read images prior to starting next one to prevent split images when parameters change
         self.dev.set("Imager", "stream_sel", "FILTER2D")
+        self.dev.set("Imager", "capture", dict(modei=1, modeo=1))
+        self.dev.set("InterpBilinearTest", "enable", 1)
+        self.dev.set("Rgb2YuvTest", "enable", 1)
         self.dev.set("Imager", "enable", 1)
 
         # test that when filter2d is not enabled that input and output match
-        x,y = basetest.get_input_and_output_imgs(self.dev, num_rows, num_cols)
+        x,y = basetest.get_input_and_output_imgs(self.dev, num_rows, num_cols, depthi=3, deptho=3)
         self.assertTrue((x==y).all(), "filter2d failed to match original image when it is disabled")
 
         # load an identity filter and make sure input and output match
@@ -30,15 +33,18 @@ class Filter2dTest(basetest.simtest):
         self.dev.set("Filter2dTest", "c1", 0)
         self.dev.set("Filter2dTest", "c2", 64)
         self.dev.set("Filter2dTest", "enable", 1)
-        x,y = basetest.get_input_and_output_imgs(self.dev, num_rows, num_cols, num_rows-4, num_cols-4)
-        self.assertTrue((x[2:-2,2:-2]==y).all(), "filter2d failed to match original image when an identity fileter is loaded")
+        x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-6, num_cols-6, depthi=3, deptho=3)
+        x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-6, num_cols-6, depthi=3, deptho=3)
+        self.assertTrue((x[2:-2,2:-2]==y).all(), "filter2d failed to match original image when an identity filter is loaded")
 
         # load a 2x gain filter and make sure clamping works
         self.dev.set("Filter2dTest", "c0", 0)
         self.dev.set("Filter2dTest", "c1", 0)
         self.dev.set("Filter2dTest", "c2", 127)
-        x,y = basetest.get_input_and_output_imgs(self.dev, num_rows, num_cols, num_rows-4, num_cols-4)
-        yI = (x[2:-2,2:-2].astype(numpy.uint32) * 127 / 64 * 127 / 64).astype(numpy.uint16)
+        x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-6, num_cols-6, depthi=3, deptho=3)
+        x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-6, num_cols-6, depthi=3, deptho=3)
+        yI = x[2:-2,2:-2]
+        yI[:,:,0] = ((yI[:,:,0].astype(numpy.uint32)) * 127 / 64 * 127 / 64).astype(numpy.uint16)
         yI[yI>1023] = 1023
         self.assertTrue((yI==y).all(), "filter2d failed gain by 2x correctly")
         
@@ -47,11 +53,13 @@ class Filter2dTest(basetest.simtest):
         self.dev.set("Filter2dTest", "c0", c[0][0])
         self.dev.set("Filter2dTest", "c1", c[0][1])
         self.dev.set("Filter2dTest", "c2", c[0][2])
-        x,y = basetest.get_input_and_output_imgs(self.dev, num_rows, num_cols, num_rows-4, num_cols-4)
-        w = scipy.signal.convolve2d(x,c/64., 'valid').astype(numpy.uint16)
+        x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-6, num_cols-6, depthi=3, deptho=3)
+        x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-6, num_cols-6, depthi=3, deptho=3)
+        w = scipy.signal.convolve2d(x[:,:,0],c/64., 'valid').astype(numpy.uint16)
         v = scipy.signal.convolve2d(w,c.transpose()/64., 'valid').astype(numpy.uint16)
-        x = x[2:-2,2:-2]
-        self.assertTrue((y==v).all(), "Low Pass filter failed")
+        yI = y.copy()
+        yI[:,:,0] == v
+        self.assertTrue((y==yI).all(), "Low Pass filter failed")
         
         #pylab.figure()
         #ax = pylab.subplot(211)
