@@ -115,6 +115,10 @@ module Imager_tb
    wire 	di_read_rdy_FILTER2D, di_write_rdy_FILTER2D, di_FILTER2D_en;
    wire [15:0] 	di_transfer_status_FILTER2D;
 
+   wire [31:0] 	di_reg_datao_UNSHARPMASK;
+   wire 	di_read_rdy_UNSHARPMASK, di_write_rdy_UNSHARPMASK, di_UNSHARPMASK_en;
+   wire [15:0] 	di_transfer_status_UNSHARPMASK;
+
    wire [31:0] 	di_reg_datao_STREAM2DI_INPUT;
    wire 	di_read_rdy_STREAM2DI_INPUT;
    wire 	di_write_rdy_STREAM2DI_INPUT = 0;
@@ -184,6 +188,11 @@ module Imager_tb
 	 di_read_rdy  =  di_read_rdy_FILTER2D;
 	 di_write_rdy = di_write_rdy_FILTER2D;
 	 di_transfer_status = di_transfer_status_FILTER2D;
+      end else if(di_UNSHARPMASK_en) begin
+	 di_reg_datao = di_reg_datao_UNSHARPMASK;
+	 di_read_rdy  =  di_read_rdy_UNSHARPMASK;
+	 di_write_rdy = di_write_rdy_UNSHARPMASK;
+	 di_transfer_status = di_transfer_status_UNSHARPMASK;
       end else if(di_INTERP_en) begin
 	 di_reg_datao = di_reg_datao_INTERP;
 	 di_read_rdy  =  di_read_rdy_INTERP;
@@ -468,6 +477,46 @@ module Imager_tb
       .meta_datao(meta_datao_filter2d)
       );
 
+   /**************** Filter2d Test Bench ********************/
+   wire 		   dvo_unsharp_mask;
+   wire [PIXEL_WIDTH-1:0]  y_unsharp_mask, u_unsharp_mask, v_unsharp_mask;
+   wire [15:0] 		   meta_datao_unsharp_mask;
+   wire [`DTYPE_WIDTH-1:0] dtypeo_unsharp_mask;
+   unsharp_mask_tb #(.PIXEL_WIDTH(PIXEL_WIDTH))
+   unsharp_tb
+     (
+      .resetb(resetb),
+      .di_clk(clk),
+      .di_term_addr(di_term_addr),
+      .di_reg_addr(di_reg_addr),
+      .di_read_mode(di_read_mode),
+      .di_read_req(di_read_req),
+      .di_read(di_read),
+      .di_write_mode(di_write_mode),
+      .di_write(di_write),
+      .di_reg_datai(di_reg_datai),
+      .di_read_rdy(di_read_rdy_UNSHARPMASK),
+      .di_reg_datao(di_reg_datao_UNSHARPMASK),
+      .di_write_rdy(di_write_rdy_UNSHARPMASK),
+      .di_transfer_status(di_transfer_status_UNSHARPMASK),
+      .di_en(di_UNSHARPMASK_en),
+
+      .img_clk(clk),
+      .dvi(               dvo_rgb2yuv),
+      .dtypei(         dtypeo_rgb2yuv),
+      .meta_datai( meta_datao_rgb2yuv),
+      .yi(                  y_rgb2yuv),
+      .ui(                  u_rgb2yuv),
+      .vi(                  v_rgb2yuv),
+
+      .dvo(              dvo_unsharp_mask),
+      .dtypeo(        dtypeo_unsharp_mask),
+      .yo(                 y_unsharp_mask),
+      .uo(                 u_unsharp_mask),
+      .vo(                 v_unsharp_mask),
+      .meta_datao(meta_datao_unsharp_mask)
+      );
+
    
    /**************** Lookup Map Test Bench ********************/
    wire 		          dvo_lookup_map;
@@ -558,6 +607,22 @@ module Imager_tb
 	 meta_datao_sel <=  meta_datao_filter2d;
 	 dtypeo_sel     <= dtypeo_filter2d;
 	 dvo_sel        <=    dvo_filter2d;
+
+      end else if(stream_sel == `Imager_stream_sel_UNSHARP_MASK) begin
+	 datai0_sel     <=          y_rgb2yuv;
+	 datai1_sel     <=          u_rgb2yuv;
+	 datai2_sel     <=          v_rgb2yuv;
+	 meta_datai_sel <= meta_datao_rgb2yuv;
+	 dtypei_sel     <=     dtypeo_rgb2yuv;
+	 dvi_sel        <=        dvo_rgb2yuv;
+	 
+	 datao0_sel     <=  y_unsharp_mask;
+	 datao1_sel     <=  u_unsharp_mask;
+	 datao2_sel     <=  v_unsharp_mask;
+	 meta_datao_sel <=  meta_datao_unsharp_mask;
+	 dtypeo_sel     <= dtypeo_unsharp_mask;
+	 dvo_sel        <=    dvo_unsharp_mask;
+
       end else if(stream_sel == `Imager_stream_sel_INTERP_BILINEAR) begin
 	 datai0_sel     <=  datao_rx;
 	 datai1_sel     <=  0;

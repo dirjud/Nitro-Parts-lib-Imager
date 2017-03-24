@@ -50,6 +50,9 @@ SIM_FILES = sim/Imager_tb.v \
 	rtl/lookup_map.v \
 	sim/lookup_map_tb.v \
 	rtl/rowbuffer.v \
+	rtl_auto/UnsharpMaskTestTerminal.v \
+	sim/unsharp_mask_tb.v \
+	rtl/unsharp_mask.v \
 
 # VERILATOR specific options
 #VERILATOR_ARGS=-Wno-UNOPTFLAT

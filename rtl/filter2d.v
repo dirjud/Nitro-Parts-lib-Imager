@@ -15,7 +15,11 @@
  The pipeline data is used to pass additional channels, such as the UV
  data and keep it pipeline aligned appropriately with the filtered
  channel.
-  */
+ 
+ 'orig_data' is the original output unaltered but pipeline
+ aligned. This is useful if you need to perform additional operations
+ with the original sample.
+ */
 
 module filter2d
   #(parameter PIXEL_WIDTH=8,
@@ -28,22 +32,23 @@ module filter2d
     parameter BLOCK_RAM=1
     )
   (
-   input 			       clk,
-   input 			       resetb,
-   input 			       enable,
+   input 				clk,
+   input 				resetb,
+   input 				enable,
 
-   input [KERNEL_SIZE*COEFF_WIDTH-1:0] coeffs,
+   input [KERNEL_SIZE*COEFF_WIDTH-1:0] 	coeffs,
    
-   input 			       dvi,
-   input [`DTYPE_WIDTH-1:0] 	       dtypei,
-   input [PIXEL_WIDTH-1:0] 	       datai,
-   input [PIPELINE_DATA_WIDTH-1:0]     pipeline_datai,
-   input [15:0] 		       meta_datai,
+   input 				dvi,
+   input [`DTYPE_WIDTH-1:0] 		dtypei,
+   input [PIXEL_WIDTH-1:0] 		datai,
+   input [PIPELINE_DATA_WIDTH-1:0] 	pipeline_datai,
+   input [15:0] 			meta_datai,
 
-   output reg 			       dvo,
-   output reg [`DTYPE_WIDTH-1:0]       dtypeo,
-   output reg [PIXEL_WIDTH-1:0]        datao,
-   output [15:0] 		       meta_datao,
+   output reg 				dvo,
+   output reg [`DTYPE_WIDTH-1:0] 	dtypeo,
+   output reg [PIXEL_WIDTH-1:0] 	datao,
+   output [15:0] 			meta_datao,
+   output reg [PIXEL_WIDTH-1:0] 	orig_datao,
    output reg [PIPELINE_DATA_WIDTH-1:0] pipeline_datao
    );
 
@@ -123,7 +128,8 @@ module filter2d
    parameter STATE_IMAGE=0, STATE_META=1;
    wire frame_start = dvi && (dtypei == `DTYPE_FRAME_START);
    wire frame_end   = dvi && (dtypei == `DTYPE_FRAME_END);
-   reg [PIXEL_WIDTH-1:0] datao_kernel_s, datao_kernel_ss;
+   reg [PIXEL_WIDTH-1:0] orig_datao_p, orig_datao_pp;
+   
 
    wire [PIXEL_WIDTH-1:0]  k[0:KERNEL_SIZE-1][0:KERNEL_SIZE-1];
    `UNPACK_2DARRAY(unpk_idx, PIXEL_WIDTH, KERNEL_SIZE, KERNEL_SIZE, k, kernel_datao)
@@ -139,12 +145,17 @@ module filter2d
 	 dtypeo_kernel_ss  <= 0;
 	 dvo_kernel_s      <= 0;
 	 dvo_kernel_ss     <= 0;
-	 datao_kernel_s    <= 0;
-	 datao_kernel_ss   <= 0;
 	 dvi_filt3         <= 0;
 	 pipeline_datai_ss <= 0;
 	 pipeline_datai_sss<= 0;
-      end else begin
+	 orig_datao_p      <= 0;
+	 orig_datao_pp     <= 0;
+	 orig_datao        <= 0;
+      end else begin // if (!resetb)
+	 orig_datao_p <= k[KERNEL_SIZE/2][KERNEL_SIZE/2];
+	 orig_datao_pp <= orig_datao_p;
+	 orig_datao <= orig_datao_pp;
+	 
 	 dvi_filt2 <= dvi_filt1;
 	 dvi_filt3 <= dvi_filt2;
 
