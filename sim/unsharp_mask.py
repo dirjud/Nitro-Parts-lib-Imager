@@ -41,18 +41,32 @@ class UnsharpMaskTest(basetest.simtest):
         sharpen.set_unsharp_mask(self.dev, strength, 0, term="UnsharpMaskTest", regs=["c0","c1","c2"])
         x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-6, num_cols-6, depthi=3, deptho=3)
         x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-6, num_cols-6, depthi=3, deptho=3)        
-        c = numpy.array([[-8, -8, 32, -8, -8]])
-        w = scipy.signal.convolve2d(x[:,:,0],c/32., 'valid').astype(numpy.uint16)
-        v = scipy.signal.convolve2d(w,c.transpose()/32., 'valid').astype(numpy.uint16)
+        c = numpy.array([[-8, -8, 64, -8, -8]])
+        w = scipy.signal.convolve2d(x[:,:,0],c/32., 'valid').astype(numpy.int16)
+        w[w>1023] = 1023
+        w[w<0] = 0
+        v = scipy.signal.convolve2d(w,c.transpose()/32., 'valid').astype(numpy.int16)
+        v[v>1023] = 1023
+        v[v<0]    = 0
         yI = x[2:-2,2:-2].copy()
-        yI[:,:,0] == x[2:-2,2:-2,0] + v
+        yI[:,:,0] = v
         self.assertTrue((yI==y).all(), "unsharp_mask failed to match 2x strength")
 
         threshold = 20
         sharpen.set_unsharp_mask(self.dev, 2.0, threshold, term="UnsharpMaskTest", regs=["c0","c1","c2"])
         x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-6, num_cols-6, depthi=3, deptho=3)
         x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-6, num_cols-6, depthi=3, deptho=3)        
-        v[abs(v) > threshold] = 0
+        w = scipy.signal.convolve2d(x[:,:,0],c/32., 'valid').astype(numpy.int16)
+        w[w>1023] = 1023
+        w[w<0] = 0
+        v = scipy.signal.convolve2d(w,c.transpose()/32., 'valid').astype(numpy.int16)
+        v[v>1023] = 1023
+        v[v<0]    = 0
+        yI = x[2:-2,2:-2].copy()
+        idx = abs( yI[:,:,0] - v ) < threshold
+        v[idx] = yI[:,:,0][idx]
+        yI[:,:,0] = v
+        self.assertTrue((yI==y).all(), "unsharp_mask failed to match 2x strength with threshold")
         
         
 #        self.dev.set("Filter2dTest", "c0", c[0][0])

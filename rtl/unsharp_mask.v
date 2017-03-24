@@ -9,7 +9,7 @@
  
  Uses filter2d to apply an unsharp mask. You specify the high pass filter
  coefficients and the threshold. The coefficients are signed and should
- sum to 0. If the output of the highpass filter is greater than the 
+ sum to 1. If the output of the highpass filter is greater than the 
  threshold, it will be added to the original sample.
  
  The pipeline data is used to pass additional channels, such as the UV
@@ -81,21 +81,20 @@ module unsharp_mask
    );
 
    function [PIXEL_WIDTH-1:0] abs1;
-      input [PIXEL_WIDTH-1:0] x;
+      input [PIXEL_WIDTH:0] x;
       begin
-	 if(x[PIXEL_WIDTH-1]) begin
+	 /* verilator lint_off WIDTH */
+	 if(x[PIXEL_WIDTH]) begin
 	    abs1 = ~x + 1;
 	 end else begin
 	    abs1 = x;
 	 end
+	 /* verilator lint_on WIDTH */
       end
    endfunction // abs1
 
-   wire signed [PIXEL_WIDTH+1:0] datao1 = {1'b0, orig_datao} + {datao0[PIXEL_WIDTH-1], datao0 };
-   // clamp
-   wire [PIXEL_WIDTH-1:0]      datao_sharpened = (datao1 < 0) ? 0 : 
-			       (datao1[PIXEL_WIDTH]) ? {PIXEL_WIDTH{1'b1}} :
-			       datao1[PIXEL_WIDTH-1:0];
+   wire signed [PIXEL_WIDTH:0] delta0 = orig_datao - datao0;
+   wire signed [PIXEL_WIDTH-1:0] delta = abs1(delta0);
    
    always @(posedge clk) begin
       if(!enable) begin
@@ -109,8 +108,8 @@ module unsharp_mask
 	 dtypeo <= dtypeo0;
 	 meta_datao <= meta_datao0;
 	 pipeline_datao <= pipeline_datao0;
-	 if(abs1(datao0) >= threshold) begin
-	    datao <= datao_sharpened;
+	 if(delta >= threshold) begin
+	    datao <= datao0;
 	 end else begin
 	    datao <= orig_datao;
 	 end

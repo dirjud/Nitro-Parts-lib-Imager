@@ -57,8 +57,8 @@ class Filter2dTest(basetest.simtest):
         x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-6, num_cols-6, depthi=3, deptho=3)
         w = scipy.signal.convolve2d(x[:,:,0],c/64., 'valid').astype(numpy.uint16)
         v = scipy.signal.convolve2d(w,c.transpose()/64., 'valid').astype(numpy.uint16)
-        yI = y.copy()
-        yI[:,:,0] == v
+        yI = x[2:-2,2:-2].copy()
+        yI[:,:,0] = v
         self.assertTrue((y==yI).all(), "Low Pass filter failed")
         
         #pylab.figure()
