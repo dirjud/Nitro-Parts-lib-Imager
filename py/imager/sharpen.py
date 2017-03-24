@@ -1,5 +1,5 @@
 
-def set_unsharp_mask(dev, strength, threshold, term="ImageProcessPipeline", regs=["sharpen_c0","sharpen_c1", "sharpen_c2"], threshold_reg="threshold", one=32):
+def set_unsharp_mask(dev, strength, threshold, term="ImageProcessPipeline", regs=["sharpen_c0","sharpen_c1", "sharpen_c2"], threshold_reg="sharpen_threshold", one=32):
 
     c2 = int((strength-1) * one)
     c1 = -int(c2/4)

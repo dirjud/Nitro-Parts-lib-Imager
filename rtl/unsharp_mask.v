@@ -43,7 +43,7 @@ module unsharp_mask
    output reg 				dvo,
    output reg [`DTYPE_WIDTH-1:0] 	dtypeo,
    output reg [PIXEL_WIDTH-1:0] 	datao,
-   output [15:0] 			meta_datao,
+   output reg [15:0] 			meta_datao,
    output reg [PIPELINE_DATA_WIDTH-1:0] pipeline_datao
    );
 
