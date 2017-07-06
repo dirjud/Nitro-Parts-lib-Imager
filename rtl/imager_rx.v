@@ -195,6 +195,9 @@ module imager_rx
          dvo            <= 0;
          dtypeo         <= 0;
          datao          <= 0;
+	 clks_per_frame <= 0;
+	 clks_per_row   <= 0;
+	 clks_per_row_count <= 0;
       end else begin // if (!resetb_clki)
 	 flags_s <= flags;
 	 left_justify_s <= mode_left_justify;
