@@ -82,7 +82,7 @@ module kernel
    end
    generate
       for(x=0; x<KERNEL_SIZE-2; x=x+1) begin
-	 always @(col_addr or rowbufo) begin
+	 always @(*) begin
 	    rowbufi[x] = rowbufo[x+1];
 	 end
       end

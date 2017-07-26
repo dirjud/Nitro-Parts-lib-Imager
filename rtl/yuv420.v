@@ -137,7 +137,7 @@ module yuv420
    wire [5:0] 		opos_plus_24 = opos + 24;
    wire        flush_required = dv1 && dtype1 == `DTYPE_FRAME_END && (|opos);
    
-   always @(obuf, raw_data, y1, u1, v1, u_ave, v_ave, opos_plus_8, opos_plus_24) begin
+   always @(*) begin
       if(flush_required) begin
 	 next_obuf = obuf << (32-opos);
 	 next_opos = 32;
