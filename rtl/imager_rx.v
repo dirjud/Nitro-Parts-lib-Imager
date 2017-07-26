@@ -71,17 +71,6 @@ module imager_rx
    reg fv_s, fv_ss, fv_sss, lv_s, lv_ss, dv_s, dv_ss;
    reg [PIXEL_WIDTH-1:0] datai_s, datai_ss;
 
-`ifndef IMAGERRX_NO_IOB
-   // the reason to comment these out would be if your
-   // fv, lv do not come directly from an off chip source
-   // i.e, you're generating them or have some other 
-   // process in between this module and the source.
-   // that gets rid of some xilinx warnings about not being
-   // able to route them in the most optimal way.
-   // synthesis attribute IOB of fv_s  is "TRUE";
-   // synthesis attribute IOB of lv_s  is "TRUE";
-   // synthesis attribute IOB of datai is "TRUE";
-`endif
    
    reg [DIM_WIDTH-1:0] row_count, col_count;
    reg [31:0] frame_cycles_count, clks_per_frame;

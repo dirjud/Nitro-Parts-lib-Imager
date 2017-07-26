@@ -21,7 +21,7 @@ module dot_product3
    output [A_DATA_WIDTH+B_DATA_WIDTH+1:0] y
    );
 
-   parameter TOTAL_WIDTH = A_DATA_WIDTH + B_DATA_WIDTH;
+   localparam TOTAL_WIDTH = A_DATA_WIDTH + B_DATA_WIDTH;
    
    wire signed [A_DATA_WIDTH-1:0] a0_signed = a0;
    wire signed [A_DATA_WIDTH-1:0] a1_signed = a1;

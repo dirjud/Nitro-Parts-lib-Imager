@@ -31,7 +31,7 @@ module dot_product
    `UNPACK_1DARRAY(idx2,  DATA_WIDTH, LENGTH, udatai, datai)
    `UNPACK_1DARRAY(idx3,  DATA_WIDTH, LENGTH, sdatai, datai)
    
-   parameter MULT_WIDTH = COEFF_WIDTH + DATA_WIDTH;
+   localparam MULT_WIDTH = COEFF_WIDTH + DATA_WIDTH;
    wire signed [MULT_WIDTH-1:0] ssmult[0:LENGTH-1];
    wire signed [MULT_WIDTH-1:0] sumult[0:LENGTH-1];
    wire signed [MULT_WIDTH-1:0] usmult[0:LENGTH-1];
@@ -71,7 +71,7 @@ module dot_product
 
    // accumulate
    parameter EXTRA_ACCUM_BITS = $clog2(LENGTH);
-   parameter ACCUM_WIDTH=MULT_WIDTH+EXTRA_ACCUM_BITS;
+   localparam ACCUM_WIDTH=MULT_WIDTH+EXTRA_ACCUM_BITS;
    reg signed [ACCUM_WIDTH-1:0] ssaccum;
    reg signed [ACCUM_WIDTH-1:0] suaccum;
    reg signed [ACCUM_WIDTH-1:0] usaccum;
@@ -91,8 +91,8 @@ module dot_product
    end
 
    // clamp and drop fractional bits
-   parameter BOT_POS = COEFF_FRAC_WIDTH;
-   parameter TOP_POS = DATA_WIDTH + BOT_POS;
+   localparam BOT_POS = COEFF_FRAC_WIDTH;
+   localparam TOP_POS = DATA_WIDTH + BOT_POS;
    reg [DATA_WIDTH-1:0] ssclamped;
    always @(*) begin
       if(ssaccum[ACCUM_WIDTH-1] && !(&ssaccum[ACCUM_WIDTH-2:TOP_POS-1])) begin

@@ -151,6 +151,7 @@ module filter2d
 	 orig_datao_p      <= 0;
 	 orig_datao_pp     <= 0;
 	 orig_datao        <= 0;
+	 pipeline_datao    <= 0;
       end else begin // if (!resetb)
 	 orig_datao_p <= k[KERNEL_SIZE/2][KERNEL_SIZE/2];
 	 orig_datao_pp <= orig_datao_p;

@@ -56,7 +56,7 @@ module yuv420
    end
 
    // Create a 2x2 kernel for the u and v downampling.
-   parameter KERNEL_SIZE=2;
+   localparam KERNEL_SIZE=2;
    wire dvo_kernel;
    wire [`DTYPE_WIDTH-1:0] dtypeo_kernel;
    wire [15:0]  k[0:KERNEL_SIZE-1][0:KERNEL_SIZE-1];
@@ -122,7 +122,7 @@ module yuv420
 
    // Generate the output stream by shifting the data into the obuf register. When it gets 32b or
    // more of data in it, we shift 32 out on the stream.
-   parameter OBUF_WIDTH = 32 + 24;
+   localparam OBUF_WIDTH = 32 + 24;
    
    reg [OBUF_WIDTH-1:0] obuf;
    reg [5:0] 		opos;

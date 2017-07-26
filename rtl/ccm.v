@@ -57,7 +57,7 @@ module ccm
    
    );
 
-   parameter TOTAL_WIDTH = PIXEL_WIDTH + COEFF_WIDTH + 3;
+   localparam TOTAL_WIDTH = PIXEL_WIDTH + COEFF_WIDTH + 3;
    
    wire [TOTAL_WIDTH-1:0] r0, g0, b0;
    
@@ -113,8 +113,8 @@ module ccm
 	 dtypeo     <= 0;
 	 meta_datao <= 0;
 	 ro         <= 0;
-	 ro         <= 0;
-	 ro         <= 0;
+	 go         <= 0;
+	 bo         <= 0;
       end else begin
 	 dvo        <= dvi;
 	 dtypeo     <= dtypei;

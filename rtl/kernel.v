@@ -42,7 +42,7 @@ module kernel
    reg [NUM_COLS_WIDTH-1:0] col_addr;
    reg [KERNEL_SIZE-1:0] row_addr; // this should be a width of LOG2_KERNEL_SIZE
 
-   parameter BORDER_SIZE = KERNEL_SIZE-1;
+   localparam BORDER_SIZE = KERNEL_SIZE-1;
    /* verilator lint_off WIDTH */
    wire valid_col = col_addr >= BORDER_SIZE;
    wire valid_row = row_addr >= BORDER_SIZE;
@@ -82,7 +82,7 @@ module kernel
    end
    generate
       for(x=0; x<KERNEL_SIZE-2; x=x+1) begin
-	 always @(col_addr) begin
+	 always @(col_addr or rowbufo) begin
 	    rowbufi[x] = rowbufo[x+1];
 	 end
       end

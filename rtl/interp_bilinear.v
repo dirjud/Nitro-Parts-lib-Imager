@@ -30,7 +30,7 @@ module interp_bilinear
    );
 
    parameter NUM_COLS_WIDTH = $clog2(MAX_COLS);
-   parameter KERNEL_SIZE=3;
+   localparam KERNEL_SIZE=3;
    wire dvo_kernel;
    wire [`DTYPE_WIDTH-1:0] dtypeo_kernel;
    wire [PIXEL_WIDTH-1:0]  k[0:KERNEL_SIZE-1][0:KERNEL_SIZE-1];
