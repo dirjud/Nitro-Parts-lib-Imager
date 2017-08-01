@@ -12,13 +12,13 @@ module imager
                       // 3: diagonal gradient
                       // 4: constant based on frame number
                       // 5: diagonal gradient offset based on frame number.
-                      // 6: image from memory.    
+                      // 6: image from memory. (SIM only)
                       // 7: incrementing counter +1 each pixel.
                       // 8: bayer red
                       //
     input [DATA_WIDTH-1:0]  bayer_red, // if mode==bayer, this is the value for the red pixels
     input [DATA_WIDTH-1:0]  bayer_gr,  // if mode==bayer, this is the value for the green pixel on red rows
-    input [DATA_WIDTH-1:0]  bayer_blue,// if mode==bayer, this is the value for the blue pixels 
+    input [DATA_WIDTH-1:0]  bayer_blue,// if mode==bayer, this is the value for the blue pixels
     input [DATA_WIDTH-1:0]  bayer_gb,  // if mode==bayer, this is the value for the green pixel on blue rows
 
     input [NUM_ROWS_WIDTH-1:0] num_active_rows,
@@ -26,7 +26,7 @@ module imager
     input [NUM_COLS_WIDTH-1:0] num_active_cols,
     input [NUM_COLS_WIDTH-1:0] num_virtual_cols,
                       // THE following two inputs are for simulating
-                      // varying amounts of exposure for an image 
+                      // varying amounts of exposure for an image
                       // sensor that has a sync signal
                       // for when the frame is valid.
                       // sync is active low and will assert
@@ -42,54 +42,59 @@ module imager
 			    // image will be different and generated
 			    // from the seed left at the end of the
 			    // previous frame.
-    
+
     output reg [DATA_WIDTH-1:0] dat,
     output reg fv,
     output reg lv,
-    output reg sync 
+    output reg sync
     );
 
+`ifdef SIM
+   // synth can't make a hug image buf
    reg [DATA_WIDTH-1:0] image_buf[0:4095][0:4095] /* verilator public */;
+ `endif
    reg [31:0] noise;
    reg [NUM_ROWS_WIDTH:0] row_count;
    reg [NUM_COLS_WIDTH:0] col_count;
    reg [NUM_ROWS_WIDTH-1:0] num_active_rows_s;
    reg [NUM_COLS_WIDTH-1:0] num_active_cols_s;
- 
+
    wire [NUM_ROWS_WIDTH:0] next_row_count = row_count + 1;
    wire [NUM_COLS_WIDTH:0] next_col_count = col_count + 1;
-   
+
    wire fv_wire = (row_count < {1'b0, num_active_rows_s});
    wire [NUM_COLS_WIDTH-1:0] hblank_fp = num_virtual_cols >> 1;
    wire 		     lv_wire = fv_wire && (col_count >= {1'b0, hblank_fp}) && (col_count < num_active_cols_s + hblank_fp);
-   
+
    reg [DATA_WIDTH-1:0] pixel_count;
 
    wire [NUM_ROWS_WIDTH:0] total_rows = num_active_rows_s + num_virtual_rows;
    wire [NUM_COLS_WIDTH:0] total_cols = num_active_cols_s + num_virtual_cols;
    reg [15:0] 		   frame_count;
-   
+
    reg [NUM_ROWS_WIDTH-1:0] sync_row;
    wire [NUM_ROWS_WIDTH:0] sync_row_end = sync_row_start + sync_rows;
 
    /* verilator lint_off WIDTH */
    wire [DATA_WIDTH-1:0] bayer = (row_count & 1) == 0 ?
                                   ( (col_count & 1) == 0 ? bayer_blue : bayer_gb ) :
-                                  ( (col_count & 1) == 0 ? bayer_gr : bayer_red ); 
+                                  ( (col_count & 1) == 0 ? bayer_gr : bayer_red );
 
-   
+
    wire [DATA_WIDTH-1:0] dat_sel = (mode == 0) ? noise[DATA_WIDTH-1:0] :
 			           (mode == 1) ? row_count :
 			           (mode == 2) ? col_count :
 			           (mode == 3) ? row_count + col_count :
 			           (mode == 4) ? frame_count :
 			           (mode == 5) ? frame_count + col_count + row_count :
+`ifdef SIM
 			           (mode == 6) ? image_buf[row_count][col_count] :
-                                   (mode == 7) ? pixel_count :
-                                   bayer;
+`endif
+                        (mode == 7) ? pixel_count :
+                                      bayer;
    /* verilator lint_on WIDTH */
-   
-   
+
+
    always @(posedge clk or negedge reset_n) begin
       if(!reset_n) begin
          col_count <= 0;
@@ -108,10 +113,10 @@ module imager
 	 if(!fv_wire) begin
 	    if(|noise_seed) noise <= noise_seed;// only reseed noise at beginning of each frame if the noise seed is not 0. When noise seed is 0, let the next image be different than the previous.
 	 end else begin
-	    if(lv_wire) 
+	    if(lv_wire)
               noise <= { noise[30:0], !(noise[31] ^ noise[21] ^ noise[1] ^ noise[0]) };
 	 end
-	 
+
          // generate lv, fv, and dat
          if(!enable) begin
             lv             <= 0;
@@ -175,5 +180,5 @@ module imager
     `verilog
 `endif
 `endif
-      
-endmodule 
+
+endmodule
