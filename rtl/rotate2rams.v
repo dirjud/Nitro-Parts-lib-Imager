@@ -7,7 +7,7 @@
 // single buffer situation.
 // 
 
-
+`include "dtypes.v"
 module rotate2rams
   #(parameter ADDR_WIDTH=21, DATA_WIDTH=24, ANGLE_WIDTH=10, DIM_WIDTH=11)
   (input clk,

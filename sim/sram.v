@@ -13,19 +13,20 @@ module sram
     input [ADDR_WIDTH-1:0] addr);
 
    reg [DATA_WIDTH-1:0]   buffer[0:(1<<ADDR_WIDTH)-1];
- 
+//   reg [DATA_WIDTH-1:0]   data;
+
    always @(ceb, web, addr, data, oeb) begin
       if(!ceb && !web) begin
 	 buffer[addr] = data;
-	 data = {DATA_WIDTH{1'bz}};
-      end else if(!ceb && !oeb) begin
-	 data = buffer[addr];
-      end else begin
-	 data = {DATA_WIDTH{1'bz}};
+//	 data = {DATA_WIDTH{1'bz}};
+//      end else if(!ceb && !oeb) begin
+//	 data = buffer[addr];
+//      end else begin
+//	 data = {DATA_WIDTH{1'bz}};
       end
    end
 
-//   assign data = (oeb==0 && ceb==0) ? buffer[addr] : {DATA_WIDTH{1'bz}};
+   assign data = (oeb==0 && ceb==0) ? buffer[addr] : {DATA_WIDTH{1'bz}};
 
 
    
