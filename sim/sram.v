@@ -14,10 +14,13 @@ module sram
 
    reg [DATA_WIDTH-1:0]   buffer[0:(1<<ADDR_WIDTH)-1];
 //   reg [DATA_WIDTH-1:0]   data;
-
-   always @(ceb, web, addr, data, oeb) begin
+   reg [DATA_WIDTH-1:0]   data0;
+   always @(*) begin
+      #1 data0 = data;
+   end
+   always @(*) begin
       if(!ceb && !web) begin
-	 buffer[addr] = data;
+	 buffer[addr] = data0;
 //	 data = {DATA_WIDTH{1'bz}};
 //      end else if(!ceb && !oeb) begin
 //	 data = buffer[addr];
