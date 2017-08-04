@@ -54,10 +54,19 @@ module stream2mig
    output reg [ADDR_WIDTH-1:0] 	  pR_cmd_byte_addr,
    input 			  pR_cmd_full,
    input 			  pR_cmd_empty,
+`ifdef ARTIX
+   output reg pR_rd_flush,
+   output pR_wr_flush,
+   output pW_rd_flush,
+   output reg pW_wr_flush,
+`endif   
    output reg 			  pR_busy
    
    );
-
+`ifdef ARTIX
+   assign pR_wr_flush = 1;
+   assign pW_rd_flush = 1;
+`endif   
    
    localparam FIFO_WIDTH=8;
    localparam ADDR_BLOCK_WIDTH=24;
@@ -193,12 +202,18 @@ module stream2mig
 	 rwait <= 1;
          need_re <= 0;
          cur_read_pos <= 0;
+`ifdef ARTIX
+	 pR_rd_flush <= 1;
+`endif   
 	 
       end else begin
          
 	 rwait <= rempty;
 
 	 if(!enable) begin
+`ifdef ARTIX
+	    pR_rd_flush <= 1;
+`endif   
             pR_cmd_en    <= 0;
             pR_cmd_instr <= CMD_IDLE;
             pR_cmd_byte_addr <= 0;
@@ -212,6 +227,9 @@ module stream2mig
             need_re <= 0;
             if(di_read_mode) begin 
 	       if(!rwait) begin
+`ifdef ARTIX
+		  pR_rd_flush <= 0;
+`endif   
 		  pR_cmd_byte_addr <= { cur_frame_pos, 6'b0 };
 		  pR_cmd_instr <= CMD_READ;
                   re <= 1;
@@ -220,6 +238,9 @@ module stream2mig
 	       end
 	       pR_busy <= 1;
             end else begin
+`ifdef ARTIX
+	       pR_rd_flush <= 1;
+`endif   
 	       pR_busy <= 0;
 	    end
             pR_cmd_en <= 0;
@@ -346,11 +367,17 @@ module stream2mig
 	 state <= STATE_WAIT_FRAME;
 	 frame_length <= 0;
 	 we_s <= 0;
+`ifdef ARTIX
+		  pW_wr_flush <= 1;
+`endif   
       end else begin
 	 we_s <= we;
 	 we_ss<= we_s;
 
 	 if(!enable_s && wfifo_empty) begin
+`ifdef ARTIX
+	    pW_wr_flush <= 1;
+`endif   
 
 	    // drain any data in wfifo
             pW_cmd_en <= 0;
@@ -379,6 +406,9 @@ module stream2mig
 	        end
 	           
 	        if(dvi && dtypei == `DTYPE_HEADER_END) begin
+`ifdef ARTIX
+		   pW_wr_flush <= 1;
+`endif   
 	           if(wwait) begin
 	              $display("Dropping frame because fifo is full.");
 	              we <= 0;
@@ -389,6 +419,9 @@ module stream2mig
 	           end
 
 	        end else if(dvi && dtypei == `DTYPE_FRAME_START) begin
+`ifdef ARTIX
+		   pW_wr_flush <= 0;
+`endif   
 	           we <= 0;
 	           frame_length <= header_length;
 	           pW_cmd_byte_addr <= waddr_base + header_length;
