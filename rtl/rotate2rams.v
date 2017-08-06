@@ -11,8 +11,6 @@
 module rotate2rams
   #(parameter ADDR_WIDTH=21, DATA_WIDTH=24, ANGLE_WIDTH=10, DIM_WIDTH=11)
   (input clk,
-   input 			  sram_wclkp,
-   input 			  sram_wclkn,
    input 			  resetb,
    input 			  enable,
    input 			  dvi,
@@ -88,7 +86,7 @@ module rotate2rams
 //   wire [ADDR_WIDTH-1:0] raddr = frame_count == 0 ? addr0_internal : addr1_internal;
 
    reg [15:0] 			 ram_databus0s, ram_databus1s;
-   always @(negedge clk) begin
+   always @(posedge clk) begin
       ram_databus0s <= sram_datai0;
       ram_databus1s <= sram_datai1;
    end
@@ -241,8 +239,8 @@ module rotate2rams
    assign sram_datai0 = ram_databus0;
    assign sram_datai1 = ram_databus1;
 
-   ODDR2 web0_oddr(.Q(web0), .C0(sram_wclkp), .C1(sram_wclkn), .CE(1), .D0(1), .D1(web0_internal), .R(0), .S(0));
-   ODDR2 web1_oddr(.Q(web1), .C0(sram_wclkp), .C1(sram_wclkn), .CE(1), .D0(1), .D1(web1_internal), .R(0), .S(0));
+   ODDR2 web0_oddr(.Q(web0), .C0(clk), .C1(!clk), .CE(1), .D0(1), .D1(web0_internal), .R(0), .S(0));
+   ODDR2 web1_oddr(.Q(web1), .C0(clk), .C1(!clk), .CE(1), .D0(1), .D1(web1_internal), .R(0), .S(0));
    
    // synthesis attribute IOB of datao0 is "TRUE";
    // synthesis attribute IOB of datao1 is "TRUE";
