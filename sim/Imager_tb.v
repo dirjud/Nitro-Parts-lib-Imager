@@ -147,6 +147,10 @@ module Imager_tb
    wire [31:0] 	di_reg_datao_LOOKUP_MAP;
    wire [15:0] 	di_transfer_status_LOOKUP_MAP;
    
+   wire [31:0] 	di_reg_datao_CIRCLE_CROP;
+   wire 	di_read_rdy_CIRCLE_CROP, di_write_rdy_CIRCLE_CROP, di_CIRCLE_CROP_en;
+   wire [15:0] 	di_transfer_status_CIRCLE_CROP;
+
    always @(*) begin
       if(di_term_addr == `TERM_Imager) begin
 	 di_reg_datao = ImagerTerminal_reg_datao;
@@ -193,6 +197,11 @@ module Imager_tb
 	 di_read_rdy  =  di_read_rdy_UNSHARPMASK;
 	 di_write_rdy = di_write_rdy_UNSHARPMASK;
 	 di_transfer_status = di_transfer_status_UNSHARPMASK;
+      end else if(di_CIRCLE_CROP_en) begin
+	 di_reg_datao = di_reg_datao_CIRCLE_CROP;
+	 di_read_rdy  = di_read_rdy_CIRCLE_CROP;
+	 di_write_rdy = di_write_rdy_CIRCLE_CROP;
+	 di_transfer_status = di_transfer_status_CIRCLE_CROP;
       end else if(di_INTERP_en) begin
 	 di_reg_datao = di_reg_datao_INTERP;
 	 di_read_rdy  =  di_read_rdy_INTERP;
@@ -554,6 +563,46 @@ module Imager_tb
       .vo(                 v_lookup_map),
       .meta_datao(meta_datao_lookup_map));
 
+   /**************** Circle Crop Test Bench ********************/
+   wire 		   dvo_circle_crop;
+   wire [PIXEL_WIDTH-1:0]  r_circle_crop, g_circle_crop, b_circle_crop;
+   wire [15:0] 		   meta_datao_circle_crop;
+   wire [`DTYPE_WIDTH-1:0] dtypeo_circle_crop;
+   circle_crop_tb #(.PIXEL_WIDTH(PIXEL_WIDTH))
+   circle_crop_tb
+     (
+      .resetb(resetb),
+      .di_clk(clk),
+      .di_term_addr(di_term_addr),
+      .di_reg_addr(di_reg_addr),
+      .di_read_mode(di_read_mode),
+      .di_read_req(di_read_req),
+      .di_read(di_read),
+      .di_write_mode(di_write_mode),
+      .di_write(di_write),
+      .di_reg_datai(di_reg_datai),
+      .di_read_rdy(di_read_rdy_CIRCLE_CROP),
+      .di_reg_datao(di_reg_datao_CIRCLE_CROP),
+      .di_write_rdy(di_write_rdy_CIRCLE_CROP),
+      .di_transfer_status(di_transfer_status_CIRCLE_CROP),
+      .di_en(di_CIRCLE_CROP_en),
+
+      .img_clk(clk),
+      .dvi(dvo_interp),
+      .dtypei(dtypeo_interp),
+      .r(r_interp),
+      .g(g_interp),
+      .b(b_interp),
+      .meta_datai(meta_datao_interp),
+
+      .dvo(dvo_circle_crop),
+      .dtypeo(dtypeo_circle_crop),
+      .ro(r_circle_crop),
+      .go(g_circle_crop),
+      .bo(b_circle_crop),
+      .meta_datao(meta_datao_circle_crop)
+      );
+
    /**************** MUX to SELECT Reading Port ********************/
    reg [15:0] 		   datao0_sel, datao1_sel, datao2_sel;
    reg [15:0] 		   meta_datao_sel;
@@ -593,6 +642,20 @@ module Imager_tb
 	 meta_datao_sel <=  datao_rotate;
 	 dtypeo_sel     <= dtypeo_rotate;
 	 dvo_sel        <=    dvo_rotate;
+      end else if(stream_sel == `Imager_stream_sel_CIRCLE_CROP) begin
+	 datai0_sel     <=          r_interp;
+	 datai1_sel     <=          g_interp;
+	 datai2_sel     <=          b_interp;
+	 meta_datai_sel <= meta_datao_interp;
+	 dtypei_sel     <=     dtypeo_interp;
+	 dvi_sel        <=        dvo_interp;
+	 
+	 datao0_sel     <=          r_circle_crop;
+	 datao1_sel     <=          g_circle_crop;
+	 datao2_sel     <=          b_circle_crop;
+	 meta_datao_sel <= meta_datao_circle_crop;
+	 dtypeo_sel     <=     dtypeo_circle_crop;
+	 dvo_sel        <=        dvo_circle_crop;
       end else if(stream_sel == `Imager_stream_sel_FILTER2D) begin
 	 datai0_sel     <=          y_rgb2yuv;
 	 datai1_sel     <=          u_rgb2yuv;

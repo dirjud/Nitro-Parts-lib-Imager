@@ -53,6 +53,12 @@ SIM_FILES = sim/Imager_tb.v \
 	rtl_auto/UnsharpMaskTestTerminal.v \
 	sim/unsharp_mask_tb.v \
 	rtl/unsharp_mask.v \
+	rtl_auto/CircleCropTestTerminal.v \
+	sim/circle_crop_tb.v \
+	rtl/circle_crop.v \
+	$(NITRO_PARTS_DIR)/lib/math/rtl/sqrt.v \
+	$(NITRO_PARTS_DIR)/lib/math/rtl/divide.v \
+
 
 # VERILATOR specific options
 #VERILATOR_ARGS=-Wno-UNOPTFLAT

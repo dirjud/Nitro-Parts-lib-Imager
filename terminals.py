@@ -150,7 +150,7 @@ di = DeviceInterface(
                     init=0,
                     mode="write",
                     type="int",
-                    valuemap=dict(RAW=0, ROTATE=1, FILTER2D=2, INTERP_BILINEAR=3, RGB2YUV=4, LOOKUP_MAP=5, UNSHARP_MASK=6 ),
+                    valuemap=dict(RAW=0, ROTATE=1, FILTER2D=2, INTERP_BILINEAR=3, RGB2YUV=4, LOOKUP_MAP=5, UNSHARP_MASK=6, CIRCLE_CROP=7 ),
                     comment="Selects what stream gets muxed into the 'STREAM' terminal for reading",
                 ),
             ],
@@ -567,7 +567,30 @@ di = DeviceInterface(
                 ),
             ],
         ),
-
+        Terminal(
+            name="CircleCropTest",
+            regAddrWidth=16,
+            regDataWidth=32,
+            comment="Test for circle crop",
+            register_list = [
+                Register(
+                    name="enable",
+                    width=1,
+                    init=0,
+                    type="int",
+                    mode="write",
+                    comment="Enables circle_crop.v module",
+                ),
+                Register(
+                    name="overage",
+                    width=12,
+                    init=0,
+                    type="int",
+                    mode="write",
+                    comment="Number of rows of overage in the circle crop",
+                ),
+            ],
+        ),
         
     ]
 )
