@@ -15,7 +15,7 @@ class CircleCropTest(simtest):
 
         num_cols = 300
         num_rows = 200
-        self.dev.set("Imager", "mode", 2)
+        self.dev.set("Imager", "mode", 3)
         self.dev.set("Imager", "num_active_cols", num_cols)
         self.dev.set("Imager", "num_active_rows", num_rows)
         self.dev.set("Imager", "stream_sel", "CIRCLE_CROP")
@@ -47,7 +47,7 @@ class CircleCropTest(simtest):
                 self.assertTrue((y[row, :c0-3,:] == 0).all(), str(row))
                 self.assertTrue((y[row, c1+4:,:] == 0).all(), str(row))
 
-        if False:
+        if True:
             w = numpy.abs(z.astype(numpy.int16) - y)
             pylab.figure(figsize=[8,8])
             ax = pylab.subplot(221)

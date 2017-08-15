@@ -248,7 +248,7 @@ module imager_rx
 	    dtypeo <= `DTYPE_FRAME_END;
 	    datao  <= 0;
 	    header_mode <= 1;
-	    header_addr <= 0;
+	    header_addr <= 1;
 	    flags_ss <= flags_s;
 	 end else if(lv_rising) begin
 	    dvo    <= 1;
@@ -267,8 +267,12 @@ module imager_rx
 	       dvo <= 0;
 	       
 	    end else begin
-	       dvo <= 1;
-	       header_mode <= 2;
+               if(header_addr == 0) begin // wait for the header_addr to swing around once before exporting the header to create some separation from frame end to the header
+	          dvo <= 1;
+	          header_mode <= 2;
+               end else begin
+                  dvo <= 0;
+               end
 	       header_addr <= header_addr + 1;
 	    end
 	    dtypeo <= `DTYPE_HEADER_START;
