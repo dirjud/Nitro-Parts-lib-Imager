@@ -2,9 +2,10 @@
 //
 
 `include "dtypes.v"
+`include "terminals_defs.v"
 
 module raw_to_32
-    #(parameter PIXEL_WIDTH=10
+    #(parameter PIXEL_WIDTH=10  // TODO this is written for 10 bit data if pack is true.
      )
 
     (
@@ -15,6 +16,7 @@ module raw_to_32
     input [15:0]                datai,
     input                       dvi,
     input [`DTYPE_WIDTH-1:0]    dtypei,
+    input [15:0]                image_type,
     //input [15:0]                meta_datai,
 
     input                       pack,
@@ -30,10 +32,14 @@ module raw_to_32
     reg flush_lsbs;
     reg send_row_end;
 
+    integer opos;
+
     wire [7:0] eight_bits = datai[9:2];
     wire [1:0] two_bits = datai[1:0];
 
     //wire [15:0] packed_datai = {{16-PIXEL_WIDTH{1'b0}}, datai[PIXEL_WIDTH-1:0]};
+
+    wire [15:0] unpacked_datai = (dtypei == `DTYPE_HEADER && opos == `Image_image_type) ? image_type : datai;
 
     always @(posedge clk or negedge resetb) begin
         if (!resetb) begin
@@ -45,6 +51,7 @@ module raw_to_32
             packpos <= 0;
             flush_lsbs <= 0;
             send_row_end <= 0;
+            opos <= 0;
         end else begin
 
             if (dvi) begin
@@ -52,12 +59,13 @@ module raw_to_32
                 if ( (!pack && |(dtypei & `DTYPE_PIXEL_MASK)) ||
                       dtypei == `DTYPE_HEADER) begin
                     dtypeo <= dtypei;
+                    if (dtypei == `DTYPE_HEADER) opos <= opos + 1;
                     if (!dvo1) begin
-                        datao[15:0] <= datai;
+                        datao[15:0] <= unpacked_datai;
                         dvo1 <= 1;
                         dvo <= 0;
                     end else begin
-                        datao[31:16] <= datai;
+                        datao[31:16] <= unpacked_datai;
                         dvo <= 1;
                         dvo1 <= 0;
                     end
@@ -82,6 +90,7 @@ module raw_to_32
                         send_row_end <= 1;
                     end else begin
                         dtypeo <= dtypei;
+                        opos <= 0;
                     end
                     dvo <= 1;
                 end
