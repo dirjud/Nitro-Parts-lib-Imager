@@ -11,7 +11,7 @@ import pylab, matplotlib
 class CircleCropTest(simtest):
 
     def testCircleCrop(self):
-        """Rotates image through series of rotations and verifies it."""
+        """Enables circle crop and checks for correctness"""
 
         num_cols = 300
         num_rows = 200

@@ -17,7 +17,7 @@ module omnivision_spi_tx
 
    wire 		   clk_hs;
 
-   PLL_sim2 pll_hs (.input_clk(pixclk), .output_clk(clk_hs), .pll_mult(4), .pll_div(1), .debug(1));
+   PLL_sim pll_hs (.input_clk(pixclk), .output_clk(clk_hs), .pll_mult(4), .pll_div(1), .debug(1));
 
 
    reg [7:0]    sr;
