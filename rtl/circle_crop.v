@@ -63,6 +63,7 @@ module circle_crop
 	 go  <= 0;
 	 bo  <= 0;
 	 dtypeo <= 0;
+	 meta_datao <= 0;
 
 	 row <= 0;
 	 col <= 0;

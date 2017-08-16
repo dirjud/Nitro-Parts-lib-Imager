@@ -5,3 +5,4 @@ imager_rx.xml
 rtl_auto
 *.so
 obj_dir
+data

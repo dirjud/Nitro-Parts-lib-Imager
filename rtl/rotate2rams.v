@@ -129,6 +129,7 @@ module rotate2rams
 	 ob <= 0;
          datao2 <= 0;
          datao <= 0;
+         dvo <= 0;
       end else begin
 	 // do a three clock cycle pipeline delay to give time to turn around
 	 // data through the RAM
