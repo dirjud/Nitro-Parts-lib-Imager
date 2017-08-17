@@ -52,8 +52,8 @@ di = DeviceInterface(
                     mode="write",
                     type="int",
                     subregs=[
-                        SubReg(name="modei", width=1, init=0, comment="""0: 16b single channel. 1: 16b three channels""",),
-                        SubReg(name="modeo", width=1, init=0, comment="""0: 16b single channel. 1: 16b three channels""",),
+                        SubReg(name="modei", width=2, init=0, comment="""0: 16b single channel. 1: 16b three channels. 2: 16b two channels""",),
+                        SubReg(name="modeo", width=2, init=0, comment="""0: 16b single channel. 1: 16b three channels. 2: 16b two channels""",),
                         ],
                 ),
                 Register(

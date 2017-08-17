@@ -21,7 +21,7 @@ module stream2di
    input [15:0] 		 datai1,
    input [15:0] 		 datai2,
    input [STREAM_DATA_WIDTH-1:0] meta_datai,
-   input 			 mode, // 0 just datai0, 1 - datai0/datai1,datai2
+   input [1:0]			 mode, // 0 just datai0, 1 - datai0/datai1,datai2, 2- datai0, datai1
    input 			 rclk,
    input 			 di_read_mode,
    input 			 di_read,
@@ -81,7 +81,10 @@ module stream2di
 		     buffer[waddr+1][wbuf] <= { datai2, datai1 };
 		     waddr <= waddr + 2;
 		  end
-	       end
+	       end else if(mode == 2) begin
+		  buffer[waddr][wbuf] <= { datai1, datai0 };
+		  waddr <= waddr + 1;
+               end
 
 	    end else if(dvi && dtypei == `DTYPE_FRAME_END) begin
 	       wstate <= WIDLE;
