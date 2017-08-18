@@ -71,8 +71,8 @@ module raw_to_32
                     end
                 end else if (pack && |(dtypei & `DTYPE_PIXEL_MASK)) begin
                     dtypeo <= dtypei;
-                    datao <= { eight_bits, datao[31:8] }; // >> 8)   //(datao << 8) | eight_bits;
-                   lsbs <= { two_bits, lsbs[31:2] }; //(lsbs << 2) | two_bits;
+                    datao <= { eight_bits, datao[31:8] }; // >> 8)   //(datao << 8) | eight_bits
+                    lsbs <= { two_bits, lsbs[31:2] }; //(lsbs << 2) | two_bits;
                     packpos <= packpos+1;
                     dvo <= (packpos&3) == 3;
                     if (packpos==15) begin
@@ -88,16 +88,18 @@ module raw_to_32
                         lsbs <= 0;
                         datao <= lsbs;
                         send_row_end <= 1;
+                        dvo <= flush_lsbs || packpos > 0;
                     end else begin
                         dtypeo <= dtypei;
                         opos <= 0;
+                        dvo <= 1;
                     end
-                    dvo <= 1;
                 end
 
             end else begin
-                if (flush_lsbs) begin
+                if (flush_lsbs || (send_row_end && packpos > 0)) begin
                     datao <= lsbs;
+                    packpos <= 0;
                     lsbs <= 0;
                     flush_lsbs <= 0;
                     dvo <= 1;

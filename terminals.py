@@ -150,7 +150,16 @@ di = DeviceInterface(
                     init=0,
                     mode="write",
                     type="int",
-                    valuemap=dict(RAW=0, ROTATE=1, FILTER2D=2, INTERP_BILINEAR=3, RGB2YUV=4, LOOKUP_MAP=5, UNSHARP_MASK=6, CIRCLE_CROP=7 ),
+                    valuemap=dict(RAW=0, 
+                                  ROTATE=1, 
+                                  FILTER2D=2, 
+                                  INTERP_BILINEAR=3, 
+                                  RGB2YUV=4, 
+                                  LOOKUP_MAP=5, 
+                                  UNSHARP_MASK=6, 
+                                  CIRCLE_CROP=7, 
+                                  RAWTO32=8
+                                ),
                     comment="Selects what stream gets muxed into the 'STREAM' terminal for reading",
                 ),
             ],
@@ -588,6 +597,29 @@ di = DeviceInterface(
                     type="int",
                     mode="write",
                     comment="Number of rows of overage in the circle crop",
+                ),
+            ],
+        ),
+        Terminal (
+            name="RawTo32Test",
+            regAddrWidth=16,
+            regDataWidth=32,
+            comment="Test packing raw10 data",
+            register_list = [
+                Register (
+                    name="en",
+                    width=1,
+                    init=0,
+                    mode="write",
+                    comment="enable test module"
+                ),
+                Register(
+                    name="pack",
+                    width=1,
+                    init=1,
+                    type="int",
+                    mode="write",
+                    comment="packs into blocks with lsbs when 1 else packs into 16 bits."
                 ),
             ],
         ),

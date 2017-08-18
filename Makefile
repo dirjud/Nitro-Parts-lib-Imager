@@ -8,4 +8,4 @@ include ../../lib/Makefiles/project.mk
 
 sim_tests:
 	$(MAKE) sim
-	cd sim; python -m unittest ccm dot_product filter2d imager_rx interp_bilinear lookup_map rgb2yuv circle_crop
+	cd sim; python -m unittest ccm dot_product filter2d imager_rx interp_bilinear lookup_map rgb2yuv circle_crop rawto32

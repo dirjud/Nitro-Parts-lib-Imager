@@ -111,6 +111,10 @@ module Imager_tb
    wire 	di_read_rdy_DOTPRODUCT, di_write_rdy_DOTPRODUCT, di_DOTPRODUCT_en;
    wire [15:0] 	di_transfer_status_DOTPRODUCT;
 
+   wire [31:0] 	di_reg_datao_RAWTO32;
+   wire 	di_read_rdy_RAWTO32, di_write_rdy_RAWTO32, di_RAWTO32_en;
+   wire [15:0] 	di_transfer_status_RAWTO32;
+
    wire [31:0] 	di_reg_datao_FILTER2D;
    wire 	di_read_rdy_FILTER2D, di_write_rdy_FILTER2D, di_FILTER2D_en;
    wire [15:0] 	di_transfer_status_FILTER2D;
@@ -187,6 +191,11 @@ module Imager_tb
 	 di_read_rdy  =  di_read_rdy_DOTPRODUCT;
 	 di_write_rdy = di_write_rdy_DOTPRODUCT;
 	 di_transfer_status = di_transfer_status_DOTPRODUCT;
+      end else if(di_RAWTO32_en) begin
+	 di_reg_datao = di_reg_datao_RAWTO32;
+	 di_read_rdy  =  di_read_rdy_RAWTO32;
+	 di_write_rdy = di_write_rdy_RAWTO32;
+	 di_transfer_status = di_transfer_status_RAWTO32;
       end else if(di_FILTER2D_en) begin
 	 di_reg_datao = di_reg_datao_FILTER2D;
 	 di_read_rdy  =  di_read_rdy_FILTER2D;
@@ -373,6 +382,39 @@ module Imager_tb
       .di_transfer_status(di_transfer_status_DOTPRODUCT),
       .di_en(di_DOTPRODUCT_en)
       );
+
+   /**************** Raw to 32 Test ********************/
+
+   wire dvo_rawto32;
+   wire [31:0] datao_rawto32;
+   wire [`DTYPE_WIDTH-1:0] dtypeo_rawto32;
+   raw_to_32_tb raw_to_32_tb
+   (
+      .resetb(resetb),
+      .di_clk(clk),
+      .di_term_addr(di_term_addr),
+      .di_reg_addr(di_reg_addr),
+      .di_read_mode(di_read_mode),
+      .di_read_req(di_read_req),
+      .di_read(di_read),
+      .di_write_mode(di_write_mode),
+      .di_write(di_write),
+      .di_reg_datai(di_reg_datai),
+      .di_read_rdy(  di_read_rdy_RAWTO32),
+      .di_reg_datao(di_reg_datao_RAWTO32),
+      .di_write_rdy(di_write_rdy_RAWTO32),
+      .di_transfer_status(di_transfer_status_RAWTO32),
+      .di_en(di_RAWTO32_en),
+
+      .img_clk(clk),
+      .dvi(dvo_rx),
+      .dtypei(dtypeo_rx),
+      .datai(datao_rx),
+
+      .dvo(dvo_rawto32),
+      .dtypeo(dtypeo_rawto32),
+      .datao(datao_rawto32)
+   );
 
 
    /**************** Interp Bilinear Test Bench ********************/
@@ -642,6 +684,20 @@ module Imager_tb
 	 meta_datao_sel <=  datao_rotate;
 	 dtypeo_sel     <= dtypeo_rotate;
 	 dvo_sel        <=    dvo_rotate;
+      end else if(stream_sel == `Imager_stream_sel_RAWTO32) begin
+	 datai0_sel     <=  datao_rx;
+	 datai1_sel     <=  0;
+	 datai2_sel     <=  0;
+	 meta_datai_sel <=  datao_rx;
+	 dtypei_sel     <= dtypeo_rx;
+	 dvi_sel        <=    dvo_rx;
+	 
+	 datao0_sel     <=  datao_rawto32[15:0];
+	 datao1_sel     <=  datao_rawto32[31:16];
+	 datao2_sel     <=  0;
+	 meta_datao_sel <=  0;
+	 dtypeo_sel     <= dtypeo_rawto32;
+	 dvo_sel        <=    dvo_rawto32;
       end else if(stream_sel == `Imager_stream_sel_CIRCLE_CROP) begin
 	 datai0_sel     <=          r_interp;
 	 datai1_sel     <=          g_interp;
