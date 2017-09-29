@@ -41,7 +41,7 @@ module interp_bilinear
    kernel #(.KERNEL_SIZE(KERNEL_SIZE),
 	    .PIXEL_WIDTH(PIXEL_WIDTH),
 	    .DATA_WIDTH(16),
-	    .MAX_COLS(1288),
+	    .MAX_COLS(MAX_COLS),
 	    .BLOCK_RAM(BLOCK_RAM)
 	    )
    kernel

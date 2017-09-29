@@ -13,7 +13,7 @@
 // unsigned numbers.
 
 module yuv420
-  #(parameter RAW_PIXEL_SHIFT=0, BLOCK_RAM=1) // number of LSBs to drop in raw data stream to make it 8b.
+  #(parameter RAW_PIXEL_SHIFT=0, BLOCK_RAM=1, MAX_COLS=1288) // number of LSBs to drop in raw data stream to make it 8b.
   (input clk,
    input 			 resetb,
    input [15:0] 		 image_type,
@@ -66,7 +66,7 @@ module yuv420
    kernel #(.KERNEL_SIZE(KERNEL_SIZE),
 	    .PIXEL_WIDTH(16),
 	    .DATA_WIDTH(16),
-	    .MAX_COLS(1288),
+	    .MAX_COLS(MAX_COLS),
 	    .BLOCK_RAM(BLOCK_RAM)
 	    )
    kernel
