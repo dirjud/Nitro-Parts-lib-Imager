@@ -48,6 +48,8 @@ module image_mean
    output reg [ACCUM_WIDTH-1:0] 			  image_accum01,
    output reg [ACCUM_WIDTH-1:0] 			  image_accum10,
    output reg [ACCUM_WIDTH-1:0] 			  image_accum11,
+   output reg [NUM_ROWS_WIDTH+NUM_COLS_WIDTH-1:0] 	  top_bin_count,
+   output reg [NUM_ROWS_WIDTH+NUM_COLS_WIDTH-1:0] 	  sat_pix_count,
    output reg [NUM_ROWS_WIDTH+NUM_COLS_WIDTH-3:0] 	  image_accum_count
 
    );
@@ -66,6 +68,7 @@ module image_mean
    reg [NUM_COLS_WIDTH-1:0] 		  col;
    wire 			  valid_pixel = (col >= window_col_start) && (col < window_col_end) && (row >= window_row_start) && (row < window_row_end);
    reg [NUM_ROWS_WIDTH+NUM_COLS_WIDTH-3:0] pix_count;
+   reg [NUM_ROWS_WIDTH+NUM_COLS_WIDTH-1:0] top_bin_count0, sat_pix_count0;
    wire [NUM_ROWS_WIDTH-1:0] 		   next_row = row + 1;
    
    always @(posedge pixclk or negedge resetb) begin
@@ -78,6 +81,10 @@ module image_mean
 	 image_accum01    <= 0;
 	 image_accum10    <= 0;
 	 image_accum11    <= 0;
+         top_bin_count  <= 0;
+         top_bin_count0 <= 0;
+         sat_pix_count  <= 0;
+         sat_pix_count0 <= 0;
 	 col        <= 0;
 	 row        <= 0;
 	 done       <= 0;
@@ -94,6 +101,8 @@ module image_mean
 	       row      <= 0;
 	       col      <= 0;
 	       pix_count<= 0;
+               top_bin_count0  <= 0;
+               sat_pix_count0  <= 0;
 	    end else if(dtypei == `DTYPE_ROW_END) begin
 	       col      <= 0;
 	       row      <= next_row;
@@ -106,6 +115,12 @@ module image_mean
 		  if(accum_addr == 0) begin
 		     pix_count <= pix_count + 1;
 		  end
+                  if(datai >= top_bin_threshold) begin
+                     top_bin_count0 <= top_bin_count0 + 1;
+                  end
+                  if(&datai) begin
+                     sat_pix_count0 <= sat_pix_count0 + 1;
+                  end
 	       end
 	    end
 	 
@@ -132,6 +147,8 @@ module image_mean
 	    image_accum10 <= accum[2];
 	    image_accum11 <= accum[3];
 	    image_accum_count <= pix_count;
+            top_bin_count <= top_bin_count0;
+            sat_pix_count <= sat_pix_count0;
 	 end	    
       end
    end
