@@ -47,65 +47,81 @@ module raw_to_32_tb
    wire [`DTYPE_WIDTH-1:0] fifo_dtypeo = fifo_datao[`DTYPE_WIDTH+15:16];
    wire [11:0] usedSpace;
 
-   fifo_singleclk
-    #(.ADDR_WIDTH(12),
-      .DATA_WIDTH(`DTYPE_WIDTH+16)
-     )
-   dvi_delay
-   (
-        .clk(img_clk),
-        .resetb(resetb),
-
-        .we(dvi && en),
-        .re(re),
-        .flush(!en),
-
-        .full(full),
-        .empty(empty),
-
-        .wdata({dtypei,datai}),
-        .rdata(fifo_datao),
-
-        .usedSpace(usedSpace)
-   );
-
-   reg [2:0] delay;
-   wire [11:0] usedSpaceNext = (re && usedSpace > 0) ? usedSpace-1 : usedSpace;
-   always @(posedge img_clk or negedge resetb) begin
-      if (!resetb) begin
-        re <= 0;
-        delay <= 0;
-      end else begin
-        if (usedSpace>1 || usedSpaceNext>0) begin
-            if (|(fifo_dtypeo & `DTYPE_PIXEL_MASK)) begin
-                if (delay+1 < 4) begin
-                    re <= 1;
-                    if (re) delay <= delay + 1;
-                end else begin
-                    re <= 0;
-                    delay <= 0;
-                end
-            end else begin
-                re <= 1;
-                delay <= 0;
-            end
-        end else begin
-            re<=0;
-            delay <= 0;
-        end
-      end
-   end
-
-
-   raw_to_32
-   raw_to_32
+//   fifo_singleclk
+//    #(.ADDR_WIDTH(12),
+//      .DATA_WIDTH(`DTYPE_WIDTH+16)
+//     )
+//   dvi_delay
+//   (
+//        .clk(img_clk),
+//        .resetb(resetb),
+//
+//        .we(dvi && en),
+//        .re(re),
+//        .flush(!en),
+//
+//        .full(full),
+//        .empty(empty),
+//
+//        .wdata({dtypei,datai}),
+//        .rdata(fifo_datao),
+//
+//        .usedSpace(usedSpace)
+//   );
+//
+//   reg [2:0] delay;
+//   wire [11:0] usedSpaceNext = (re && usedSpace > 0) ? usedSpace-1 : usedSpace;
+//   always @(posedge img_clk or negedge resetb) begin
+//      if (!resetb) begin
+//        re <= 0;
+//        delay <= 0;
+//      end else begin
+//        if (usedSpace>1 || usedSpaceNext>0) begin
+//            if (|(fifo_dtypeo & `DTYPE_PIXEL_MASK)) begin
+//                if (delay+1 < 4) begin
+//                    re <= 1;
+//                    if (re) delay <= delay + 1;
+//                end else begin
+//                    re <= 0;
+//                    delay <= 0;
+//                end
+//            end else begin
+//                re <= 1;
+//                delay <= 0;
+//            end
+//        end else begin
+//            re<=0;
+//            delay <= 0;
+//        end
+//      end
+//   end
+//
+//
+//   raw_to_32
+//   raw_to_32
+//   (
+//    .clk (img_clk),
+//    .resetb (resetb),
+//
+//    .datai (fifo_datao[15:0]),
+//    .dvi (re),
+//    .dtypei (fifo_dtypeo),
+//
+//    .pack (pack),
+//    .datao (datao),
+//    .dvo (dvo),
+//    .dtypeo (dtypeo)
+//
+//   );
+//
+   raw_to_32 raw_to_32
    (
     .clk (img_clk),
     .resetb (resetb),
 
-    .datai (fifo_datao[15:0]),
-    .dvi (re),
-    .dtypei (fifo_dtypeo),
+    .datai (datai),
+    .dvi (dvi),
+    .dtypei (dtypei),
 
     .pack (pack),
     .datao (datao),
@@ -113,6 +129,5 @@ module raw_to_32_tb
     .dtypeo (dtypeo)
 
    );
-
 
 endmodule

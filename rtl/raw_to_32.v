@@ -36,7 +36,8 @@ module raw_to_32
 
     wire [7:0] eight_bits = datai[9:2];
     wire [1:0] two_bits = datai[1:0];
-
+   reg [7:0]   eight_bits_s;
+   
     //wire [15:0] packed_datai = {{16-PIXEL_WIDTH{1'b0}}, datai[PIXEL_WIDTH-1:0]};
 
     wire [15:0] unpacked_datai = (dtypei == `DTYPE_HEADER && opos == `Image_image_type) ? image_type : datai;
@@ -52,8 +53,8 @@ module raw_to_32
             flush_lsbs <= 0;
             send_row_end <= 0;
             opos <= 0;
+           eight_bits_s <= 0;
         end else begin
-
             if (dvi) begin
 
                 if ( (!pack && |(dtypei & `DTYPE_PIXEL_MASK)) ||
@@ -70,14 +71,22 @@ module raw_to_32
                         dvo1 <= 0;
                     end
                 end else if (pack && |(dtypei & `DTYPE_PIXEL_MASK)) begin
-                    dtypeo <= dtypei;
-                    datao <= { eight_bits, datao[31:8] }; // >> 8)   //(datao << 8) | eight_bits
-                    lsbs <= { two_bits, lsbs[31:2] }; //(lsbs << 2) | two_bits;
-                    packpos <= packpos+1;
-                    dvo <= (packpos&3) == 3;
-                    if (packpos==15) begin
-                        flush_lsbs <= 1;
-                    end
+                   packpos <= packpos+1;
+                   lsbs <= { two_bits, lsbs[31:2] };
+                   eight_bits_s <= eight_bits;
+                   if(!flush_lsbs) begin
+                      dtypeo <= dtypei;
+                      datao  <= { eight_bits, eight_bits_s, datao[23:8] };
+                      dvo <= (packpos&3) == 3;
+                      if (packpos==15) begin
+                         flush_lsbs <= 1;
+                      end
+                   end else begin
+                      flush_lsbs <= 0;
+                      dvo    <= 1;
+                      datao  <= lsbs;
+                      dtypeo <= `DTYPE_PIXEL;
+                   end
                 end else begin
                     // pass through all dtypes
                     // ignores what datao is set to
