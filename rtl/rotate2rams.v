@@ -2,10 +2,7 @@
 // Date: 10/19/16
 
 // Description: Rotates image about (center_row, center_col)
-// position. Uses SRAM interface and will double buffer between addr0
-// and addr1 as its starting location. Set addr0 equal to addr1 for a
-// single buffer situation.
-// 
+// position. Uses SRAM interface and two rams
 
 `include "dtypes.v"
 module rotate2rams
