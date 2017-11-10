@@ -69,7 +69,7 @@ module stream2mig
 `endif   
    
    localparam FIFO_WIDTH=8;
-   localparam ADDR_BLOCK_WIDTH=24;
+   localparam ADDR_BLOCK_WIDTH=ADDR_WIDTH-6;
    
 
    reg 			       rword_sel, rfirst_word, wword_sel;
@@ -83,10 +83,10 @@ module stream2mig
    wire 		 wfull, rempty;
    
    wire [ADDR_BLOCK_WIDTH*2-1:0] wdata;
-   assign wdata = {waddr_base[29:6], next_waddr_base[29:6]};
+   assign wdata = {waddr_base[ADDR_WIDTH-1:6], next_waddr_base[ADDR_WIDTH-1:6]};
    
    wire [FIFO_WIDTH-1:0]       wFreeSpace, rUsedSpace;
-   wire 		       wwait = wFreeSpace <= (255 - num_buffers);
+   wire 		       wwait = wFreeSpace <= (((1<<FIFO_WIDTH) - 1) - num_buffers);
    
    fifo_dualclk #(.ADDR_WIDTH(FIFO_WIDTH), 
 		  .DATA_WIDTH(ADDR_BLOCK_WIDTH*2))
@@ -181,13 +181,13 @@ module stream2mig
       end
    end
 
-   wire[ADDR_WIDTH-1:0] next_pR_cmd_byte_addr = pR_cmd_byte_addr + 30'd64;
+   wire[ADDR_WIDTH-1:0] next_pR_cmd_byte_addr = pR_cmd_byte_addr + 64;
 
-   wire [23:0] next_frame_pos    = rdata[23:0];
-   wire [23:0] cur_frame_pos     = rdata[47:24];
+   wire [ADDR_BLOCK_WIDTH-1:0] next_frame_pos    = rdata[ADDR_BLOCK_WIDTH-1:0];
+   wire [ADDR_BLOCK_WIDTH-1:0] cur_frame_pos     = rdata[ADDR_BLOCK_WIDTH*2-1:ADDR_BLOCK_WIDTH];
    reg 	       rwait, need_re;
-   reg  [27:0] read_ok_pos;
-   reg  [27:0] cur_read_pos; 
+   reg  [ADDR_WIDTH-3:0] read_ok_pos;
+   reg  [ADDR_WIDTH-3:0] cur_read_pos; 
 
    always @(posedge rclk or negedge rresetb) begin
       if(!rresetb) begin
@@ -292,17 +292,20 @@ module stream2mig
    reg enable_s;
    wire dtype_needs_written = (dtypei == `DTYPE_HEADER) || ((!capture_header_only) && (|(dtypei & `DTYPE_PIXEL_MASK)));
 
-   reg [29:0] frame_length;
-   wire [29:0] frame_length_rounded  = (frame_length + 63) & 30'h3FFFFFC0;
+   reg  [ADDR_WIDTH-1:0] frame_length;
+   wire [ADDR_WIDTH-1:0] frame_length_rounded  = (frame_length + 63) & 30'h3FFFFFC0;
    reg [5:0] header_addr;
 
    reg [2:0]   state;
-   parameter STATE_WRITE_FRAME=0, STATE_WRITE_HEADER=1, STATE_HEADER_END=2, STATE_FRAME_END=3, STATE_WAIT_FRAME=4;
+   localparam STATE_WRITE_FRAME=0, STATE_WRITE_HEADER=1, STATE_HEADER_END=2, STATE_FRAME_END=3, STATE_WAIT_FRAME=4;
    /* verilator lint_off WIDTH */
    wire [STREAM_DATA_WIDTH-1:0] datai_mux = (state != STATE_WRITE_HEADER) ? datai :
 	       (header_addr == `Image_frame_length_0 && STREAM_DATA_WIDTH==16) ? frame_length_rounded[15:0]  :
 	       (header_addr == `Image_frame_length_1 && STREAM_DATA_WIDTH==16) ? {2'b0, frame_length_rounded[29:16] } :
 	       (header_addr == `Image_frame_length_0 && STREAM_DATA_WIDTH==32) ? frame_length_rounded :
+	       (header_addr == 30 && STREAM_DATA_WIDTH==32) ? waddr_base :
+	       (header_addr == 28 && STREAM_DATA_WIDTH==32) ? 32'h76543210 :
+	       (header_addr == 26 && STREAM_DATA_WIDTH==32) ? frame_length_rounded :
 	       datai;
    /* verilator lint_on WIDTH */
 
@@ -334,12 +337,18 @@ module stream2mig
 		  end
 	       end else if(STREAM_DATA_WIDTH == 32) begin
 		  header_addr <= header_addr + 2;
-		  pW_wr_en <= 1;
+		  pW_wr_en <= (state == STATE_WRITE_HEADER);
 		  pW_wr_data[STREAM_DATA_WIDTH-1:0] <= datai_mux;
 	       end
             end else begin
                pW_wr_en <= 0;
 	       if(dvi && (dtypei == `DTYPE_FRAME_END || dtypei == `DTYPE_HEADER_END)) begin
+		  if(wfifo_count[1:0] != 0 && pW_wr_en == 0) begin // top off the write to a multiple of 16 bytes
+		     pW_wr_data <= wfifo_count;
+		     pW_wr_en <= 1;
+		  end else begin
+		     pW_wr_en <= 0;
+		  end
 		  wword_sel <= 0;
 	       end
 	       if(dvi && dtypei == `DTYPE_HEADER_START) begin
@@ -353,9 +362,11 @@ module stream2mig
    assign pW_cmd_instr = CMD_WRITE;
    wire wfifo_empty = wfifo_count == 0;
    assign next_waddr_base            = waddr_base + frame_length_rounded;
-   wire [29:0] header_length         = `Image_image_data * 2;
-   wire [29:0] next_pW_cmd_byte_addr = pW_cmd_byte_addr + 30'd64;
+   wire [ADDR_WIDTH-1:0] header_length         = `Image_image_data * 2;
+   wire [ADDR_WIDTH-1:0] next_pW_cmd_byte_addr = pW_cmd_byte_addr + 64;
 
+   reg [4:0]   flush_countdown;
+   
    always @(posedge clki or negedge wresetb) begin
       if(!wresetb) begin
          pW_cmd_en <= 0;
@@ -367,8 +378,11 @@ module stream2mig
 	 state <= STATE_WAIT_FRAME;
 	 frame_length <= 0;
 	 we_s <= 0;
+	 we_ss<= 0;
+	 pW_busy <= 0;
 `ifdef ARTIX
-		  pW_wr_flush <= 1;
+	 pW_wr_flush <= 1;
+	 flush_countdown <= 0;
 `endif   
       end else begin
 	 we_s <= we;
@@ -395,9 +409,12 @@ module stream2mig
             if (state == STATE_WAIT_FRAME) begin
                 // wait for a new frame before writing data. 
                 if (dvi && dtypei == `DTYPE_FRAME_START) begin
-                        frame_length <= header_length; 
-	                pW_cmd_byte_addr <= waddr_base + header_length;
-                        state <= STATE_WRITE_FRAME;
+                   frame_length <= header_length; 
+	           pW_cmd_byte_addr <= waddr_base + header_length;
+                   state <= STATE_WRITE_FRAME;
+`ifdef ARTIX
+		   pW_wr_flush <= 0;
+`endif   
                 end
             end else begin
 
@@ -406,9 +423,6 @@ module stream2mig
 	        end
 	           
 	        if(dvi && dtypei == `DTYPE_HEADER_END) begin
-`ifdef ARTIX
-		   pW_wr_flush <= 1;
-`endif   
 	           if(wwait) begin
 	              $display("Dropping frame because fifo is full.");
 	              we <= 0;
@@ -417,20 +431,28 @@ module stream2mig
                       //wait_count <= 8'hff;
                       we <= 1;
 	           end
-
+		   flush_countdown <= -1;
 	        end else if(dvi && dtypei == `DTYPE_FRAME_START) begin
 `ifdef ARTIX
 		   pW_wr_flush <= 0;
 `endif   
 	           we <= 0;
 	           frame_length <= header_length;
-	           pW_cmd_byte_addr <= waddr_base + header_length;
+	           pW_cmd_byte_addr <= waddr_base;// + header_length;
 
 	        end else if(dvi && dtypei == `DTYPE_HEADER_START) begin
 	           we <= 0;
 	           pW_cmd_byte_addr <= waddr_base; // go back to write header
 	           
 	        end else begin
+`ifdef ARTIX
+		   if(|flush_countdown) begin
+		      flush_countdown <= flush_countdown - 1;
+		      if(flush_countdown == 1) begin
+			 //pW_wr_flush <= 1;
+		      end
+		   end
+`endif   
 	           we <= 0;
 	           if(pW_cmd_en) begin
 	              pW_cmd_byte_addr <= next_pW_cmd_byte_addr;
@@ -474,7 +496,7 @@ module stream2mig
 	           // when write_mode is done, then we need to drain whatever
 	           // is left over in the write fifo.
                    if(!wfifo_empty) begin
-	              if(!pW_cmd_full && !pW_cmd_en && !pW_wr_en) begin
+	              if(!pW_cmd_full && !pW_cmd_en && !pW_wr_en && wfifo_count[1:0] == 0) begin
                          pW_cmd_en <= 1;
                          pW_cmd_bl <= (wfifo_count - 6'd1);
 	              end else begin
