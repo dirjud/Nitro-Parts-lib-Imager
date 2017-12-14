@@ -46,7 +46,9 @@ module imager
     output reg [DATA_WIDTH-1:0] dat,
     output reg fv,
     output reg lv,
-    output reg sync
+    output reg sync,
+    output reg img_start, // pulse at pos 0,0
+    output reg row_start  // pulse at the start of every row (virtual and active)
     );
 
 `ifdef SIM
@@ -59,18 +61,24 @@ module imager
    reg [NUM_ROWS_WIDTH-1:0] num_active_rows_s;
    reg [NUM_COLS_WIDTH-1:0] num_active_cols_s;
 
+   wire [NUM_ROWS_WIDTH:0] total_rows = num_active_rows_s + num_virtual_rows;
+   wire [NUM_COLS_WIDTH:0] total_cols = num_active_cols_s + num_virtual_cols;
+ 
    wire [NUM_ROWS_WIDTH:0] next_row_count = row_count + 1;
    wire [NUM_COLS_WIDTH:0] next_col_count = col_count + 1;
 
-   wire fv_wire = (row_count < {1'b0, num_active_rows_s});
+   wire [NUM_ROWS_WIDTH-1:0] vblank_fp = num_virtual_rows >> 1; 
+   wire fv_wire = (row_count < {1'b0, total_rows});
    wire [NUM_COLS_WIDTH-1:0] hblank_fp = num_virtual_cols >> 1;
-   wire 		     lv_wire = fv_wire && (col_count >= {1'b0, hblank_fp}) && (col_count < num_active_cols_s + hblank_fp);
+   wire lv_wire = (row_count >= {1'b0, vblank_fp}) &&
+                  (row_count < num_active_rows_s+vblank_fp) &&
+                  (col_count >= {1'b0, hblank_fp}) && 
+                  (col_count < num_active_cols_s + hblank_fp);
+
 
    reg [DATA_WIDTH-1:0] pixel_count;
 
-   wire [NUM_ROWS_WIDTH:0] total_rows = num_active_rows_s + num_virtual_rows;
-   wire [NUM_COLS_WIDTH:0] total_cols = num_active_cols_s + num_virtual_cols;
-   reg [15:0] 		   frame_count;
+  reg [15:0] 		   frame_count;
 
    reg [NUM_ROWS_WIDTH-1:0] sync_row;
    wire [NUM_ROWS_WIDTH:0] sync_row_end = sync_row_start + sync_rows;
@@ -108,6 +116,8 @@ module imager
          sync_row <= 0;
          num_active_rows_s <= 0;
          pixel_count <= 0;
+         img_start <= 0;
+         row_start <= 0;
       end else begin
          // generate pseudo random noise
 	 if(!fv_wire) begin
@@ -132,6 +142,8 @@ module imager
                 num_active_cols_s <= num_active_cols;
                 num_active_rows_s <= num_active_rows;
             end
+            img_start <= row_count == 0 && col_count == 0;
+            row_start <= col_count == 0;
             lv  <= lv_wire;
 	    fv  <= fv_wire;
 	    dat <= lv_wire ? dat_sel : 0;
