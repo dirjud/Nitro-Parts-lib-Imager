@@ -33,6 +33,9 @@ SIM_FILES = sim/Imager_tb.v \
 	rtl/rotate.v \
 	rtl/rotate2rams.v \
 	sim/sram.v \
+	rtl_auto/RotateYUVTestTerminal.v \
+	sim/rotate_yuv_tb.v \
+	rtl/rotate2rams_yuv.v \
 	rtl_auto/DotProductTestTerminal.v \
 	sim/dot_product_tb.v \
 	rtl/dot_product.v \
@@ -40,12 +43,17 @@ SIM_FILES = sim/Imager_tb.v \
 	sim/filter2d_tb.v \
 	rtl/kernel_with_pipeline.v \
 	rtl/filter2d.v \
-	rtl_auto/InterpBilinearTestTerminal.v \
+	rtl_auto/InterpTestTerminal.v \
 	rtl/interp_bilinear.v \
-	sim/interp_bilinear_tb.v \
+	rtl/interp_ed.v \
+	sim/interp_tb.v \
 	rtl_auto/Rgb2YuvTestTerminal.v \
 	rtl/rgb2yuv.v \
 	sim/rgb2yuv_tb.v \
+	rtl_auto/Yuv420TestTerminal.v \
+	rtl/yuv420.v \
+	rtl/uv_offset.v \
+	sim/yuv420_tb.v \
 	rtl_auto/LookupMapTestTerminal.v \
 	rtl/lookup_map.v \
 	sim/lookup_map_tb.v \
