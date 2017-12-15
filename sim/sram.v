@@ -15,19 +15,14 @@ module sram
    reg [DATA_WIDTH-1:0]   buffer[0:(1<<ADDR_WIDTH)-1];
 
 `ifdef verilator
-   
-    reg [DATA_WIDTH-1:0]   buffer[0:(1<<ADDR_WIDTH)-1];
 
-    always @(ceb, web, addr, data, oeb) begin
-       if(!ceb && !web) begin
+   assign data = (!ceb && !oeb) ? buffer[addr] : {DATA_WIDTH{1'bz}};
+   
+   always @(posedge web) begin
+      if(!ceb) begin
  	 buffer[addr] = data;
-	 data = {DATA_WIDTH{1'bz}};
-      end else if(!ceb && !oeb) begin
-	 data = buffer[addr];
-      end else begin
-	 data = {DATA_WIDTH{1'bz}};
-       end
-    end
+      end
+   end
  
 //   assign data = (oeb==0 && ceb==0) ? buffer[addr] : {DATA_WIDTH{1'bz}};
 

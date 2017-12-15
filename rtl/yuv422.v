@@ -2,8 +2,8 @@
 `include "array.v"
 `include "terminals_defs.v"
 // Author: Lane Brooks
-// Date  : 11/5/2013
-// Desc : Converts yuv to yuv420 by subsampling the u an v
+// Date  : 10/30/2017
+// Desc : Converts yuv to yuv422 by subsampling the u an v
 // channels. Does not convert the stream to planar (YUV420p) but
 // instead adds the UV subsampled pixels after the two Y pixels on
 // every other row. In other words, the stream looks like this: Y00
@@ -88,26 +88,13 @@ module yuv420
    wire [8:0] u_add0 = k[0][0][15:8] + k[0][1][15:8];
    wire [8:0] u_add1 = k[1][0][15:8] + k[1][1][15:8];
    wire [9:0] u_add2 = u_add0 + u_add1;
-   wire [7:0] u_ave  = u_add2[9:2]; // divider by 4
+   wire [7:0] u_ave  = u_add2[9:2]; // divider by 2
    wire [8:0] v_add0 = k[0][0][7:0] + k[0][1][7:0];
    wire [8:0] v_add1 = k[1][0][7:0] + k[1][1][7:0];
    wire [9:0] v_add2 = v_add0 + v_add1;
    wire [7:0] v_ave  = v_add2[9:2];
    
-//   wire [2:0] u_count = 
-//              ((k[0][0][15:8] == 0) ? 0 : 1) + 
-//              ((k[0][1][15:8] == 0) ? 0 : 1) + 
-//              ((k[1][0][15:8] == 0) ? 0 : 1) + 
-//              ((k[1][1][15:8] == 0) ? 0 : 1);
-//   wire [2:0] v_count = 
-//              ((k[0][0][7:0] == 0) ? 0 : 1) + 
-//              ((k[0][1][7:0] == 0) ? 0 : 1) + 
-//              ((k[1][0][7:0] == 0) ? 0 : 1) + 
-//              ((k[1][1][7:0] == 0) ? 0 : 1);
-//   /* verilator lint_off WIDTH */
-//   wire [7:0] u_ave_alt = u_add2 / u_count;
-//   wire [7:0] v_ave_alt = v_add2 / v_count;
-//   /* verilator lint_on WIDTH */
+
 
    // Calculate the row and column phase within the image.
    reg col_phase, row_phase;

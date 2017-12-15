@@ -25,7 +25,7 @@ class CircleCropTest(simtest):
         
         self.dev.set("CircleCropTest", "enable", 1)
         self.dev.set("Imager", "capture", dict(modei=1, modeo=1))
-        self.dev.set("InterpBilinearTest", "enable", 1)
+        self.dev.set("InterpTest", "enable_bilinear", 1)
         self.dev.set("Imager", "enable", 1)
 
         x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-2, num_cols-2, depthi=3, deptho=3)

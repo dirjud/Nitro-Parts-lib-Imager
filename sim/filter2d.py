@@ -20,7 +20,7 @@ class Filter2dTest(basetest.simtest):
         self.dev.set("Imager", "num_virtual_rows", 24) # give enough time to read images prior to starting next one to prevent split images when parameters change
         self.dev.set("Imager", "stream_sel", "FILTER2D")
         self.dev.set("Imager", "capture", dict(modei=1, modeo=1))
-        self.dev.set("InterpBilinearTest", "enable", 1)
+        self.dev.set("InterpTest", "enable_bilinear", 1)
         self.dev.set("Rgb2YuvTest", "enable", 1)
         self.dev.set("Imager", "enable", 1)
 
