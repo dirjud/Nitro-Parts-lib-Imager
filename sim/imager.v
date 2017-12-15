@@ -15,7 +15,8 @@ module imager
                       // 6: image from memory. (SIM only)
                       // 7: incrementing counter +1 each pixel.
                       // 8: bayer red
-                      //
+                      // 9: color bars
+                      //10: color checkers
     input [DATA_WIDTH-1:0]  bayer_red, // if mode==bayer, this is the value for the red pixels
     input [DATA_WIDTH-1:0]  bayer_gr,  // if mode==bayer, this is the value for the green pixel on red rows
     input [DATA_WIDTH-1:0]  bayer_blue,// if mode==bayer, this is the value for the blue pixels
@@ -84,6 +85,36 @@ module imager
    wire [NUM_ROWS_WIDTH:0] sync_row_end = sync_row_start + sync_rows;
 
    /* verilator lint_off WIDTH */
+   reg [DATA_WIDTH-1:0]    color_bars;
+   wire [NUM_COLS_WIDTH-1:0]    big_col_count = (mode == 10) ? (col_count >> 4) + row_count[4] : (col_count >> 4);
+   always @(col_count or row_count) begin
+      if(row_count[0] == 0 && col_count[0] == 0) begin // red position
+         case (big_col_count)
+           4,7,8,11,12   : color_bars = { DATA_WIDTH { 1'b1 }};    // 100%
+           10,13,16      : color_bars = { DATA_WIDTH-1 { 1'b1 }};  //  50%
+           3,5,6,9,14,15 : color_bars = 0;                         //   0%
+           default:
+             color_bars = ~col_count;
+         endcase
+      end else if(row_count[0] == 1 && col_count[0] == 1) begin // blue position
+         case (big_col_count)
+           6,7,9,13,14   : color_bars = { DATA_WIDTH { 1'b1 }}; // 100%
+           10,11,15      : color_bars = { DATA_WIDTH-1 { 1'b1 }};  //  50%
+           3,4,5,8,12,16 : color_bars = 0;                       //   0%
+           default:
+             color_bars = ~col_count;
+         endcase
+      end else begin // green position
+         case (big_col_count)
+           5,8,9,15,16   : color_bars = { DATA_WIDTH { 1'b1 }}; // 100%
+           10,12,14      : color_bars = { DATA_WIDTH-1 { 1'b1 }};  //  50%
+           3,4,6,7,12,13 : color_bars = 0;              //   0%
+           default:
+             color_bars = col_count;
+         endcase
+      end
+   end
+
    wire [DATA_WIDTH-1:0] bayer = (row_count & 1) == 0 ?
                                   ( (col_count & 1) == 0 ? bayer_blue : bayer_gb ) :
                                   ( (col_count & 1) == 0 ? bayer_gr : bayer_red );
@@ -99,7 +130,8 @@ module imager
 			           (mode == 6) ? image_buf[row_count][col_count] :
 `endif
                         (mode == 7) ? pixel_count :
-                                      bayer;
+                         (mode == 8) ? bayer :
+                         (mode == 9 || mode == 10) ? color_bars : 0;
    /* verilator lint_on WIDTH */
 
 
