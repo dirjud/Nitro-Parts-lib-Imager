@@ -36,10 +36,13 @@ module image_mean
    output 		      di_write_rdy,
    output [15:0] 	      di_transfer_status,
    output 		      di_en,
-
+   input                      debug,
    input 		      dvi,
    input [`DTYPE_WIDTH-1:0]   dtypei,
    input [PIXEL_WIDTH-1:0]    datai,
+   output reg 		      dvo,
+   output reg [`DTYPE_WIDTH-1:0]  dtypeo,
+   output reg [PIXEL_WIDTH-1:0]   datao,
 
    output reg 		      done,
    output reg 		      busy,
@@ -91,7 +94,12 @@ module image_mean
 	 busy       <= 0;
 	 pix_count  <= 0;
 	 image_accum_count<= 0;
+         dvo    <= 0;
+         dtypeo <= 0;
+         datao  <= 0;
       end else begin
+         dvo    <= dvi;
+         dtypeo <= dtypei;
 	 if(dvi) begin
 	    if (dtypei == `DTYPE_FRAME_START) begin
 	       accum[0] <= 0;
@@ -103,12 +111,16 @@ module image_mean
 	       pix_count<= 0;
                top_bin_count0  <= 0;
                sat_pix_count0  <= 0;
+               datao  <= datai;
 	    end else if(dtypei == `DTYPE_ROW_END) begin
 	       col      <= 0;
 	       row      <= next_row;
+               datao  <= datai;
 	    end else if(|(dtypei & `DTYPE_PIXEL_MASK)) begin
 	       col      <= col + 1;
 	       if(valid_pixel) begin
+                  datao  <= datai;
+
 		  /* verilator lint_off WIDTH */
 		  accum[accum_addr] <= accum[accum_addr] + datai;
 		  /* verilator lint_on WIDTH */
@@ -121,8 +133,16 @@ module image_mean
                   if(&datai) begin
                      sat_pix_count0 <= sat_pix_count0 + 1;
                   end
-	       end
-	    end
+	       end else begin // if (valid_pixel)
+                  if (debug) begin
+                     datao  <= 0;
+                  end else begin
+                     datao  <= datai;
+                  end
+               end
+	    end else begin
+               datao  <= datai;
+            end
 	 
 	    if(dtypei == `DTYPE_ROW_END) begin
 	       if(next_row == window_row_end) begin
@@ -133,6 +153,7 @@ module image_mean
 	    end
 	 end else begin
 	    done <= 0;
+            datao  <= datai;
 	 end
 	 
 	 if (dvi && dtypei == `DTYPE_FRAME_START) begin
