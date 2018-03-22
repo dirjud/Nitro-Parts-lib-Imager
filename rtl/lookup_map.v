@@ -14,11 +14,12 @@ module lookup_map
     parameter DI_DATA_WIDTH=16)
   (
    input pixclk,
-   input resetb,
+   input resetb_clk,
    input enable,
 
    // di interface
    input                  di_clk,
+   input resetb,
    input [15:0] 		  di_term_addr,
    input [31:0] 		  di_reg_addr,
    input 		          di_read_mode,
@@ -93,8 +94,8 @@ module lookup_map
     .datao(y_lookup)
    );
 
-  always @(posedge pixclk or negedge resetb) begin
-      if(!resetb) begin
+  always @(posedge pixclk or negedge resetb_clk) begin
+      if(!resetb_clk) begin
 	 dvo        <= 0;
 	 dtypeo     <= 0;
 	 meta_datao <= 0;

@@ -18,9 +18,10 @@ module image_mean
     )
   (
    input 		      pixclk,
-   input 		      resetb,
+   input 		      resetb_clk,
 
    // di interface
+   input 		      resetb,
    input 		      di_clk,
    input [15:0] 	      di_term_addr,
    input [31:0] 	      di_reg_addr,
@@ -74,8 +75,8 @@ module image_mean
    reg [NUM_ROWS_WIDTH+NUM_COLS_WIDTH-1:0] top_bin_count0, sat_pix_count0;
    wire [NUM_ROWS_WIDTH-1:0] 		   next_row = row + 1;
    
-   always @(posedge pixclk or negedge resetb) begin
-      if(!resetb) begin
+   always @(posedge pixclk or negedge resetb_clk) begin
+      if(!resetb_clk) begin
 	 accum[0]   <= 0;
 	 accum[1]   <= 0;
 	 accum[2]   <= 0;

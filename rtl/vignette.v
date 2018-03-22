@@ -17,34 +17,35 @@ module vignette
     parameter GAIN_FRAC_WIDTH=6,
     parameter SUBSAMPLE_SHIFT=0) // 2^SUB_SAMPLE_SHIFT cols/rows gain coeff get interpolated
    (
-    input 			  clk,
-    input 			  resetb,
-    input 			  enable,
+    input                         clk,
+    input                         resetb_clk, 
+    input                         enable,
     
     // di interface
-    input 			  di_clk,
-    input [15:0] 		  di_term_addr,
-    input [31:0] 		  di_reg_addr,
-    input 			  di_read_mode,
-    input 			  di_read_req,
-    input 			  di_read,
-    input 			  di_write_mode,
-    input 			  di_write,
-    input [DI_DATA_WIDTH-1:0] 	  di_reg_datai,
+    input                         resetb,
+    input                         di_clk,
+    input [15:0]                  di_term_addr,
+    input [31:0]                  di_reg_addr,
+    input                         di_read_mode,
+    input                         di_read_req,
+    input                         di_read,
+    input                         di_write_mode,
+    input                         di_write,
+    input [DI_DATA_WIDTH-1:0]     di_reg_datai,
 
-    output 			  di_read_rdy,
-    output [DI_DATA_WIDTH-1:0] 	  di_reg_datao,
-    output 			  di_write_rdy,
-    output [15:0] 		  di_transfer_status,
-    output 			  di_en,
+    output                        di_read_rdy,
+    output [DI_DATA_WIDTH-1:0]    di_reg_datao,
+    output                        di_write_rdy,
+    output [15:0]                 di_transfer_status,
+    output                        di_en,
 
-    input 			  dvi,
-    input [`DTYPE_WIDTH-1:0] 	  dtypei,
-    input [15:0] 		  datai,
+    input                         dvi,
+    input [`DTYPE_WIDTH-1:0]      dtypei,
+    input [15:0]                  datai,
     
-    output reg 			  dvo,
+    output reg                    dvo,
     output reg [`DTYPE_WIDTH-1:0] dtypeo,
-    output reg [15:0] 		  datao
+    output reg [15:0]             datao
     );
 
    parameter SUBSAMPLE = 1 << SUBSAMPLE_SHIFT;
@@ -118,8 +119,8 @@ module vignette
    // check for overflow and clamp to all 1's if necessary
    wire [PIXEL_WIDTH-1:0] mult2 = (|mult1[2*GAIN_WIDTH+PIXEL_WIDTH-1:PIXEL_WIDTH+2*GAIN_FRAC_WIDTH]) ? { PIXEL_WIDTH { 1'b1 }} : mult1[PIXEL_WIDTH+2*GAIN_FRAC_WIDTH-1:2*GAIN_FRAC_WIDTH];
    
-   always @(posedge clk or negedge resetb) begin
-      if(!resetb) begin
+   always @(posedge clk or negedge resetb_clk) begin
+      if(!resetb_clk) begin
 	 dvo    <= 0;
 	 dtypeo <= 0;
 	 datao  <= 0;
