@@ -401,6 +401,27 @@ module Imager_tb
       .di_en(di_DOTPRODUCT_en)
       );
 
+   /**************** Dot Product Test Bench ********************/
+   rotate_matrix_tb rotate_matrix_tb
+     (
+      .resetb(resetb),
+      .di_clk(clk),
+      .di_term_addr(di_term_addr),
+      .di_reg_addr(di_reg_addr),
+      .di_read_mode(di_read_mode),
+      .di_read_req(di_read_req),
+      .di_read(di_read),
+      .di_write_mode(di_write_mode),
+      .di_write(di_write),
+      .di_reg_datai(di_reg_datai),
+      .di_read_rdy(  di_read_rdy_DOTPRODUCT),
+      .di_reg_datao(di_reg_datao_DOTPRODUCT),
+      .di_write_rdy(di_write_rdy_DOTPRODUCT),
+      .di_transfer_status(di_transfer_status_DOTPRODUCT),
+      .di_en(di_DOTPRODUCT_en)
+      );
+
+   
    /**************** Raw to 32 Test ********************/
 
    wire dvo_rawto32;

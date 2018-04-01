@@ -39,6 +39,9 @@ SIM_FILES = sim/Imager_tb.v \
 	rtl_auto/DotProductTestTerminal.v \
 	sim/dot_product_tb.v \
 	rtl/dot_product.v \
+	rtl_auto/RotateMatrixTestTerminal.v \
+	sim/rotate_matrix_tb.v \
+	rtl/rotate_matrix.v \
 	rtl_auto/Filter2dTestTerminal.v \
 	sim/filter2d_tb.v \
 	rtl/kernel_with_pipeline.v \
