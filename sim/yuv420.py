@@ -12,8 +12,8 @@ class YUV420Test(simtest):
     def testYUV420(self):
         """Enables YVU420 and checks it for accuracy"""
 
-        num_cols = 220
-        num_rows = 220
+        num_cols = 20
+        num_rows = 20
         self.dev.set("Imager", "mode", 10)
         self.dev.set("Imager", "num_active_cols", num_cols)
         self.dev.set("Imager", "num_active_rows", num_rows)

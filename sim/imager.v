@@ -69,7 +69,7 @@ module imager
    wire [NUM_COLS_WIDTH:0] next_col_count = col_count + 1;
 
    wire [NUM_ROWS_WIDTH-1:0] vblank_fp = num_virtual_rows >> 1; 
-   wire fv_wire = (row_count < total_rows);
+   wire fv_wire = (row_count >= vblank_fp - 1) && (row_count <= total_rows - vblank_fp);
    wire [NUM_COLS_WIDTH-1:0] hblank_fp = num_virtual_cols >> 1;
    wire lv_wire = (row_count >= {1'b0, vblank_fp}) &&
                   (row_count < num_active_rows_s+vblank_fp) &&

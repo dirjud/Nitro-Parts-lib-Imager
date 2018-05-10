@@ -159,7 +159,7 @@ di = DeviceInterface(
                                   UNSHARP_MASK=6, 
                                   CIRCLE_CROP=7, 
                                   RAWTO32=8,
-                                  ROTATE_YUV=9,
+                                  ROTATE_YUV420=9,
                                   YUV420=10,
                                 ),
                     comment="Selects what stream gets muxed into the 'STREAM' terminal for reading",
@@ -207,13 +207,21 @@ di = DeviceInterface(
             ],
         ),
         Terminal(
-            name="RotateYUVTest",
+            name="RotateYUV420Test",
             regAddrWidth=16,
             regDataWidth=32,
             comment="Test Image Process Modules",
             register_list = [
                 Register(
-                    name="enable",
+                    name="enable_420",
+                    width=1,
+                    init=0,
+                    type="int",
+                    mode="write",
+                    comment="Enables testing the rotate.v module",
+                ),
+                Register(
+                    name="enable_rotate",
                     width=1,
                     init=0,
                     type="int",

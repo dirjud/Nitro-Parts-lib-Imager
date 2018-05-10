@@ -155,9 +155,9 @@ module Imager_tb
    wire 	di_read_rdy_CIRCLE_CROP, di_write_rdy_CIRCLE_CROP, di_CIRCLE_CROP_en;
    wire [15:0] 	di_transfer_status_CIRCLE_CROP;
 
-   wire [31:0] 	di_reg_datao_ROTATE_YUV;
-   wire 	di_read_rdy_ROTATE_YUV, di_write_rdy_ROTATE_YUV, di_ROTATE_YUV_en;
-   wire [15:0] 	di_transfer_status_ROTATE_YUV;
+   wire [31:0] 	di_reg_datao_ROTATE_YUV420;
+   wire 	di_read_rdy_ROTATE_YUV420, di_write_rdy_ROTATE_YUV420, di_ROTATE_YUV420_en;
+   wire [15:0] 	di_transfer_status_ROTATE_YUV420;
 
    wire [31:0] 	di_reg_datao_YUV420;
    wire 	di_read_rdy_YUV420, di_write_rdy_YUV420, di_YUV420_en;
@@ -179,11 +179,11 @@ module Imager_tb
 	 di_read_rdy  = di_read_rdy_ROTATE;
 	 di_write_rdy = di_write_rdy_ROTATE;
 	 di_transfer_status = di_transfer_status_ROTATE;
-      end else if(di_ROTATE_YUV_en) begin
-	 di_reg_datao = di_reg_datao_ROTATE_YUV;
-	 di_read_rdy  = di_read_rdy_ROTATE_YUV;
-	 di_write_rdy = di_write_rdy_ROTATE_YUV;
-	 di_transfer_status = di_transfer_status_ROTATE_YUV;
+      end else if(di_ROTATE_YUV420_en) begin
+	 di_reg_datao = di_reg_datao_ROTATE_YUV420;
+	 di_read_rdy  = di_read_rdy_ROTATE_YUV420;
+	 di_write_rdy = di_write_rdy_ROTATE_YUV420;
+	 di_transfer_status = di_transfer_status_ROTATE_YUV420;
       end else if(di_YUV420_en) begin
 	 di_reg_datao = di_reg_datao_YUV420;
 	 di_read_rdy  = di_read_rdy_YUV420;
@@ -527,15 +527,16 @@ module Imager_tb
       .v(v_rgb2yuv),
       .meta_datao(meta_datao_rgb2yuv));
 
-   /**************** Rotate YUV Test Bench ********************/
-   wire 		   dvo_rotate_yuv, rotate_yuv_enable;
-   wire [15:0] 		   meta_datao_rotate_yuv;
-   wire [7:0] 		   y_rotate_yuv;
-   wire [7:0] 		   u_rotate_yuv;
-   wire [7:0] 		   v_rotate_yuv;
-   wire [`DTYPE_WIDTH-1:0] dtypeo_rotate_yuv;
-   rotate_yuv_tb #(.DATA_WIDTH(PIXEL_WIDTH))
-	       rotate_yuv_tb
+
+   /**************** Rotate YUV420 Test Bench ********************/
+   wire 		   dvo_rotate_yuv420;
+   wire [31:0] 		   datao_rotate_yuv420;
+   wire [7:0] 		   y_rotate_yuv420;
+   wire [7:0] 		   u_rotate_yuv420;
+   wire [7:0] 		   v_rotate_yuv420;
+   wire [`DTYPE_WIDTH-1:0] dtypeo_rotate_yuv420;
+   rotate_yuv420_tb #(.PIXEL_WIDTH(PIXEL_WIDTH))
+   rotate_yuv420_tb
      (
       .resetb(resetb),
       .di_clk(clk),
@@ -547,13 +548,12 @@ module Imager_tb
       .di_write_mode(di_write_mode),
       .di_write(di_write),
       .di_reg_datai(di_reg_datai),
-      .di_read_rdy(di_read_rdy_ROTATE_YUV),
-      .di_reg_datao(di_reg_datao_ROTATE_YUV),
-      .di_write_rdy(di_write_rdy_ROTATE_YUV),
-      .di_transfer_status(di_transfer_status_ROTATE_YUV),
-      .di_en(di_ROTATE_YUV_en),
-      .enable(rotate_yuv_enable),
-      
+      .di_read_rdy(di_read_rdy_ROTATE_YUV420),
+      .di_reg_datao(di_reg_datao_ROTATE_YUV420),
+      .di_write_rdy(di_write_rdy_ROTATE_YUV420),
+      .di_transfer_status(di_transfer_status_ROTATE_YUV420),
+      .di_en(di_ROTATE_YUV420_en),
+
       .img_clk(clk),
       .dvi(               dvo_rgb2yuv),
       .dtypei(         dtypeo_rgb2yuv),
@@ -562,12 +562,9 @@ module Imager_tb
       .ui(                  u_rgb2yuv),
       .vi(                  v_rgb2yuv),
 
-      .dvo(              dvo_rotate_yuv),
-      .dtypeo(        dtypeo_rotate_yuv),
-      .yo(                 y_rotate_yuv),
-      .uo(                 u_rotate_yuv),
-      .vo(                 v_rotate_yuv),
-      .meta_datao(meta_datao_rotate_yuv)
+      .dvo(               dvo_rotate_yuv420),
+      .dtypeo(         dtypeo_rotate_yuv420),
+      .datao(           datao_rotate_yuv420)
       );
 
    /**************** YUV420 Test Bench ********************/
@@ -594,12 +591,12 @@ module Imager_tb
       .di_en(di_YUV420_en),
 
       .img_clk(clk),
-      .dvi(        rotate_yuv_enable ?        dvo_rotate_yuv :        dvo_rgb2yuv),
-      .dtypei(     rotate_yuv_enable ?     dtypeo_rotate_yuv :     dtypeo_rgb2yuv),
-      .meta_datai( rotate_yuv_enable ? meta_datao_rotate_yuv : meta_datao_rgb2yuv),
-      .yi(         rotate_yuv_enable ?  {y_rotate_yuv, 2'b0} :          y_rgb2yuv),
-      .ui(         rotate_yuv_enable ?  {u_rotate_yuv, 2'b0} :          u_rgb2yuv),
-      .vi(         rotate_yuv_enable ?  {v_rotate_yuv, 2'b0} :          v_rgb2yuv),
+      .dvi(                dvo_rgb2yuv),
+      .dtypei(          dtypeo_rgb2yuv),
+      .meta_datai(  meta_datao_rgb2yuv),
+      .yi(                   y_rgb2yuv),
+      .ui(                   u_rgb2yuv),
+      .vi(                   v_rgb2yuv),
 
       .dvo(               dvo_yuv420),
       .dtypeo(         dtypeo_yuv420),
@@ -817,6 +814,20 @@ module Imager_tb
 	 meta_datao_sel <=  0;
 	 dtypeo_sel     <= dtypeo_rawto32;
 	 dvo_sel        <=    dvo_rawto32;
+      end else if(stream_sel == `Imager_stream_sel_ROTATE_YUV420) begin
+	 datai0_sel     <=          y_rgb2yuv;
+	 datai1_sel     <=          u_rgb2yuv;
+	 datai2_sel     <=          v_rgb2yuv;
+	 meta_datai_sel <= meta_datao_rgb2yuv;
+	 dtypei_sel     <=     dtypeo_rgb2yuv;
+	 dvi_sel        <=        dvo_rgb2yuv;
+	 
+	 datao0_sel     <=  datao_rotate_yuv420[15:0];
+	 datao1_sel     <=  datao_rotate_yuv420[31:16];
+	 datao2_sel     <=  0;
+	 meta_datao_sel <=  0;
+	 dtypeo_sel     <= dtypeo_rotate_yuv420;
+	 dvo_sel        <=    dvo_rotate_yuv420;
       end else if(stream_sel == `Imager_stream_sel_YUV420) begin
 	 datai0_sel     <=          y_rgb2yuv;
 	 datai1_sel     <=          u_rgb2yuv;
@@ -902,20 +913,6 @@ module Imager_tb
 	 meta_datao_sel <= meta_datao_rgb2yuv;
 	 dtypeo_sel     <=     dtypeo_rgb2yuv;
 	 dvo_sel        <=        dvo_rgb2yuv;
-      end else if(stream_sel == `Imager_stream_sel_ROTATE_YUV) begin
-	 datai0_sel     <=          y_rgb2yuv;
-	 datai1_sel     <=          u_rgb2yuv;
-	 datai2_sel     <=          v_rgb2yuv;
-	 meta_datai_sel <= meta_datao_rgb2yuv;
-	 dtypei_sel     <=     dtypeo_rgb2yuv;
-	 dvi_sel        <=        dvo_rgb2yuv;
-	 
-	 datao0_sel     <=  datao_yuv420[15:0];
-	 datao1_sel     <=  datao_yuv420[31:16];
-	 datao2_sel     <=  0;
-	 meta_datao_sel <=  0;
-	 dtypeo_sel     <= dtypeo_yuv420;
-	 dvo_sel        <=    dvo_yuv420;
       end else if(stream_sel == `Imager_stream_sel_LOOKUP_MAP) begin
 	 datai0_sel     <=          y_rgb2yuv;
 	 datai1_sel     <=          u_rgb2yuv;
