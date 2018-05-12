@@ -24,6 +24,8 @@ module rotate_matrix_tb
    );
 
    wire [13:0]       xo, yo;
+   wire [11:0]       xo2, yo2;
+   wire [9:0]        xo3, yo3;
    
 `include "RotateMatrixTestTerminalInstance.v"
    always @(*) begin
@@ -59,6 +61,43 @@ module rotate_matrix_tb
       .num_rows(num_rows),
       .xo(xo),
       .yo(yo)
+      );
+
+
+   rotate_matrix 
+     #(
+       .IN_WIDTH(12),
+       .ANGLE_WIDTH(10),
+       .OUT_WIDTH(12)
+       )
+   rotate_matrix2
+     (
+      .cos_theta(cos_theta),
+      .sin_theta(sin_theta),
+      .xi(xi),
+      .yi(yi),
+      .num_cols(num_cols),
+      .num_rows(num_rows),
+      .xo(xo2),
+      .yo(yo2)
+      );
+
+   rotate_matrix 
+     #(
+       .IN_WIDTH(12),
+       .ANGLE_WIDTH(10),
+       .OUT_WIDTH(10)
+       )
+   rotate_matrix3
+     (
+      .cos_theta(cos_theta),
+      .sin_theta(sin_theta),
+      .xi(xi),
+      .yi(yi),
+      .num_cols(num_cols),
+      .num_rows(num_rows),
+      .xo(xo3),
+      .yo(yo3)
       );
    
 endmodule

@@ -34,9 +34,11 @@ module rotate_yuv420_tb
     output [31:0]             datao
    );
 
+   wire                       shadow_sync;
 
 `include "RotateYUV420TestTerminalInstance.v"
 
+   
    always @(*) begin
       if(di_term_addr == `TERM_RotateYUV420Test) begin
 	 di_reg_datao = RotateYUV420TestTerminal_reg_datao;
@@ -88,6 +90,10 @@ module rotate_yuv420_tb
       .resetb(resetb),
       .image_type(16'b1),
       .enable_420(enable_420),
+      .enable_rotate(enable_rotate),
+      .shadow_sync(shadow_sync),
+      .sin_theta(sin_theta),
+      .cos_theta(cos_theta),
       .dvi(              dvo_uv_offset),
       .dtypei(        dtypeo_uv_offset),
       .yi(                 y_uv_offset[PIXEL_WIDTH-1:PIXEL_WIDTH-8]),
