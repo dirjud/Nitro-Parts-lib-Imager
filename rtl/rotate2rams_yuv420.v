@@ -15,7 +15,7 @@
 // unsigned numbers.
 
 module rotate2rams_yuv420
-  #(parameter RAW_PIXEL_SHIFT=0, BLOCK_RAM=1, MAX_COLS=1288, ANGLE_WIDTH=10) // number of LSBs to drop in raw data stream to make it 8b.
+  #(parameter RAW_PIXEL_SHIFT=0, BLOCK_RAM=1, MAX_COLS=1288, ANGLE_WIDTH=10, ADDR_WIDTH=21) // number of LSBs to drop in raw data stream to make it 8b.
   (input clk,
    input                          resetb,
    input [15:0]                   image_type,
@@ -34,8 +34,17 @@ module rotate2rams_yuv420
 
    output reg                     dvo,
    output reg [`DTYPE_WIDTH-1:0]  dtypeo,
-   output reg [31:0]              datao
+   output reg [31:0]              datao,
 
+   output reg [ADDR_WIDTH-1:0] 	  addr0,
+   output 			  web0,
+   output reg 			  oeb0,
+   inout [15:0] 		  ram_databus0,
+
+   output reg [ADDR_WIDTH-1:0] 	  addr1,
+   output 			  web1,
+   output reg 			  oeb1,
+   inout [15:0] 		  ram_databus1
    );
 
    parameter DIM_WIDTH = $clog2(MAX_COLS);
@@ -144,6 +153,11 @@ module rotate2rams_yuv420
       end
    end
 
+   wire pixel_valid0 = dvo_kernel && |(dtypeo_kernel  & `DTYPE_PIXEL_MASK);
+   wire frame_start  = dvo_kernel &&   dtypeo_kernel == `DTYPE_FRAME_START;
+   wire frame_end    = dvo_kernel &&   dtypeo_kernel == `DTYPE_FRAME_END;
+   wire row_start    = dvo_kernel &&   dtypeo_kernel == `DTYPE_ROW_START;
+   wire row_end      = dvo_kernel &&   dtypeo_kernel == `DTYPE_ROW_END;
 
    // Calculate the row and column phase within the image.
    reg [DIM_WIDTH-1:0] col_pos, row_pos, num_rows, num_cols;
@@ -155,26 +169,24 @@ module rotate2rams_yuv420
          num_cols <= 1280;
          shadow_sync <= 0;
       end else begin
-	 if(dvo_kernel) begin
-	    if(dtypeo_kernel == `DTYPE_FRAME_START) begin
-               row_pos <= 0;
-               shadow_sync <= 1;
-	    end else if (dtypeo_kernel == `DTYPE_ROW_END) begin
-               row_pos <= row_pos + 1;
-               shadow_sync <= 0;
-	    end else if(dtypeo_kernel == `DTYPE_FRAME_END) begin
-               num_rows <= row_pos + 1;
-               num_cols <= col_pos + 1;
-               shadow_sync <= 0;
-	    end else begin
-               shadow_sync <= 0;
-            end
+	 if(frame_start) begin
+            row_pos <= 0;
+            shadow_sync <= 1;
+	 end else if (row_end) begin
+            row_pos <= row_pos + 1;
+            shadow_sync <= 0;
+	 end else if(frame_end) begin
+            num_rows <= row_pos + 1;
+            num_cols <= col_pos + 1;
+            shadow_sync <= 0;
+	 end else begin
+            shadow_sync <= 0;
+         end
 
-	    if(dtypeo_kernel == `DTYPE_ROW_START) begin
-               col_pos <= 0;
-	    end else if(|(dtypeo_kernel & `DTYPE_PIXEL_MASK)) begin
-               col_pos <= col_pos + 1;
-	    end
+	 if(row_start) begin
+            col_pos <= 0;
+	 end else if(pixel_valid0) begin
+            col_pos <= col_pos + 1;
 	 end
       end
    end
@@ -249,7 +261,7 @@ module rotate2rams_yuv420
    wire [7:0] uv_ave = (num_cols[0]) ? v_ave : u_ave;                          
    generate
       for(idx=0; idx<4; idx=idx+1) begin
-         assign pix_en[idx] = (c0[idx][DIM_WIDTH+INTERP_WIDTH-1:INTERP_WIDTH] == col_pos) && (r0[idx][DIM_WIDTH+INTERP_WIDTH-1:INTERP_WIDTH] == row_pos) && (pC[idx] >= 0) && (pR[idx] >= 0) && (pC[idx] < {1'b0, num_cols}) && (pR[idx] < {1'b0, num_rows}) && dvo_kernel && (|(dtypeo_kernel & `DTYPE_PIXEL_MASK)); // check if pixel is in valid range
+         assign pix_en[idx] = (c0[idx][DIM_WIDTH+INTERP_WIDTH-1:INTERP_WIDTH] == col_pos) && (r0[idx][DIM_WIDTH+INTERP_WIDTH-1:INTERP_WIDTH] == row_pos) && (pC[idx] >= 0) && (pR[idx] >= 0) && (pC[idx] < {1'b0, num_cols}) && (pR[idx] < {1'b0, num_rows}) && pixel_valid0; // check if pixel is in valid range
 
          // generate the weighting factors for each corner of the kernel
          assign dc0[idx] = { 1'b0, c0[idx][INTERP_WIDTH-1:0] };
@@ -355,6 +367,171 @@ module rotate2rams_yuv420
    wire [DIM_WIDTH*2-1:0] ram_waddr = ram_data_[DIM_WIDTH*2+16-1:16];
    wire [15:0]            ram_wdata = ram_data_[15:0];
 
+   reg 			  web0_internal, web1_internal;
+   reg 			  oeb0_internal, oeb1_internal;
+   wire [15:0] 		 sram_datai0, sram_datai1;
+   reg 	frame_count; // toggles every frame to swap the read/write buffers
+   reg [15:0] 			 ram_databus0s, ram_databus1s;
+   always @(posedge clk) begin
+      ram_databus0s <= sram_datai0;
+      ram_databus1s <= sram_datai1;
+   end
+   reg 	      dvo_rot1, dvo_rot2, oeb0s, oeb1s, ob0, ob, dvo_rot;
+   reg [`DTYPE_WIDTH-1:0] dtypeo_rot1, dtypeo_rot2, dtypeo_rot;
+   reg [15:0]             datao_rot, datao_rot0, datao_rot1;
+   reg  [ADDR_WIDTH-1:0]  raddr;
+   wire [ADDR_WIDTH-1:0]  next_raddr = raddr + 1;
+   wire                    out_of_bounds = 0;
+   
+   always @(posedge clk or negedge resetb) begin
+      if(!resetb) begin
+	 oeb0 <= 1;
+	 oeb1 <= 1;
+	 oeb0_internal <= 1;
+	 oeb1_internal <= 1;
+	 addr0 <= 0;
+	 addr1 <= 0;
+	 web0_internal <= 1;
+	 web1_internal <= 1;
+	 frame_count <= 0;
+         dvo_rot <= 0;
+	 dvo_rot1 <= 0;
+	 dvo_rot2 <= 0;
+         dtypeo_rot  <= 0;
+	 dtypeo_rot1 <= 0;
+	 dtypeo_rot2 <= 0;
+	 oeb1s <= 0;
+	 oeb0s <= 0;
+	 ob0 <= 0;
+	 ob <= 0;
+         datao_rot0 <= 0;
+         datao_rot1 <= 0;
+         raddr <= 0;
+      end else begin
+	 // do a three clock cycle pipeline delay to give time to turn around
+	 // data through the RAM
+	 dvo_rot1 <= dvo_kernel;
+	 dvo_rot2 <= dvo_rot1;
+	 dvo_rot  <= dvo_rot2;
+
+	 dtypeo_rot1 <= dtypeo_kernel;
+	 dtypeo_rot2 <= dtypeo_rot1;
+	 dtypeo_rot  <= dtypeo_rot2;
+
+         datao_rot0 <= ram_wdata;
+         datao_rot1 <= ram_wdata;
+
+	 oeb0s <= oeb0_internal;
+	 oeb1s <= oeb1_internal;
+
+	 ob0 <= out_of_bounds;
+	 ob <= ob0;
+	 if(!enable_rotate) begin
+	    oeb0  <= 1;
+	    oeb1  <= 1;
+	    oeb0_internal  <= 1;
+	    oeb1_internal  <= 1;
+	    web0_internal  <= 1;
+	    web1_internal  <= 1;
+	    addr0 <= 0;
+	    addr1 <= 0;
+            raddr <= 0;
+	 end else begin
+	    if(oeb0s == 0) begin
+	       datao_rot <= (ob) ? 0 : ram_databus0s;
+	    end else if(oeb1s == 0) begin
+	       datao_rot <= (ob) ? 0 : ram_databus1s;
+	    end else begin
+	       datao_rot <= 0;//datao2;
+	    end
+
+	    if(frame_start) begin
+	       addr0 <= 0;
+	       addr1 <= 0;
+	    end else if(frame_count == 0) begin
+               addr0 <= ram_waddr[ADDR_WIDTH-1:0];
+	       addr1 <= raddr;
+	    end else begin
+               addr1 <= ram_waddr[ADDR_WIDTH-1:0];
+	       addr0 <= raddr;
+	    end
+	    
+	    if(frame_start) begin
+	       frame_count <= !frame_count;
+               raddr <= 0;
+	    end else if(pixel_valid0) begin
+	       oeb0  <= ~frame_count;
+	       oeb1  <=  frame_count;
+	       oeb0_internal  <= ~frame_count;
+	       oeb1_internal  <=  frame_count;
+               raddr <= next_raddr;
+	    end else begin
+	       oeb0 <= 1;
+	       oeb1 <= 1;
+	       oeb0_internal <= 1;
+	       oeb1_internal <= 1;
+	    end
+
+            if(ram_data_en) begin
+	       web0_internal  <=  frame_count;
+	       web1_internal  <= ~frame_count;
+            end else begin
+               web0_internal <= 1;
+	       web1_internal <= 1;
+            end
+	 end
+      end
+   end
+   assign ram_databus0 = oeb0_internal ? ram_wdata : {16{1'bz}};
+   assign ram_databus1 = oeb1_internal ? ram_wdata : {16{1'bz}};
+   assign sram_datai0 = ram_databus0;
+   assign sram_datai1 = ram_databus1;
+
+   ODDR2 web0_oddr(.Q(web0), .C0(clk), .C1(!clk), .CE(1), .D0(1), .D1(web0_internal), .R(0), .S(0));
+   ODDR2 web1_oddr(.Q(web1), .C0(clk), .C1(!clk), .CE(1), .D0(1), .D1(web1_internal), .R(0), .S(0));
+   
+   // synthesis attribute IOB of datao0 is "TRUE";
+   // synthesis attribute IOB of datao1 is "TRUE";
+   // synthesis attribute IOB of ram_databus0s is "TRUE";
+   // synthesis attribute IOB of ram_databus1s is "TRUE";
+   // synthesis attribute IOB of web0  is "TRUE";
+   // synthesis attribute IOB of oeb0  is "TRUE";
+   // synthesis attribute IOB of web1  is "TRUE";
+   // synthesis attribute IOB of oeb1  is "TRUE";
+   // synthesis attribute IOB of addr0 is "TRUE";
+   // synthesis attribute IOB of addr1 is "TRUE";
+
+   // synthesis attribute KEEP of web0  is "TRUE";
+   // synthesis attribute KEEP of oeb0  is "TRUE";
+   // synthesis attribute KEEP of web1  is "TRUE";
+   // synthesis attribute KEEP of oeb1  is "TRUE";
+   // synthesis attribute KEEP of addr0 is "TRUE";
+   // synthesis attribute KEEP of addr1 is "TRUE";
+   // synthesis attribute KEEP of web0_internal  is "TRUE";
+   // synthesis attribute KEEP of oeb0_internal  is "TRUE";
+   // synthesis attribute KEEP of web1_internal  is "TRUE";
+   // synthesis attribute KEEP of oeb1_internal  is "TRUE";
+   // synthesis attribute KEEP of addr0_internal is "TRUE";
+   // synthesis attribute KEEP of addr1_internal is "TRUE";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
    // Generate the output stream by shifting the data into the obuf
    // register. When it gets 32b or more of data in it, we shift 32
    // out on the stream.
