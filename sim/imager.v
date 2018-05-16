@@ -61,14 +61,18 @@ module imager
    reg [NUM_COLS_WIDTH:0] col_count;
    reg [NUM_ROWS_WIDTH-1:0] num_active_rows_s;
    reg [NUM_COLS_WIDTH-1:0] num_active_cols_s;
-
-   wire [NUM_ROWS_WIDTH:0] total_rows = num_active_rows_s + num_virtual_rows;
+   
+   // NOTE if vblank_fp <= 1 fv won't go back low 
+   // see below.. so you have to have at least vblank_fp==2
+   // in order for proper fv
+   wire [NUM_ROWS_WIDTH-1:0] min_virtual_rows = num_virtual_rows < 4 ? 4 : num_virtual_rows;
+   wire [NUM_ROWS_WIDTH:0] total_rows = num_active_rows_s + min_virtual_rows;
    wire [NUM_COLS_WIDTH:0] total_cols = num_active_cols_s + num_virtual_cols;
  
    wire [NUM_ROWS_WIDTH:0] next_row_count = row_count + 1;
    wire [NUM_COLS_WIDTH:0] next_col_count = col_count + 1;
 
-   wire [NUM_ROWS_WIDTH-1:0] vblank_fp = num_virtual_rows >> 1; 
+   wire [NUM_ROWS_WIDTH-1:0] vblank_fp = min_virtual_rows >> 1; 
    wire fv_wire = (row_count >= vblank_fp - 1) && (row_count <= total_rows - vblank_fp);
    wire [NUM_COLS_WIDTH-1:0] hblank_fp = num_virtual_cols >> 1;
    wire lv_wire = (row_count >= {1'b0, vblank_fp}) &&
