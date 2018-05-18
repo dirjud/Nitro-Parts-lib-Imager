@@ -61,6 +61,7 @@ SIM_FILES = sim/Imager_tb.v \
 	rtl_auto/LookupMapTestTerminal.v \
 	rtl/lookup_map.v \
 	sim/lookup_map_tb.v \
+	sim/lookup_map_mem.v \
 	rtl/rowbuffer.v \
 	rtl_auto/UnsharpMaskTestTerminal.v \
 	sim/unsharp_mask_tb.v \

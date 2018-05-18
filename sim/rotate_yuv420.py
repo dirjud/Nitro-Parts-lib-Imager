@@ -37,6 +37,8 @@ from videoviewer import imageprocess as ip
 #            #    print " ob=", ob, "out=", img0[row,col]
 #    return img0
 
+debug_points = [ [124,15] ]
+
 def _rotate_pos(r, c, theta, num_cols, num_rows):
     cos_theta = int(round(numpy.cos(theta)*256))/256.
     sin_theta = int(round(numpy.sin(theta)*256))/256.
@@ -66,8 +68,9 @@ def _rotate_img(yuv, theta):
             colCr0 = int(math.floor(colCr))
             colCr1 = colCr0 + 1
 
-            if (row==0 and col==0) or (row==100 and col==100):
-                print "  angle=", theta/numpy.pi * 180, "colCr0=", colCr0, "rowCr0=", rowCr0, col, row
+            for debug_point in debug_points:
+                if (row==debug_point[0] and col==debug_point[1]):
+                    print "  angle=", theta/numpy.pi * 180, "colCr0=", colCr0, "rowCr0=", rowCr0, col, row
             
             kernel = [ [rowCr0,colCr0], [rowCr0,colCr1], [rowCr1,colCr0], [rowCr1,colCr1]]
 
@@ -91,29 +94,33 @@ def _rotate_img(yuv, theta):
             # address into a buffer that can write them out to RAM
             for p in kernel:
                 r,c=_rotate_pos(p[0], p[1], -theta, num_cols, num_rows)
-                if (row==0 and col==0) or (row==100 and col==100):
-                    print "       c=", c, "r=", r, "sin=", numpy.sin(-theta)*256, numpy.cos(-theta)*256
+                for debug_point in debug_points:
+                    if (row==debug_point[0] and col==debug_point[1]):
+                        print "       c=", c, "r=", r, "sin=", numpy.sin(-theta)*256, numpy.cos(-theta)*256
                 
                 if row <= r < row+1 and col <= c < col+1 and 0 <= p[1] < num_cols and 0 <= p[0] < num_rows:
                     try:
                         c0 = int(c)
-                        dc = c - c0
+                        dc = int((c - c0) * 16)/16.
                         r0 = int(r)
-                        dr = r - r0
+                        dr = int((r - r0) * 16)/16.
                         x1 = (yuv[r0:r0+2,c0]*(1-dc) + yuv[r0:r0+2,c0+1]*dc)
                         x = (x1[0] * (1-dr)) + (x1[1] * dr)
-                        if (row==0 and col==0) or (row==100 and col==100):
-                            print "         y00=",yuv[r0,c0,0], "y01=", yuv[r0,c0+1,0],"y10=",yuv[r0+1,c0,0],"y11=",yuv[r0+1,c0+1,0]
-                            print "         dc=", dc, "dr=",dr, "x1=",x1[:,0], "x=",x[0]
-                            print "         pR=", p[0], "pC=",p[1]
+                        for debug_point in debug_points:
+                            if (row==debug_point[0] and col==debug_point[1]):
+                                print "         y00=",yuv[r0,c0,0], "y01=", yuv[r0,c0+1,0],"y10=",yuv[r0+1,c0,0],"y11=",yuv[r0+1,c0+1,0]
+                                print "         dc=", dc, "dr=",dr, "x1=",x1[:,0], "x=",x[0]
+                                print "         pR=", p[0], "pC=",p[1]
                     except:
                         x = [0,0,0]
     
                     mem[p[0],p[1], 0] = x[0]
                     if p[1] & 1: # odd col gets v
-                        mem[p[0],p[1], 1] = kernel_ave[2] #x[2]
+                        #mem[p[0],p[1], 1] = kernel_ave[2] #x[2]
+                        mem[p[0],p[1], 1] = yuv[r0,c0,2]
                     else: # even col gets u
-                        mem[p[0],p[1], 1] = kernel_ave[1] #x[1]
+                        #mem[p[0],p[1], 1] = kernel_ave[1] #x[1]
+                        mem[p[0],p[1], 1] = yuv[r0,c0+1,1]
                         
                         
     # now read out the image into YUV420 format
@@ -264,14 +271,11 @@ class RotateYUV420Test(simtest):
         xd = numpy.zeros_like(yuv)
         ip.YUV2RGB(yuv, xd)
 
-        z_yuv = _yuv2yuv420(yd)
-        z = numpy.zeros_like(z_yuv)
-        ip.YUV2RGB(z_yuv, z)
-
-        import pdb
-        pdb.set_trace()
-        self.assertTrue((yuv[:-2,:-1,0] == z_yuv[:-2,:-1,0]).all())
-        
+        #z_yuv = _yuv2yuv420(yd)
+        #z = numpy.zeros_like(z_yuv)
+        #ip.YUV2RGB(z_yuv, z)
+        z_yuv = _rotate_img(yd, 0)
+        self.assertTrue((yuv[6:-6,6:-6] == z_yuv[6:-6,6:-6,0]).all())
         
         angles =  [15]#[0, 15, 45, 75, 90] #numpy.linspace(0,360, 17)
         sincos = []
@@ -296,6 +300,10 @@ class RotateYUV420Test(simtest):
 
 
             yuvI = _rotate_img(yd, theta)
+
+            self.assertFalse(((abs(yuv[:,:,0].astype(numpy.int16)-yuvI[:,:,0]) > 2) * (yuv[:,:,0] != 0) * (yuvI[:,:,0] != 0)).any())
+            import pdb
+            pdb.set_trace()
 
             print "    READ 99,103 -> Y =", yuv[99,103,0]
 #if __name__ == "__main__":

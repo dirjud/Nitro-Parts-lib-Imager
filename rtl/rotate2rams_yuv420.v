@@ -127,6 +127,25 @@ module rotate2rams_yuv420
    reg [7:0] y01_s, y01_ss;
    reg [7:0] y10_s, y10_ss;
    reg [7:0] y11_s, y11_ss;
+
+   wire [7:0] u00 = k[0][0][15:8];
+   wire [7:0] u01 = k[0][1][15:8];
+   wire [7:0] u10 = k[1][0][15:8];
+   wire [7:0] u11 = k[1][1][15:8];
+   reg [7:0]  u00_s, u00_ss;
+   reg [7:0]  u01_s, u01_ss;
+   reg [7:0]  u10_s, u10_ss;
+   reg [7:0]  u11_s, u11_ss;
+
+   wire [7:0] v00 = k[0][0][7:0];
+   wire [7:0] v01 = k[0][1][7:0];
+   wire [7:0] v10 = k[1][0][7:0];
+   wire [7:0] v11 = k[1][1][7:0];
+   reg [7:0]  v00_s, v00_ss;
+   reg [7:0]  v01_s, v01_ss;
+   reg [7:0]  v10_s, v10_ss;
+   reg [7:0]  v11_s, v11_ss;
+
    
 //   wire [2:0] u_count = 
 //              ((k[0][0][15:8] == 0) ? 0 : 1) + 
@@ -289,7 +308,7 @@ module rotate2rams_yuv420
          assign waddr_ss[idx] = waddr_row_ss[idx] + pC_ss[idx];
          /* verilator lint_on WIDTH */
 
-         assign uv_ave_ss[idx] = pC_ss[idx][0] ? v_ave_ss : u_ave_ss;
+         assign uv_ave_ss[idx] = pC_ss[idx][0] ? v00_ss : u00_s;
          assign wfifo_din_ss[idx] = { waddr_ss[idx], x2_ss[idx], uv_ave_ss[idx] };
 
 
@@ -305,6 +324,25 @@ module rotate2rams_yuv420
             y01_ss <= y01_s;
             y10_ss <= y10_s;
             y11_ss <= y11_s;
+
+            u00_s  <= u00;
+            u01_s  <= u01;
+            u10_s  <= u10;
+            u11_s  <= u11;
+            u00_ss <= u00_s;
+            u01_ss <= u01_s;
+            u10_ss <= u10_s;
+            u11_ss <= u11_s;
+
+            v00_s  <= v00;
+            v01_s  <= v01;
+            v10_s  <= v10;
+            v11_s  <= v11;
+            v00_ss <= v00_s;
+            v01_ss <= v01_s;
+            v10_ss <= v10_s;
+            v11_ss <= v11_s;
+
             dc0_ss[idx] <= dc0_s[idx];
             //dc1_ss[idx] <= dc1_s[idx];
             dr0_ss[idx] <= dr0_s[idx];
@@ -429,7 +467,7 @@ module rotate2rams_yuv420
    wire [ADDR_WIDTH-1:0]  next_raddr = raddr + 1;
    reg [DIM_WIDTH-1:0] col_pos2, row_pos2;
    wire signed [DIM_WIDTH:0]  col_pos3, row_pos3;
-   wire                out_of_bounds = (col_pos2 >= num_cols-3) || (row_pos2 >= num_rows-2) || (col_pos3 >= {1'b0, num_cols}) || (row_pos3 >= {1'b0, num_rows}) || (col_pos3 < 0) || (row_pos3 < 0);
+   wire                out_of_bounds = (col_pos2 >= num_cols-3) || (row_pos2 >= num_rows-2) || (col_pos3 >= {1'b0, num_cols}) || (row_pos3 >= {1'b0, num_rows}) || (col_pos3 <= 0) || (row_pos3 <= 0);
 
    rotate_matrix #(.IN_WIDTH(DIM_WIDTH+1),
                    .ANGLE_WIDTH(ANGLE_WIDTH),

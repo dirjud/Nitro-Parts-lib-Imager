@@ -8,7 +8,7 @@ from videoviewer import imageprocess as ip
 class LookupMapTest(basetest.simtest):
 
     def testLookupMap(self):
-        """Sets lookup map and verifies input translates correctly"""
+        """Sets lookup map and verifies input translates correctly. Checks both enabled and disabled"""
         num_cols = 200
         num_rows = 20
         self.dev.set("Imager", "mode", 0)
@@ -23,7 +23,6 @@ class LookupMapTest(basetest.simtest):
         lu = [ random.randint(0,1023) for i in range(1024) ]
         for idx, val in enumerate(lu):
             self.dev.set("LookupMap", idx, val)
-        
         self.dev.set("Imager", "enable", 1)
 
         x,y = basetest.get_input_and_output_imgs(self.dev, num_rows-2, num_cols-2, num_rows-2, num_cols-2, depthi=3, deptho=3)

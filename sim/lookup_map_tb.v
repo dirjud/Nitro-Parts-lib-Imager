@@ -41,7 +41,7 @@ module lookup_map_tb
 
 `include "LookupMapTestTerminalInstance.v"
    wire di_read_rdy_LOOKUP_MAP, di_write_rdy_LOOKUP_MAP, di_LOOKUP_MAP_en;
-   wire [15:0] di_reg_datao_LOOKUP_MAP;
+   wire [31:0] di_reg_datao_LOOKUP_MAP;
    wire [15:0] di_transfer_status_LOOKUP_MAP;
 
    always @(*) begin
@@ -52,7 +52,7 @@ module lookup_map_tb
 	 di_transfer_status = 0;
 	 di_en = 1;
       end else if(di_LOOKUP_MAP_en) begin
-	 di_reg_datao = {16'b0, di_reg_datao_LOOKUP_MAP};
+	 di_reg_datao = di_reg_datao_LOOKUP_MAP;
  	 di_read_rdy  = di_read_rdy_LOOKUP_MAP;
 	 di_write_rdy = di_write_rdy_LOOKUP_MAP;
 	 di_transfer_status = di_transfer_status_LOOKUP_MAP;
@@ -70,6 +70,7 @@ module lookup_map_tb
    lookup_map
      (
       .pixclk(img_clk),
+      .resetb_clk(resetb),
       .resetb(resetb),
       .enable(enable),
       .di_clk(di_clk),
@@ -80,7 +81,7 @@ module lookup_map_tb
       .di_read	(di_read),     
       .di_write_mode	(di_write_mode),
       .di_write	(di_write),    
-      .di_reg_datai	(di_reg_datai[15:0]),
+      .di_reg_datai	(di_reg_datai),
       .di_read_rdy       (di_read_rdy_LOOKUP_MAP),	     
       .di_reg_datao      (di_reg_datao_LOOKUP_MAP),	     
       .di_write_rdy	   (di_write_rdy_LOOKUP_MAP),	     

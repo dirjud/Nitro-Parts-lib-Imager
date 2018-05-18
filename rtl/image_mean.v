@@ -7,10 +7,13 @@
  cumulates the image as four channels. Does not perform the final
  division to actually calculate the image mean. Assumes bayer data.
  Outputs accumulation of 
+ 
+ DATA_WIDTH is width of bus, usually 16b. PIXEL_WIDTH is width of pixels, usually 10b or 8b
  */
 
 module image_mean
   #(parameter PIXEL_WIDTH=8,
+    parameter DATA_WIDTH=8,
     parameter DI_DATA_WIDTH=32,
     parameter NUM_ROWS_WIDTH=12,
     parameter NUM_COLS_WIDTH=12,
@@ -40,10 +43,10 @@ module image_mean
    input                      debug,
    input 		      dvi,
    input [`DTYPE_WIDTH-1:0]   dtypei,
-   input [PIXEL_WIDTH-1:0]    datai,
+   input [DATA_WIDTH-1:0]    datai,
    output reg 		      dvo,
    output reg [`DTYPE_WIDTH-1:0]  dtypeo,
-   output reg [PIXEL_WIDTH-1:0]   datao,
+   output reg [DATA_WIDTH-1:0]   datao,
 
    output reg 		      done,
    output reg 		      busy,
@@ -123,15 +126,15 @@ module image_mean
                   datao  <= datai;
 
 		  /* verilator lint_off WIDTH */
-		  accum[accum_addr] <= accum[accum_addr] + datai;
+		  accum[accum_addr] <= accum[accum_addr] + datai[PIXEL_WIDTH-1:0];
 		  /* verilator lint_on WIDTH */
 		  if(accum_addr == 0) begin
 		     pix_count <= pix_count + 1;
 		  end
-                  if(datai >= top_bin_threshold) begin
+                  if(datai[PIXEL_WIDTH-1:0] >= top_bin_threshold) begin
                      top_bin_count0 <= top_bin_count0 + 1;
                   end
-                  if(&datai) begin
+                  if(&datai[PIXEL_WIDTH-1:0]) begin
                      sat_pix_count0 <= sat_pix_count0 + 1;
                   end
 	       end else begin // if (valid_pixel)

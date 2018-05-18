@@ -114,37 +114,38 @@ module vignette
    
    /* verilator lint_on WIDTH */
    
-   reg [GAIN_WIDTH+PIXEL_WIDTH-1:0]   mult0;
-   always @(posedge di_clk) begin
-      valid_pixel_s <= valid_pixel;
+   reg [GAIN_WIDTH+PIXEL_WIDTH-1:0]  mult0;
+   always @(posedge clk) begin
       mult0 <= col_coeff_sel * datai[PIXEL_WIDTH-1:0];
    end
    wire [2*GAIN_WIDTH+PIXEL_WIDTH-1:0] mult1 = row_coeff_sel * mult0;
 
    // check for overflow and clamp to all 1's if necessary
    wire [PIXEL_WIDTH-1:0] mult2 = (|mult1[2*GAIN_WIDTH+PIXEL_WIDTH-1:PIXEL_WIDTH+2*GAIN_FRAC_WIDTH]) ? { PIXEL_WIDTH { 1'b1 }} : mult1[PIXEL_WIDTH+2*GAIN_FRAC_WIDTH-1:2*GAIN_FRAC_WIDTH];
-
-   reg                    dvo0;
-   reg                    dtypeo0;
-   reg [15:0]             datao0;
+   reg                    dv0;
+   reg [`DTYPE_WIDTH-1:0] dtype0;
+   reg [15:0]             data0;
+   
    always @(posedge clk or negedge resetb_clk) begin
       if(!resetb_clk) begin
 	 dvo    <= 0;
 	 dtypeo <= 0;
-	 dvo0   <= 0;
-	 dtypeo0<= 0;
 	 datao  <= 0;
-	 datao0 <= 0;
+	 dv0    <= 0;
+	 dtype0 <= 0;
+	 data0  <= 0;
 	 row_pos<= 0;
 	 col_pos<= 0;
+         valid_pixel_s <= 0;
       end else begin
-	 dvo0    <= dvi;
-	 dtypeo0 <= dtypei;
-	 dvo     <= dvo0;
-	 dtypeo  <= dtypeo0;
-	 datao0  <= datai;
+         valid_pixel_s <= valid_pixel;
+
+	 dv0        <= dvi;
+	 dtype0     <= dtypei;
+	 dvo        <= dv0;
+	 dtypeo     <= dtype0;
 	 if(!enable) begin
-	    datao  <= datao0;
+	    datao <= data0;
 	 end else if(dvi) begin
 	    if (dtypei == `DTYPE_FRAME_START) begin
 	       row_pos <= 0;
@@ -156,13 +157,16 @@ module vignette
 	    end else if(valid_pixel) begin
 	       col_pos <= col_pos + 1;
 	    end
+
 	    if(valid_pixel_s) begin
 	       /* verilator lint_off WIDTH */
 	       datao <= mult2;
 	       /* verilator lint_on WIDTH */
 	    end else begin
-	       datao <= datao0;
+	       datao <= data0;
 	    end
+	 end else begin
+	    datao <= data0;
 	 end
       end
    end
