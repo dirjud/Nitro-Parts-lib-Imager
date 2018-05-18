@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2017.4 (64-bit)
+# SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
+# IP Build 2085800 on Fri Dec 15 22:25:07 MST 2017
+# Start of session at: Fri May 18 05:52:00 2018
+# Process ID: 1170
+# Current directory: /home/lane/work/ubixum/prj/xenecor/src/lib/imager/rtl/ip/managed_ip_project/managed_ip_project.runs/lookup_map_mem_synth_1
+# Command line: vivado -log lookup_map_mem.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source lookup_map_mem.tcl
+# Log file: /home/lane/work/ubixum/prj/xenecor/src/lib/imager/rtl/ip/managed_ip_project/managed_ip_project.runs/lookup_map_mem_synth_1/lookup_map_mem.vds
+# Journal file: /home/lane/work/ubixum/prj/xenecor/src/lib/imager/rtl/ip/managed_ip_project/managed_ip_project.runs/lookup_map_mem_synth_1/vivado.jou
+#-----------------------------------------------------------
+source lookup_map_mem.tcl -notrace
