@@ -84,6 +84,10 @@ module rotate_yuv420_tb
       .meta_datao(meta_datao_uv_offset)
       );
 
+   parameter ADDR_WIDTH=21;
+   wire                    web0, oeb0, web1, oeb1;
+   wire [ADDR_WIDTH-1:0]   addr0, addr1;
+   wire [15:0]             ram_databus0, ram_databus1;
    rotate2rams_yuv420 #(.MAX_COLS(MAX_COLS))
    rotate2raw_yuv420
      (.clk(img_clk),
@@ -91,7 +95,6 @@ module rotate_yuv420_tb
       .image_type(16'b1),
       .enable_420(enable_420),
       .enable_rotate(enable_rotate),
-      .shadow_sync(shadow_sync),
       .sin_theta(sin_theta),
       .cos_theta(cos_theta),
       .dvi(              dvo_uv_offset),
@@ -102,6 +105,28 @@ module rotate_yuv420_tb
       .meta_datai(meta_datao_uv_offset),
       .dvo(dvo),
       .dtypeo(dtypeo),
-      .datao(datao)
+      .datao(datao),
+
+      .addr0(addr0),
+      .web0(web0),
+      .oeb0(oeb0),
+      .ram_databus0(ram_databus0),
+      .addr1(addr1),
+      .web1(web1),
+      .oeb1(oeb1),
+      .ram_databus1(ram_databus1)
       );
+
+// A Verilator is having problems with sram bus
+   sram #(.ADDR_WIDTH(ADDR_WIDTH),
+	  .DATA_WIDTH(16))
+   sram[1:0]
+     (.ceb(2'b0),
+      .oeb( {        oeb1,         oeb0}),
+      .web( {        web1,         web0}),
+      .addr({       addr1,        addr0}),
+      .data({ram_databus1, ram_databus0})
+      );
+
+   
 endmodule

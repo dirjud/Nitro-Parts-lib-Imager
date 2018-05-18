@@ -80,7 +80,8 @@ module vignette
    reg [DIM_WIDTH-1:0] 		   col_pos;
    reg [DIM_WIDTH-1:0] 		   row_pos;
    wire 			   valid_pixel = |(dtypei & `DTYPE_PIXEL_MASK);
-
+   reg                             valid_pixel_s;
+   
    /* verilator lint_off WIDTH */
 
    // interpolate the column gain
@@ -113,24 +114,37 @@ module vignette
    
    /* verilator lint_on WIDTH */
    
-   wire [GAIN_WIDTH+PIXEL_WIDTH-1:0] mult0 = col_coeff_sel * datai[PIXEL_WIDTH-1:0];
+   reg [GAIN_WIDTH+PIXEL_WIDTH-1:0]   mult0;
+   always @(posedge di_clk) begin
+      valid_pixel_s <= valid_pixel;
+      mult0 <= col_coeff_sel * datai[PIXEL_WIDTH-1:0];
+   end
    wire [2*GAIN_WIDTH+PIXEL_WIDTH-1:0] mult1 = row_coeff_sel * mult0;
 
    // check for overflow and clamp to all 1's if necessary
    wire [PIXEL_WIDTH-1:0] mult2 = (|mult1[2*GAIN_WIDTH+PIXEL_WIDTH-1:PIXEL_WIDTH+2*GAIN_FRAC_WIDTH]) ? { PIXEL_WIDTH { 1'b1 }} : mult1[PIXEL_WIDTH+2*GAIN_FRAC_WIDTH-1:2*GAIN_FRAC_WIDTH];
-   
+
+   reg                    dvo0;
+   reg                    dtypeo0;
+   reg [15:0]             datao0;
    always @(posedge clk or negedge resetb_clk) begin
       if(!resetb_clk) begin
 	 dvo    <= 0;
 	 dtypeo <= 0;
+	 dvo0   <= 0;
+	 dtypeo0<= 0;
 	 datao  <= 0;
+	 datao0 <= 0;
 	 row_pos<= 0;
 	 col_pos<= 0;
       end else begin
-	 dvo        <= dvi;
-	 dtypeo     <= dtypei;
+	 dvo0    <= dvi;
+	 dtypeo0 <= dtypei;
+	 dvo     <= dvo0;
+	 dtypeo  <= dtypeo0;
+	 datao0  <= datai;
 	 if(!enable) begin
-	    datao <= datai;
+	    datao  <= datao0;
 	 end else if(dvi) begin
 	    if (dtypei == `DTYPE_FRAME_START) begin
 	       row_pos <= 0;
@@ -142,13 +156,12 @@ module vignette
 	    end else if(valid_pixel) begin
 	       col_pos <= col_pos + 1;
 	    end
-
-	    if(valid_pixel) begin
+	    if(valid_pixel_s) begin
 	       /* verilator lint_off WIDTH */
 	       datao <= mult2;
 	       /* verilator lint_on WIDTH */
 	    end else begin
-	       datao <= datai;
+	       datao <= datao0;
 	    end
 	 end
       end

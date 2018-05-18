@@ -7,18 +7,16 @@ module sram
     input 		   ceb,
     input 		   web,
     input 		   oeb,
-/* verilator lint_off UNOPTFLAT */
     inout [DATA_WIDTH-1:0] data,
-/* verilator lint_on UNOPTFLAT */
     input [ADDR_WIDTH-1:0] addr);
 
    reg [DATA_WIDTH-1:0]   buffer[0:(1<<ADDR_WIDTH)-1];
-
+   
 `ifdef verilator
 
    assign data = (!ceb && !oeb) ? buffer[addr] : {DATA_WIDTH{1'bz}};
    
-   always @(posedge web) begin
+   always @(negedge web) begin
       if(!ceb) begin
  	 buffer[addr] = data;
       end

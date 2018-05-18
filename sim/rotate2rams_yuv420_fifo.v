@@ -1,4 +1,4 @@
-module rotate2ram_yuv420_fifo
+module rotate2rams_yuv420_fifo
    (input clk,
     input srst,
     input [37:0] din,
