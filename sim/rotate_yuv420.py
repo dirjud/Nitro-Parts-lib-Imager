@@ -324,9 +324,7 @@ class RotateYUV420Test(simtest):
                 pylab.subplot(133, sharex=ax, sharey=ax)
                 pylab.imshow(rgb, interpolation="nearest")
                 pylab.show()
-            #import pdb
-            #pdb.set_trace()
-            self.assertFalse(((abs(yuv[:,:,0].astype(numpy.int16)-yuvI[:,:,0]) > 10) * (yuv[:,:,0] != 0) * (yuvI[:,:,0] != 0)).any())
+            self.assertFalse(((abs(yuv[:,:,0].astype(numpy.int16)-yuvI[:,:,0]) > 2) * (yuv[:,:,0] != 0) * (yuvI[:,:,0] != 0)).any())
 
 
 if __name__ == "__main__":
