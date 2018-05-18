@@ -6,3 +6,5 @@ rtl_auto
 *.so
 obj_dir
 data
+*.jou
+*.log
