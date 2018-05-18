@@ -5,6 +5,8 @@ import numpy, math
 import pylab, matplotlib
 from nitro_parts.lib.imager import rotate as rot
 from videoviewer import imageprocess as ip
+import numpy,math,sys
+from PIL import Image
 
 #def _rotate_img(img, sin_theta, cos_theta):
 #    img0 = numpy.zeros_like(img)
@@ -40,8 +42,8 @@ from videoviewer import imageprocess as ip
 debug_points = [ [124,15] ]
 
 def _rotate_pos(r, c, theta, num_cols, num_rows):
-    cos_theta = int(round(numpy.cos(theta)*256))/256.
-    sin_theta = int(round(numpy.sin(theta)*256))/256.
+    cos_theta = int(round(numpy.cos(theta)*4096))/4096.
+    sin_theta = int(round(numpy.sin(theta)*4096))/4096.
 
     col0 = c - num_cols/2.0
     row0 = r - num_rows/2.0
@@ -120,7 +122,11 @@ def _rotate_img(yuv, theta):
                         mem[p[0],p[1], 1] = yuv[r0,c0,2]
                     else: # even col gets u
                         #mem[p[0],p[1], 1] = kernel_ave[1] #x[1]
-                        mem[p[0],p[1], 1] = yuv[r0,c0+1,1]
+                        try:
+                            mem[p[0],p[1], 1] = yuv[r0,c0+1,1]
+                        except IndexError:
+                            mem[p[0],p[1], 1] = 128
+                            
                         
                         
     # now read out the image into YUV420 format
@@ -236,11 +242,14 @@ class RotateYUV420Test(simtest):
         ip.YUV2RGB(z_yuv, z)
         self.assertTrue((yuv == z_yuv).all())
 
+
+
+
     def testRotateYUV420(self):
         """Turns on rotation and verifies various angles."""
 
-        num_cols = 220
-        num_rows = 220
+        num_cols = 720
+        num_rows = 720
         self.dev.set("Imager", "mode", 10)
         self.dev.set("Imager", "num_active_cols", num_cols)
         self.dev.set("Imager", "num_active_rows", num_rows)
@@ -262,34 +271,36 @@ class RotateYUV420Test(simtest):
         pylab.imshow(rgb, interpolation='nearest')
         #pylab.show()
 
-        x0 = numpy.zeros((num_rows-2)*(num_cols-2)*3/2, dtype=numpy.uint8)
-        self.dev.read("STREAM_OUTPUT", 0, x0)
-        x = numpy.zeros((num_rows-2)*(num_cols-2)*3/2, dtype=numpy.uint8)
-        self.dev.read("STREAM_OUTPUT", 0, x)
-        yuv = numpy.zeros([num_rows-2, num_cols-2, 3], dtype=numpy.uint8)
-        ip.Stream2YUV(x, yuv)
-        xd = numpy.zeros_like(yuv)
-        ip.YUV2RGB(yuv, xd)
-
-        #z_yuv = _yuv2yuv420(yd)
-        #z = numpy.zeros_like(z_yuv)
-        #ip.YUV2RGB(z_yuv, z)
-        z_yuv = _rotate_img(yd, 0)
-        self.assertTrue((yuv[6:-6,6:-6] == z_yuv[6:-6,6:-6,0]).all())
+#        x0 = numpy.zeros((num_rows-2)*(num_cols-2)*3/2, dtype=numpy.uint8)
+#        self.dev.read("STREAM_OUTPUT", 0, x0)
+#        x = numpy.zeros((num_rows-2)*(num_cols-2)*3/2, dtype=numpy.uint8)
+#        self.dev.read("STREAM_OUTPUT", 0, x)
+#        yuv = numpy.zeros([num_rows-2, num_cols-2, 3], dtype=numpy.uint8)
+#        ip.Stream2YUV(x, yuv)
+#        xd = numpy.zeros_like(yuv)
+#        ip.YUV2RGB(yuv, xd)
+#
+#        #z_yuv = _yuv2yuv420(yd)
+#        #z = numpy.zeros_like(z_yuv)
+#        #ip.YUV2RGB(z_yuv, z)
+#        z_yuv = _rotate_img(yd, 0)
+#        self.assertTrue((yuv[6:-6,6:-6] == z_yuv[6:-6,6:-6,0]).all())
         
-        angles =  [15]#[0, 15, 45, 75, 90] #numpy.linspace(0,360, 17)
+        angles =  [-2.8125-90]#[0, 15, 45, 75, 90] #numpy.linspace(0,360, 17)
         sincos = []
         
         for idx, angle in enumerate(angles + [0]): # add a dummy at end to get entire sequence
             theta = angle / 180.0 * numpy.pi
             print "Setting angle=", angle
 
-            sin_theta, cos_theta = rot.set_rotation(angle, self.dev, "RotateYUV420Test", bit_depth=8)
+            sin_theta, cos_theta = rot.set_rotation(angle, self.dev, "RotateYUV420Test", bit_depth=12)
+            print "  sin,cos=", self.dev.get("RotateYUV420Test","sin_theta"), self.dev.get("RotateYUV420Test","cos_theta")
             sincos.append((sin_theta, cos_theta))
             
             x0 = numpy.zeros((num_rows-2)*(num_cols-2)*3/2, dtype=numpy.uint8)
             self.dev.read("STREAM_OUTPUT", 0, x0)
             x = numpy.zeros((num_rows-2)*(num_cols-2)*3/2, dtype=numpy.uint8)
+            self.dev.read("STREAM_OUTPUT", 0, x)
             self.dev.read("STREAM_OUTPUT", 0, x)
             self.dev.read("STREAM_OUTPUT", 0, x)
             yuv = numpy.zeros([num_rows-2, num_cols-2,3], dtype=numpy.uint8)
@@ -298,14 +309,41 @@ class RotateYUV420Test(simtest):
             xd = numpy.zeros_like(yuv)
             ip.YUV2RGB(yuv, xd)
 
-
+            
             yuvI = _rotate_img(yd, theta)
+            rgbI = numpy.zeros_like(yuvI)
+            ip.YUV2RGB(yuvI, rgbI)
+            #import pdb
+            #pdb.set_trace()
 
-            self.assertFalse(((abs(yuv[:,:,0].astype(numpy.int16)-yuvI[:,:,0]) > 2) * (yuv[:,:,0] != 0) * (yuvI[:,:,0] != 0)).any())
-            import pdb
-            pdb.set_trace()
+            if False:
+                ax = pylab.subplot(131)
+                pylab.imshow(xd, interpolation="nearest")
+                pylab.subplot(132, sharex=ax, sharey=ax)
+                pylab.imshow(rgbI, interpolation="nearest")
+                pylab.subplot(133, sharex=ax, sharey=ax)
+                pylab.imshow(rgb, interpolation="nearest")
+                pylab.show()
+            #import pdb
+            #pdb.set_trace()
+            self.assertFalse(((abs(yuv[:,:,0].astype(numpy.int16)-yuvI[:,:,0]) > 10) * (yuv[:,:,0] != 0) * (yuvI[:,:,0] != 0)).any())
 
-            print "    READ 99,103 -> Y =", yuv[99,103,0]
-#if __name__ == "__main__":
-#    rt = RotateTest()
-#    rt.testRotate()
+
+if __name__ == "__main__":
+    ifile = "chart_1280x720.png"
+    ofile = "chart_1280x720_rotated.png"
+
+    im = Image.open(ifile)
+    rgb = numpy.array(im)
+    print rgb.shape
+    if rgb.shape[2] == 4:
+        rgb = rgb[:,:,:3].copy()
+    yuv = numpy.zeros_like(rgb)
+    ip.RGB2YUV(rgb, yuv)
+
+    num_rows, num_cols, depth = rgb.shape
+    yuvI = _rotate_img(yuv, -92.8125)
+    rgbI = numpy.zeros_like(yuvI)
+    ip.YUV2RGB(yuvI, rgbI)
+    pylab.imshow(rgbI, interpolation="nearest")
+    pylab.show()
