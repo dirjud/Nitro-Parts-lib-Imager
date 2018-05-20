@@ -230,7 +230,7 @@ di = DeviceInterface(
                 ),
                 Register(
                     name="sin_theta",
-                    width=14,
+                    width=10,
                     init=0,
                     type="int",
                     mode="write",
@@ -238,8 +238,8 @@ di = DeviceInterface(
                 ),
                 Register(
                     name="cos_theta",
-                    width=14,
-                    init=0x1000,
+                    width=10,
+                    init=0x100,
                     type="int",
                     mode="write",
                     comment="0 to 360 degree rotation.",

@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GenRun Id="lookup_map_mem_synth_1" LaunchPart="xc7a35tcsg324-3" LaunchTime="1526644318">
-  <File Type="VDS-TIMING-PB" Name="lookup_map_mem_timing_summary_synth.pb"/>
-  <File Type="VDS-TIMINGSUMMARY" Name="lookup_map_mem_timing_summary_synth.rpt"/>
-  <File Type="RDS-DCP" Name="lookup_map_mem.dcp"/>
-  <File Type="REPORTS-TCL" Name="lookup_map_mem_reports.tcl"/>
-  <File Type="PA-TCL" Name="lookup_map_mem.tcl"/>
-  <File Type="RDS-RDS" Name="lookup_map_mem.vds"/>
-  <File Type="RDS-PROPCONSTRS" Name="lookup_map_mem_drc_synth.rpt"/>
   <File Type="RDS-UTIL" Name="lookup_map_mem_utilization_synth.rpt"/>
   <File Type="RDS-UTIL-PB" Name="lookup_map_mem_utilization_synth.pb"/>
+  <File Type="RDS-RDS" Name="lookup_map_mem.vds"/>
+  <File Type="RDS-DCP" Name="lookup_map_mem.dcp"/>
+  <File Type="PA-TCL" Name="lookup_map_mem.tcl"/>
+  <File Type="REPORTS-TCL" Name="lookup_map_mem_reports.tcl"/>
   <FileSet Name="sources" Type="BlockSrcs" RelSrcDir="$PSRCDIR/lookup_map_mem">
     <File Path="$PPRDIR/../lookup_map_mem/lookup_map_mem.xci">
       <FileInfo>
@@ -36,9 +33,7 @@
     </Config>
   </FileSet>
   <Strategy Version="1" Minor="2">
-    <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2017">
-      <Desc>Vivado Synthesis Defaults</Desc>
-    </StratHandle>
+    <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2017"/>
     <Step Id="synth_design"/>
   </Strategy>
 </GenRun>

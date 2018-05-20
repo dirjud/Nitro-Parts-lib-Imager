@@ -88,7 +88,7 @@ module rotate_yuv420_tb
    wire                    web0, oeb0, web1, oeb1;
    wire [ADDR_WIDTH-1:0]   addr0, addr1;
    wire [15:0]             ram_databus0, ram_databus1;
-   rotate2rams_yuv420 #(.MAX_COLS(MAX_COLS), .ANGLE_WIDTH(14))
+   rotate2rams_yuv420 #(.MAX_COLS(MAX_COLS), .ANGLE_WIDTH(10))
    rotate2raw_yuv420
      (.clk(img_clk),
       .resetb(resetb),

@@ -41,9 +41,12 @@ from PIL import Image
 
 debug_points = [ [124,15] ]
 
+sin_cos_bit_depth = 8
+sin_cos_theta_unity = 1<<sin_cos_bit_depth
+
 def _rotate_pos(r, c, theta, num_cols, num_rows):
-    cos_theta = int(round(numpy.cos(theta)*4096))/4096.
-    sin_theta = int(round(numpy.sin(theta)*4096))/4096.
+    cos_theta = int(round(numpy.cos(theta)*sin_cos_theta_unity))/float(sin_cos_theta_unity)
+    sin_theta = int(round(numpy.sin(theta)*sin_cos_theta_unity))/float(sin_cos_theta_unity)
 
     col0 = c - num_cols/2.0
     row0 = r - num_rows/2.0
@@ -98,7 +101,7 @@ def _rotate_img(yuv, theta):
                 r,c=_rotate_pos(p[0], p[1], -theta, num_cols, num_rows)
                 for debug_point in debug_points:
                     if (row==debug_point[0] and col==debug_point[1]):
-                        print "       c=", c, "r=", r, "sin=", numpy.sin(-theta)*256, numpy.cos(-theta)*256
+                        print "       c=", c, "r=", r, "sin=", numpy.sin(-theta)*sin_cos_theta_unity, numpy.cos(-theta)*sin_cos_theta_unity
                 
                 if row <= r < row+1 and col <= c < col+1 and 0 <= p[1] < num_cols and 0 <= p[0] < num_rows:
                     try:
@@ -248,15 +251,16 @@ class RotateYUV420Test(simtest):
     def testRotateYUV420(self):
         """Turns on rotation and verifies various angles."""
 
-        num_cols = 720
-        num_rows = 720
+        num_cols = 454#1080
+        num_rows = 454#1080
         self.dev.set("Imager", "mode", 10)
         self.dev.set("Imager", "num_active_cols", num_cols)
         self.dev.set("Imager", "num_active_rows", num_rows)
+        self.dev.set("Imager", "num_virtual_rows", 50)
         self.dev.set("Imager", "stream_sel", "ROTATE_YUV420")
         self.dev.set("Imager", "capture", dict(modei=1, modeo=2))
-        self.dev.set("InterpTest", "phase", 3)
-        self.dev.set("InterpTest", "enable_bilinear", 1)
+        self.dev.set("InterpTest", "phase", 1)
+        self.dev.set("InterpTest", "enable_ed", 1)
         self.dev.set("Rgb2YuvTest", "enable", 1)
         self.dev.set("RotateYUV420Test", "enable_420", 1)
         self.dev.set("RotateYUV420Test", "enable_rotate", 1)
@@ -293,15 +297,14 @@ class RotateYUV420Test(simtest):
             theta = angle / 180.0 * numpy.pi
             print "Setting angle=", angle
 
-            sin_theta, cos_theta = rot.set_rotation(angle, self.dev, "RotateYUV420Test", bit_depth=12)
+            sin_theta, cos_theta = rot.set_rotation(angle, self.dev, "RotateYUV420Test", bit_depth=sin_cos_bit_depth)
             print "  sin,cos=", self.dev.get("RotateYUV420Test","sin_theta"), self.dev.get("RotateYUV420Test","cos_theta")
             sincos.append((sin_theta, cos_theta))
             
             x0 = numpy.zeros((num_rows-2)*(num_cols-2)*3/2, dtype=numpy.uint8)
             self.dev.read("STREAM_OUTPUT", 0, x0)
+            self.dev.read("STREAM_OUTPUT", 0, x0)
             x = numpy.zeros((num_rows-2)*(num_cols-2)*3/2, dtype=numpy.uint8)
-            self.dev.read("STREAM_OUTPUT", 0, x)
-            self.dev.read("STREAM_OUTPUT", 0, x)
             self.dev.read("STREAM_OUTPUT", 0, x)
             yuv = numpy.zeros([num_rows-2, num_cols-2,3], dtype=numpy.uint8)
             ip.Stream2YUV(x,yuv)
@@ -316,7 +319,7 @@ class RotateYUV420Test(simtest):
             #import pdb
             #pdb.set_trace()
 
-            if False:
+            if True:
                 ax = pylab.subplot(131)
                 pylab.imshow(xd, interpolation="nearest")
                 pylab.subplot(132, sharex=ax, sharey=ax)

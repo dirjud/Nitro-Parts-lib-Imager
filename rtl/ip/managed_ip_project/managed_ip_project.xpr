@@ -40,13 +40,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="6"/>
-    <Option Name="WTModelSimExportSim" Val="6"/>
-    <Option Name="WTQuestaExportSim" Val="6"/>
-    <Option Name="WTIesExportSim" Val="6"/>
-    <Option Name="WTVcsExportSim" Val="6"/>
-    <Option Name="WTRivieraExportSim" Val="6"/>
-    <Option Name="WTActivehdlExportSim" Val="6"/>
+    <Option Name="WTXSimExportSim" Val="8"/>
+    <Option Name="WTModelSimExportSim" Val="8"/>
+    <Option Name="WTQuestaExportSim" Val="8"/>
+    <Option Name="WTIesExportSim" Val="8"/>
+    <Option Name="WTVcsExportSim" Val="8"/>
+    <Option Name="WTRivieraExportSim" Val="8"/>
+    <Option Name="WTActivehdlExportSim" Val="8"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -78,19 +78,6 @@
         <Option Name="SrcSet" Val="sources_1"/>
       </Config>
     </FileSet>
-    <FileSet Name="rotate2rams_yuv420_fifo" Type="BlockSrcs" RelSrcDir="$PSRCDIR/rotate2rams_yuv420_fifo">
-      <File Path="$PPRDIR/../rotate2rams_yuv420_fifo/rotate2rams_yuv420_fifo.xci">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <Config>
-        <Option Name="TopModule" Val="rotate2rams_yuv420_fifo"/>
-        <Option Name="UseBlackboxStub" Val="1"/>
-      </Config>
-    </FileSet>
     <FileSet Name="lookup_map_mem" Type="BlockSrcs" RelSrcDir="$PSRCDIR/lookup_map_mem">
       <File Path="$PPRDIR/../lookup_map_mem/lookup_map_mem.xci">
         <FileInfo>
@@ -101,6 +88,19 @@
       </File>
       <Config>
         <Option Name="TopModule" Val="lookup_map_mem"/>
+        <Option Name="UseBlackboxStub" Val="1"/>
+      </Config>
+    </FileSet>
+    <FileSet Name="rotate2rams_yuv420_fifo" Type="BlockSrcs" RelSrcDir="$PSRCDIR/rotate2rams_yuv420_fifo">
+      <File Path="$PPRDIR/../rotate2rams_yuv420_fifo/rotate2rams_yuv420_fifo.xci">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <Config>
+        <Option Name="TopModule" Val="rotate2rams_yuv420_fifo"/>
         <Option Name="UseBlackboxStub" Val="1"/>
       </Config>
     </FileSet>
@@ -135,7 +135,7 @@
       <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2017"/>
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
     </Run>
-    <Run Id="rotate2rams_yuv420_fifo_synth_1" Type="Ft3:Synth" SrcSet="rotate2rams_yuv420_fifo" Part="xc7a35tcsg324-3" ConstrsSet="rotate2rams_yuv420_fifo" Description="Vivado Synthesis Defaults" WriteIncrSynthDcp="false" Dir="$PRUNDIR/rotate2rams_yuv420_fifo_synth_1" IncludeInArchive="true">
+    <Run Id="lookup_map_mem_synth_1" Type="Ft3:Synth" SrcSet="lookup_map_mem" Part="xc7a35tcsg324-3" ConstrsSet="lookup_map_mem" Description="Vivado Synthesis Defaults" WriteIncrSynthDcp="false" Dir="$PRUNDIR/lookup_map_mem_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2017"/>
         <Step Id="synth_design"/>
@@ -144,7 +144,7 @@
       <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2017"/>
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
     </Run>
-    <Run Id="lookup_map_mem_synth_1" Type="Ft3:Synth" SrcSet="lookup_map_mem" Part="xc7a35tcsg324-3" ConstrsSet="lookup_map_mem" Description="Vivado Synthesis Defaults" WriteIncrSynthDcp="false" Dir="$PRUNDIR/lookup_map_mem_synth_1" IncludeInArchive="true">
+    <Run Id="rotate2rams_yuv420_fifo_synth_1" Type="Ft3:Synth" SrcSet="rotate2rams_yuv420_fifo" Part="xc7a35tcsg324-3" ConstrsSet="rotate2rams_yuv420_fifo" Description="Vivado Synthesis Defaults" WriteIncrSynthDcp="false" Dir="$PRUNDIR/rotate2rams_yuv420_fifo_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2017">
           <Desc>Vivado Synthesis Defaults</Desc>
@@ -171,7 +171,7 @@
       <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2017"/>
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
     </Run>
-    <Run Id="rotate2rams_yuv420_fifo_impl_1" Type="Ft2:EntireDesign" Part="xc7a35tcsg324-3" ConstrsSet="rotate2rams_yuv420_fifo" Description="Default settings for Implementation." WriteIncrSynthDcp="false" SynthRun="rotate2rams_yuv420_fifo_synth_1" IncludeInArchive="false">
+    <Run Id="lookup_map_mem_impl_1" Type="Ft2:EntireDesign" Part="xc7a35tcsg324-3" ConstrsSet="lookup_map_mem" Description="Default settings for Implementation." WriteIncrSynthDcp="false" SynthRun="lookup_map_mem_synth_1" IncludeInArchive="false">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2017"/>
         <Step Id="init_design"/>
@@ -187,7 +187,7 @@
       <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2017"/>
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
     </Run>
-    <Run Id="lookup_map_mem_impl_1" Type="Ft2:EntireDesign" Part="xc7a35tcsg324-3" ConstrsSet="lookup_map_mem" Description="Default settings for Implementation." WriteIncrSynthDcp="false" SynthRun="lookup_map_mem_synth_1" IncludeInArchive="false">
+    <Run Id="rotate2rams_yuv420_fifo_impl_1" Type="Ft2:EntireDesign" Part="xc7a35tcsg324-3" ConstrsSet="rotate2rams_yuv420_fifo" Description="Default settings for Implementation." WriteIncrSynthDcp="false" SynthRun="rotate2rams_yuv420_fifo_synth_1" IncludeInArchive="false">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2017">
           <Desc>Default settings for Implementation.</Desc>
