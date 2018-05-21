@@ -41,7 +41,7 @@ from PIL import Image
 
 debug_points = [ [124,15] ]
 
-sin_cos_bit_depth = 8
+sin_cos_bit_depth = 12
 sin_cos_theta_unity = 1<<sin_cos_bit_depth
 
 def _rotate_pos(r, c, theta, num_cols, num_rows):
@@ -302,6 +302,7 @@ class RotateYUV420Test(simtest):
             sincos.append((sin_theta, cos_theta))
             
             x0 = numpy.zeros((num_rows-2)*(num_cols-2)*3/2, dtype=numpy.uint8)
+            self.dev.read("STREAM_OUTPUT", 0, x0)
             self.dev.read("STREAM_OUTPUT", 0, x0)
             self.dev.read("STREAM_OUTPUT", 0, x0)
             x = numpy.zeros((num_rows-2)*(num_cols-2)*3/2, dtype=numpy.uint8)
