@@ -56,7 +56,7 @@ module rotate_yuv420_tb
    end
 
 
-      /****************** uv offset to make it "proper" YUV *********************/
+   /****************** uv offset to make it "proper" YUV *********************/
    wire                    dvo_uv_offset;
    wire [PIXEL_WIDTH-1:0]  y_uv_offset, u_uv_offset, v_uv_offset;
    wire [`DTYPE_WIDTH-1:0] dtypeo_uv_offset;

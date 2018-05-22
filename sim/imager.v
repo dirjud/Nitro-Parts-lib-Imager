@@ -73,12 +73,13 @@ module imager
    wire [NUM_COLS_WIDTH:0] next_col_count = col_count + 1;
 
    wire [NUM_ROWS_WIDTH-1:0] vblank_fp = min_virtual_rows >> 1; 
-   wire fv_wire = (row_count >= vblank_fp - 1) && (row_count <= total_rows - vblank_fp);
+   wire fv_wire = (row_count < {1'b0, num_active_rows_s});//(row_count >= vblank_fp - 1) && (row_count <= total_rows - vblank_fp);
    wire [NUM_COLS_WIDTH-1:0] hblank_fp = num_virtual_cols >> 1;
-   wire lv_wire = (row_count >= {1'b0, vblank_fp}) &&
-                  (row_count < num_active_rows_s+vblank_fp) &&
-                  (col_count >= {1'b0, hblank_fp}) && 
-                  (col_count < num_active_cols_s + hblank_fp);
+   wire lv_wire = fv_wire && (col_count >= {1'b0, hblank_fp}) && (col_count < num_active_cols_s + hblank_fp);
+        //(row_count >= {1'b0, vblank_fp}) &&
+        //(row_count < num_active_rows_s+vblank_fp) &&
+        //(col_count >= {1'b0, hblank_fp}) && 
+        //(col_count < num_active_cols_s + hblank_fp);
 
 
    reg [DATA_WIDTH-1:0] pixel_count;

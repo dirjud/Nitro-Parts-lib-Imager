@@ -97,7 +97,9 @@ module Imager_tb
       .fx3_fd_oe(fx3_fd_oe)
       );
 
+   wire [1:0]   in_buffer_count, out_buffer_count;
 `include "ImagerTerminalInstance.v"
+`include "TestBenchTerminalInstance.v"
 
    wire [31:0] 	di_reg_datao_CCM;
    wire 	di_read_rdy_CCM, di_write_rdy_CCM, di_CCM_en;
@@ -166,6 +168,11 @@ module Imager_tb
    always @(*) begin
       if(di_term_addr == `TERM_Imager) begin
 	 di_reg_datao = ImagerTerminal_reg_datao;
+ 	 di_read_rdy  = 1;
+	 di_write_rdy = 1;
+	 di_transfer_status = 0;
+      end else if(di_term_addr == `TERM_TestBench) begin
+	 di_reg_datao = TestBenchTerminal_reg_datao;
  	 di_read_rdy  = 1;
 	 di_write_rdy = 1;
 	 di_transfer_status = 0;
@@ -949,7 +956,8 @@ module Imager_tb
       .di_read_mode(di_read_mode && di_STREAM2DI_INPUT_en),
       .di_read(di_read && di_STREAM2DI_INPUT_en),
       .di_read_rdy(di_read_rdy_STREAM2DI_INPUT),
-      .di_reg_datao(di_reg_datao_STREAM2DI_INPUT)
+      .di_reg_datao(di_reg_datao_STREAM2DI_INPUT),
+      .buffer_count(in_buffer_count)
       );
 
    /**************  STREAM 2 DI ***********************************/
@@ -970,7 +978,8 @@ module Imager_tb
       .di_read_mode(di_read_mode && di_STREAM2DI_OUTPUT_en),
       .di_read(di_read && di_STREAM2DI_OUTPUT_en),
       .di_read_rdy(di_read_rdy_STREAM2DI_OUTPUT),
-      .di_reg_datao(di_reg_datao_STREAM2DI_OUTPUT)
+      .di_reg_datao(di_reg_datao_STREAM2DI_OUTPUT),
+      .buffer_count(out_buffer_count)
       );
 
 endmodule

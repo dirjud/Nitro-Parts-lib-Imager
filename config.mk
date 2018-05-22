@@ -22,6 +22,7 @@ INC_FILES =  \
 SIM_FILES = sim/Imager_tb.v \
 	$(NITRO_PARTS_DIR)/lib/HostInterface/models/fx3.v \
 	rtl_auto/ImagerTerminal.v \
+	rtl_auto/TestBenchTerminal.v \
 	rtl_auto/ImagerRxTerminal.v \
 	rtl_auto/ImageTerminal.v \
 	rtl_auto/CcmTestTerminal.v \

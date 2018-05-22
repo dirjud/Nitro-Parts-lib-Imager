@@ -18,6 +18,38 @@ di = DeviceInterface(
             comment="Read image stream from this terminal",
             ),
         Terminal(
+            name="TestBench",
+            regAddrWidth=16,
+            regDataWidth=32,
+            register_list=[
+                Register(
+                    name="debug",
+                    width=32,
+                    init=0,
+                    mode="write",
+                    type="int",
+                    comment="Debug register",
+                ),
+                Register(
+                    name="in_buffer_count",
+                    width=2,
+                    init=0,
+                    mode="read",
+                    type="int",
+                    comment="Number of buffers filled with the input stream buffer",
+                ),
+                Register(
+                    name="out_buffer_count",
+                    width=2,
+                    init=0,
+                    mode="read",
+                    type="int",
+                    comment="Number of buffers filled with the output stream buffer",
+                ),
+                
+            ],
+        ),
+        Terminal(
             name="Imager",
             regAddrWidth=16,
             regDataWidth=32,
@@ -230,7 +262,7 @@ di = DeviceInterface(
                 ),
                 Register(
                     name="sin_theta",
-                    width=14,
+                    width=10,
                     init=0,
                     type="int",
                     mode="write",
@@ -238,8 +270,8 @@ di = DeviceInterface(
                 ),
                 Register(
                     name="cos_theta",
-                    width=14,
-                    init=0x1000,
+                    width=10,
+                    init=0x100,
                     type="int",
                     mode="write",
                     comment="0 to 360 degree rotation.",

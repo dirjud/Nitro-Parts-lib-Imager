@@ -8,7 +8,8 @@
 module stream2di
   #(parameter ADDR_WIDTH=22,
     parameter DI_DATA_WIDTH=32,
-    parameter STREAM_DATA_WIDTH=16
+    parameter STREAM_DATA_WIDTH=16,
+    parameter FIFO_ADDR_WIDTH=2
     )
   (
    input 			 enable, // syncronous to rclk
@@ -26,19 +27,25 @@ module stream2di
    input 			 di_read_mode,
    input 			 di_read,
    output reg 			 di_read_rdy,
-   output [DI_DATA_WIDTH-1:0] 	 di_reg_datao
+   output [DI_DATA_WIDTH-1:0] 	 di_reg_datao,
+   output [FIFO_ADDR_WIDTH-1:0]  buffer_count
    );
 
-   reg [31:0] 			  buffer[0:(1<<ADDR_WIDTH)-1][0:1];
+   parameter FIFO_DEPTH = 1 << FIFO_ADDR_WIDTH;
+   
+   reg [31:0] 			  buffer[0:(1<<ADDR_WIDTH)-1][0:FIFO_DEPTH-1];
 
    reg [ADDR_WIDTH-1:0] 	  waddr, raddr;
-   reg 				  wbuf, rbuf;
+   reg [FIFO_ADDR_WIDTH-1:0]      wbuf, rbuf;
+   wire [FIFO_ADDR_WIDTH-1:0]     next_wbuf = wbuf + 1;
+   wire [FIFO_ADDR_WIDTH-1:0]     next_rbuf = rbuf + 1;
    reg 				  phase;
    reg [15:0] 			  datai_s;
 
    reg [1:0] 			  wstate, rstate;
    parameter WIDLE=0, WCAPTURE=1;
    parameter RWAIT_FOR_BUFFER=0, READING=1;
+   assign buffer_count = wbuf - rbuf;
    
    // Write Controller
    always @(posedge clki or negedge resetb) begin
@@ -88,8 +95,10 @@ module stream2di
 
 	    end else if(dvi && dtypei == `DTYPE_FRAME_END) begin
 	       wstate <= WIDLE;
-	       if(wbuf == rbuf) begin
-		  wbuf <= !wbuf;
+	       if(next_wbuf == rbuf) begin
+                  $display("***** FRAME BEING DROPPED ******");
+               end else begin
+		  wbuf <= next_wbuf;
 	       end
 	    end
 	 end
@@ -117,7 +126,7 @@ module stream2di
 
 	    if(rstate == READING) begin
 	       rstate <= RWAIT_FOR_BUFFER;
-	       rbuf <= !rbuf;
+	       rbuf <= next_rbuf;
 	    end
 	    
 	 end else begin
