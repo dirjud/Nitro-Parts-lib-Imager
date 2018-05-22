@@ -10,8 +10,8 @@ module rotate2rams_yuv420_fifo
     output reg almost_empty
     );
 
-   parameter DEPTH=128;
-   parameter DEPTH_WIDTH=7;
+   parameter DEPTH=512;
+   parameter DEPTH_WIDTH=$clog2(DEPTH);
    reg [37:0]  mem[0:DEPTH-1];
 
    

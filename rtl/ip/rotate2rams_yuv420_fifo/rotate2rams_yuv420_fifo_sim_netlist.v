@@ -1,10 +1,10 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2017.4 (lin64) Build 2086221 Fri Dec 15 20:54:30 MST 2017
-// Date        : Sun May 20 10:05:24 2018
+// Date        : Sun May 20 09:42:28 2018
 // Host        : borah.lane.brooks.nu running 64-bit Fedora release 27 (Twenty Seven)
-// Command     : write_verilog -force -mode funcsim
-//               /home/lane/work/ubixum/prj/xenecor/src/lib/imager/rtl/ip/rotate2rams_yuv420_fifo/rotate2rams_yuv420_fifo_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim -rename_top rotate2rams_yuv420_fifo -prefix
+//               rotate2rams_yuv420_fifo_ rotate2rams_yuv420_fifo_sim_netlist.v
 // Design      : rotate2rams_yuv420_fifo
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -264,11 +264,11 @@ module rotate2rams_yuv420_fifo
   (* C_HAS_WR_RST = "0" *) 
   (* C_IMPLEMENTATION_TYPE = "0" *) 
   (* C_IMPLEMENTATION_TYPE_AXIS = "1" *) 
-  (* C_IMPLEMENTATION_TYPE_RACH = "2" *) 
+  (* C_IMPLEMENTATION_TYPE_RACH = "1" *) 
   (* C_IMPLEMENTATION_TYPE_RDCH = "1" *) 
-  (* C_IMPLEMENTATION_TYPE_WACH = "2" *) 
+  (* C_IMPLEMENTATION_TYPE_WACH = "1" *) 
   (* C_IMPLEMENTATION_TYPE_WDCH = "1" *) 
-  (* C_IMPLEMENTATION_TYPE_WRCH = "2" *) 
+  (* C_IMPLEMENTATION_TYPE_WRCH = "1" *) 
   (* C_INIT_WR_PNTR_VAL = "0" *) 
   (* C_INTERFACE_TYPE = "0" *) 
   (* C_MEMORY_TYPE = "1" *) 
@@ -602,7 +602,6 @@ module rotate2rams_yuv420_fifo
         .wr_rst_busy(NLW_U0_wr_rst_busy_UNCONNECTED));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_generic_cstr" *) 
 module rotate2rams_yuv420_fifo_blk_mem_gen_generic_cstr
    (dout,
     clk,
@@ -641,7 +640,6 @@ module rotate2rams_yuv420_fifo_blk_mem_gen_generic_cstr
         .tmp_ram_rd_en(tmp_ram_rd_en));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module rotate2rams_yuv420_fifo_blk_mem_gen_prim_width
    (dout,
     clk,
@@ -680,7 +678,6 @@ module rotate2rams_yuv420_fifo_blk_mem_gen_prim_width
         .tmp_ram_rd_en(tmp_ram_rd_en));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module rotate2rams_yuv420_fifo_blk_mem_gen_prim_wrapper
    (dout,
     clk,
@@ -960,7 +957,6 @@ module rotate2rams_yuv420_fifo_blk_mem_gen_prim_wrapper
         .WEBWE({WEBWE,WEBWE,WEBWE,WEBWE,WEBWE,WEBWE,WEBWE,WEBWE}));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_top" *) 
 module rotate2rams_yuv420_fifo_blk_mem_gen_top
    (dout,
     clk,
@@ -999,7 +995,6 @@ module rotate2rams_yuv420_fifo_blk_mem_gen_top
         .tmp_ram_rd_en(tmp_ram_rd_en));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_v8_4_1" *) 
 module rotate2rams_yuv420_fifo_blk_mem_gen_v8_4_1
    (dout,
     clk,
@@ -1038,7 +1033,6 @@ module rotate2rams_yuv420_fifo_blk_mem_gen_v8_4_1
         .tmp_ram_rd_en(tmp_ram_rd_en));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_v8_4_1_synth" *) 
 module rotate2rams_yuv420_fifo_blk_mem_gen_v8_4_1_synth
    (dout,
     clk,
@@ -1077,7 +1071,6 @@ module rotate2rams_yuv420_fifo_blk_mem_gen_v8_4_1_synth
         .tmp_ram_rd_en(tmp_ram_rd_en));
 endmodule
 
-(* ORIG_REF_NAME = "compare" *) 
 module rotate2rams_yuv420_fifo_compare
    (ram_full_fb_i_reg,
     v1_reg,
@@ -1376,7 +1369,6 @@ module rotate2rams_yuv420_fifo_compare_3
         .S({\NLW_gmux.gm[4].gms.ms_CARRY4_S_UNCONNECTED [3:1],\gc1.count_reg[8] }));
 endmodule
 
-(* ORIG_REF_NAME = "fifo_generator_ramfifo" *) 
 module rotate2rams_yuv420_fifo_fifo_generator_ramfifo
    (dout,
     empty,
@@ -1481,7 +1473,6 @@ module rotate2rams_yuv420_fifo_fifo_generator_ramfifo
         .tmp_ram_rd_en(tmp_ram_rd_en));
 endmodule
 
-(* ORIG_REF_NAME = "fifo_generator_top" *) 
 module rotate2rams_yuv420_fifo_fifo_generator_top
    (dout,
     empty,
@@ -1556,9 +1547,9 @@ endmodule
 (* C_HAS_RD_RST = "0" *) (* C_HAS_RST = "0" *) (* C_HAS_SLAVE_CE = "0" *) 
 (* C_HAS_SRST = "1" *) (* C_HAS_UNDERFLOW = "0" *) (* C_HAS_VALID = "0" *) 
 (* C_HAS_WR_ACK = "0" *) (* C_HAS_WR_DATA_COUNT = "0" *) (* C_HAS_WR_RST = "0" *) 
-(* C_IMPLEMENTATION_TYPE = "0" *) (* C_IMPLEMENTATION_TYPE_AXIS = "1" *) (* C_IMPLEMENTATION_TYPE_RACH = "2" *) 
-(* C_IMPLEMENTATION_TYPE_RDCH = "1" *) (* C_IMPLEMENTATION_TYPE_WACH = "2" *) (* C_IMPLEMENTATION_TYPE_WDCH = "1" *) 
-(* C_IMPLEMENTATION_TYPE_WRCH = "2" *) (* C_INIT_WR_PNTR_VAL = "0" *) (* C_INTERFACE_TYPE = "0" *) 
+(* C_IMPLEMENTATION_TYPE = "0" *) (* C_IMPLEMENTATION_TYPE_AXIS = "1" *) (* C_IMPLEMENTATION_TYPE_RACH = "1" *) 
+(* C_IMPLEMENTATION_TYPE_RDCH = "1" *) (* C_IMPLEMENTATION_TYPE_WACH = "1" *) (* C_IMPLEMENTATION_TYPE_WDCH = "1" *) 
+(* C_IMPLEMENTATION_TYPE_WRCH = "1" *) (* C_INIT_WR_PNTR_VAL = "0" *) (* C_INTERFACE_TYPE = "0" *) 
 (* C_MEMORY_TYPE = "1" *) (* C_MIF_FILE_NAME = "BlankString" *) (* C_MSGON_VAL = "1" *) 
 (* C_OPTIMIZATION_MODE = "0" *) (* C_OVERFLOW_LOW = "0" *) (* C_POWER_SAVING_MODE = "0" *) 
 (* C_PRELOAD_LATENCY = "1" *) (* C_PRELOAD_REGS = "0" *) (* C_PRIM_FIFO_TYPE = "512x72" *) 
@@ -1591,7 +1582,7 @@ endmodule
 (* C_WR_DEPTH_WRCH = "16" *) (* C_WR_FREQ = "1" *) (* C_WR_PNTR_WIDTH = "9" *) 
 (* C_WR_PNTR_WIDTH_AXIS = "10" *) (* C_WR_PNTR_WIDTH_RACH = "4" *) (* C_WR_PNTR_WIDTH_RDCH = "10" *) 
 (* C_WR_PNTR_WIDTH_WACH = "4" *) (* C_WR_PNTR_WIDTH_WDCH = "10" *) (* C_WR_PNTR_WIDTH_WRCH = "4" *) 
-(* C_WR_RESPONSE_LATENCY = "1" *) (* ORIG_REF_NAME = "fifo_generator_v13_2_1" *) 
+(* C_WR_RESPONSE_LATENCY = "1" *) 
 module rotate2rams_yuv420_fifo_fifo_generator_v13_2_1
    (backup,
     backup_marker,
@@ -2605,7 +2596,6 @@ module rotate2rams_yuv420_fifo_fifo_generator_v13_2_1
         .wr_en(wr_en));
 endmodule
 
-(* ORIG_REF_NAME = "fifo_generator_v13_2_1_synth" *) 
 module rotate2rams_yuv420_fifo_fifo_generator_v13_2_1_synth
    (dout,
     empty,
@@ -2648,7 +2638,6 @@ module rotate2rams_yuv420_fifo_fifo_generator_v13_2_1_synth
         .wr_en(wr_en));
 endmodule
 
-(* ORIG_REF_NAME = "memory" *) 
 module rotate2rams_yuv420_fifo_memory
    (dout,
     clk,
@@ -2687,7 +2676,6 @@ module rotate2rams_yuv420_fifo_memory
         .tmp_ram_rd_en(tmp_ram_rd_en));
 endmodule
 
-(* ORIG_REF_NAME = "rd_bin_cntr" *) 
 module rotate2rams_yuv420_fifo_rd_bin_cntr
    (ram_full_fb_i_reg,
     Q,
@@ -3064,7 +3052,6 @@ module rotate2rams_yuv420_fifo_rd_bin_cntr
         .O(ram_empty_i_reg_0));
 endmodule
 
-(* ORIG_REF_NAME = "rd_logic" *) 
 module rotate2rams_yuv420_fifo_rd_logic
    (out,
     empty,
@@ -3178,7 +3165,6 @@ module rotate2rams_yuv420_fifo_rd_logic
         .srst(srst));
 endmodule
 
-(* ORIG_REF_NAME = "rd_status_flags_ss" *) 
 module rotate2rams_yuv420_fifo_rd_status_flags_ss
    (out,
     empty,
@@ -3319,7 +3305,6 @@ module rotate2rams_yuv420_fifo_rd_status_flags_ss
         .S(srst));
 endmodule
 
-(* ORIG_REF_NAME = "wr_bin_cntr" *) 
 module rotate2rams_yuv420_fifo_wr_bin_cntr
    (Q,
     v1_reg_1,
@@ -3762,7 +3747,6 @@ module rotate2rams_yuv420_fifo_wr_bin_cntr
         .O(ram_empty_i_reg_2));
 endmodule
 
-(* ORIG_REF_NAME = "wr_logic" *) 
 module rotate2rams_yuv420_fifo_wr_logic
    (out,
     full,
@@ -3863,7 +3847,6 @@ module rotate2rams_yuv420_fifo_wr_logic
         .v1_reg_2(\c1/v1_reg ));
 endmodule
 
-(* ORIG_REF_NAME = "wr_status_flags_ss" *) 
 module rotate2rams_yuv420_fifo_wr_status_flags_ss
    (out,
     full,

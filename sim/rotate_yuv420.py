@@ -39,9 +39,9 @@ from PIL import Image
 #            #    print " ob=", ob, "out=", img0[row,col]
 #    return img0
 
-debug_points = [ [124,15] ]
+debug_points = [ [178, 146] ]
 
-sin_cos_bit_depth = 10
+sin_cos_bit_depth = 18
 sin_cos_theta_unity = 1<<sin_cos_bit_depth
 
 def _rotate_pos(r, c, theta, num_cols, num_rows):
@@ -118,7 +118,9 @@ def _rotate_img(yuv, theta):
                                 print "         pR=", p[0], "pC=",p[1]
                     except:
                         x = [0,0,0]
-    
+
+                    if p[0] == 158 and p[1] == 151:
+                        print "HERE", row, col
                     mem[p[0],p[1], 0] = x[0]
                     if p[1] & 1: # odd col gets v
                         #mem[p[0],p[1], 1] = kernel_ave[2] #x[2]
@@ -251,8 +253,8 @@ class RotateYUV420Test(simtest):
     def testRotateYUV420(self):
         """Turns on rotation and verifies various angles."""
 
-        num_cols = 350
-        num_rows = 350
+        num_cols = 1280
+        num_rows = 1080
         self.dev.set("Imager", "mode", 10)
         self.dev.set("Imager", "num_active_cols", num_cols)
         self.dev.set("Imager", "num_active_rows", num_rows)
@@ -281,7 +283,7 @@ class RotateYUV420Test(simtest):
 #        z_yuv = _rotate_img(yd, 0)
 #        self.assertTrue((yuv[6:-6,6:-6] == z_yuv[6:-6,6:-6,0]).all())
         
-        angles =  [45]#-2.8125-90]#[0, 15, 45, 75, 90] #numpy.linspace(0,360, 17)
+        angles =  [-(-360/512.-90)]#[0, 15, 45, 75, 90] #numpy.linspace(0,360, 17)
         sincos = []
 
 
@@ -339,8 +341,6 @@ class RotateYUV420Test(simtest):
             yuvI = _rotate_img(yd, theta)
             rgbI = numpy.zeros_like(yuvI)
             ip.YUV2RGB(yuvI, rgbI)
-            #import pdb
-            #pdb.set_trace()
 
 #            if True:
 #                ax = pylab.subplot(131)
@@ -350,9 +350,11 @@ class RotateYUV420Test(simtest):
 #                pylab.subplot(133, sharex=ax, sharey=ax)
 #                pylab.imshow(rgb, interpolation="nearest")
 #                pylab.show()
-            match = ((abs(yuv[:,:,0].astype(numpy.int16)-yuvI[:,:,0]) > 2) * (yuv[:,:,0] != 0) * (yuvI[:,:,0] != 0)).any()
+            match = not(((abs(yuv[:,:,0].astype(numpy.int16)-yuvI[:,:,0]) > 2) * (yuv[:,:,0] != 0) * (yuvI[:,:,0] != 0)).any())
             print "    match=",match
-            #self.assertFalse(match)
+            import pdb
+            pdb.set_trace()
+            #self.assertTrue(match)
         pylab.show()
 
 

@@ -1,10 +1,10 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2017.4 (lin64) Build 2086221 Fri Dec 15 20:54:30 MST 2017
-// Date        : Sun May 20 10:05:24 2018
+// Date        : Sun May 20 09:42:28 2018
 // Host        : borah.lane.brooks.nu running 64-bit Fedora release 27 (Twenty Seven)
-// Command     : write_verilog -force -mode synth_stub
-//               /home/lane/work/ubixum/prj/xenecor/src/lib/imager/rtl/ip/rotate2rams_yuv420_fifo/rotate2rams_yuv420_fifo_stub.v
+// Command     : write_verilog -force -mode synth_stub -rename_top rotate2rams_yuv420_fifo -prefix
+//               rotate2rams_yuv420_fifo_ rotate2rams_yuv420_fifo_stub.v
 // Design      : rotate2rams_yuv420_fifo
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7a35tcsg324-3

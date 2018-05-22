@@ -1,10 +1,10 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.4 (lin64) Build 2086221 Fri Dec 15 20:54:30 MST 2017
--- Date        : Sun May 20 10:05:24 2018
+-- Date        : Sun May 20 09:42:28 2018
 -- Host        : borah.lane.brooks.nu running 64-bit Fedora release 27 (Twenty Seven)
--- Command     : write_vhdl -force -mode funcsim
---               /home/lane/work/ubixum/prj/xenecor/src/lib/imager/rtl/ip/rotate2rams_yuv420_fifo/rotate2rams_yuv420_fifo_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim -rename_top rotate2rams_yuv420_fifo -prefix
+--               rotate2rams_yuv420_fifo_ rotate2rams_yuv420_fifo_sim_netlist.vhdl
 -- Design      : rotate2rams_yuv420_fifo
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -25,8 +25,6 @@ entity rotate2rams_yuv420_fifo_blk_mem_gen_prim_wrapper is
     \gcc0.gc0.count_d1_reg[8]\ : in STD_LOGIC_VECTOR ( 8 downto 0 );
     din : in STD_LOGIC_VECTOR ( 37 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_blk_mem_gen_prim_wrapper : entity is "blk_mem_gen_prim_wrapper";
 end rotate2rams_yuv420_fifo_blk_mem_gen_prim_wrapper;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_blk_mem_gen_prim_wrapper is
@@ -364,8 +362,6 @@ entity rotate2rams_yuv420_fifo_compare is
     rd_en : in STD_LOGIC;
     ram_empty_fb_i_reg : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_compare : entity is "compare";
 end rotate2rams_yuv420_fifo_compare;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_compare is
@@ -714,8 +710,6 @@ entity rotate2rams_yuv420_fifo_rd_bin_cntr is
     E : in STD_LOGIC_VECTOR ( 0 to 0 );
     clk : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_rd_bin_cntr : entity is "rd_bin_cntr";
 end rotate2rams_yuv420_fifo_rd_bin_cntr;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_rd_bin_cntr is
@@ -1209,8 +1203,6 @@ entity rotate2rams_yuv420_fifo_wr_bin_cntr is
     E : in STD_LOGIC_VECTOR ( 0 to 0 );
     clk : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_wr_bin_cntr : entity is "wr_bin_cntr";
 end rotate2rams_yuv420_fifo_wr_bin_cntr;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_wr_bin_cntr is
@@ -1769,8 +1761,6 @@ entity rotate2rams_yuv420_fifo_blk_mem_gen_prim_width is
     \gcc0.gc0.count_d1_reg[8]\ : in STD_LOGIC_VECTOR ( 8 downto 0 );
     din : in STD_LOGIC_VECTOR ( 37 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_blk_mem_gen_prim_width : entity is "blk_mem_gen_prim_width";
 end rotate2rams_yuv420_fifo_blk_mem_gen_prim_width;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_blk_mem_gen_prim_width is
@@ -1814,8 +1804,6 @@ entity rotate2rams_yuv420_fifo_rd_status_flags_ss is
     wr_en : in STD_LOGIC;
     WEBWE : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_rd_status_flags_ss : entity is "rd_status_flags_ss";
 end rotate2rams_yuv420_fifo_rd_status_flags_ss;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_rd_status_flags_ss is
@@ -1945,8 +1933,6 @@ entity rotate2rams_yuv420_fifo_wr_status_flags_ss is
     rd_en : in STD_LOGIC;
     ram_empty_fb_i_reg : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_wr_status_flags_ss : entity is "wr_status_flags_ss";
 end rotate2rams_yuv420_fifo_wr_status_flags_ss;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_wr_status_flags_ss is
@@ -2052,8 +2038,6 @@ entity rotate2rams_yuv420_fifo_blk_mem_gen_generic_cstr is
     \gcc0.gc0.count_d1_reg[8]\ : in STD_LOGIC_VECTOR ( 8 downto 0 );
     din : in STD_LOGIC_VECTOR ( 37 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_blk_mem_gen_generic_cstr : entity is "blk_mem_gen_generic_cstr";
 end rotate2rams_yuv420_fifo_blk_mem_gen_generic_cstr;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_blk_mem_gen_generic_cstr is
@@ -2100,8 +2084,6 @@ entity rotate2rams_yuv420_fifo_rd_logic is
     wr_en : in STD_LOGIC;
     WEBWE : in STD_LOGIC_VECTOR ( 0 to 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_rd_logic : entity is "rd_logic";
 end rotate2rams_yuv420_fifo_rd_logic;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_rd_logic is
@@ -2178,8 +2160,6 @@ entity rotate2rams_yuv420_fifo_wr_logic is
     \gc1.count_d1_reg[7]\ : in STD_LOGIC_VECTOR ( 7 downto 0 );
     \gc1.count_reg[7]\ : in STD_LOGIC_VECTOR ( 7 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_wr_logic : entity is "wr_logic";
 end rotate2rams_yuv420_fifo_wr_logic;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_wr_logic is
@@ -2238,8 +2218,6 @@ entity rotate2rams_yuv420_fifo_blk_mem_gen_top is
     \gcc0.gc0.count_d1_reg[8]\ : in STD_LOGIC_VECTOR ( 8 downto 0 );
     din : in STD_LOGIC_VECTOR ( 37 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_blk_mem_gen_top : entity is "blk_mem_gen_top";
 end rotate2rams_yuv420_fifo_blk_mem_gen_top;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_blk_mem_gen_top is
@@ -2271,8 +2249,6 @@ entity rotate2rams_yuv420_fifo_blk_mem_gen_v8_4_1_synth is
     \gcc0.gc0.count_d1_reg[8]\ : in STD_LOGIC_VECTOR ( 8 downto 0 );
     din : in STD_LOGIC_VECTOR ( 37 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_blk_mem_gen_v8_4_1_synth : entity is "blk_mem_gen_v8_4_1_synth";
 end rotate2rams_yuv420_fifo_blk_mem_gen_v8_4_1_synth;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_blk_mem_gen_v8_4_1_synth is
@@ -2304,8 +2280,6 @@ entity rotate2rams_yuv420_fifo_blk_mem_gen_v8_4_1 is
     \gcc0.gc0.count_d1_reg[8]\ : in STD_LOGIC_VECTOR ( 8 downto 0 );
     din : in STD_LOGIC_VECTOR ( 37 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_blk_mem_gen_v8_4_1 : entity is "blk_mem_gen_v8_4_1";
 end rotate2rams_yuv420_fifo_blk_mem_gen_v8_4_1;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_blk_mem_gen_v8_4_1 is
@@ -2337,8 +2311,6 @@ entity rotate2rams_yuv420_fifo_memory is
     \gcc0.gc0.count_d1_reg[8]\ : in STD_LOGIC_VECTOR ( 8 downto 0 );
     din : in STD_LOGIC_VECTOR ( 37 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_memory : entity is "memory";
 end rotate2rams_yuv420_fifo_memory;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_memory is
@@ -2371,8 +2343,6 @@ entity rotate2rams_yuv420_fifo_fifo_generator_ramfifo is
     srst : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 37 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_fifo_generator_ramfifo : entity is "fifo_generator_ramfifo";
 end rotate2rams_yuv420_fifo_fifo_generator_ramfifo;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_fifo_generator_ramfifo is
@@ -2472,8 +2442,6 @@ entity rotate2rams_yuv420_fifo_fifo_generator_top is
     srst : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 37 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_fifo_generator_top : entity is "fifo_generator_top";
 end rotate2rams_yuv420_fifo_fifo_generator_top;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_fifo_generator_top is
@@ -2507,8 +2475,6 @@ entity rotate2rams_yuv420_fifo_fifo_generator_v13_2_1_synth is
     srst : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 37 downto 0 )
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1_synth : entity is "fifo_generator_v13_2_1_synth";
 end rotate2rams_yuv420_fifo_fifo_generator_v13_2_1_synth;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1_synth is
@@ -2961,15 +2927,15 @@ entity rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 is
   attribute C_IMPLEMENTATION_TYPE_AXIS : integer;
   attribute C_IMPLEMENTATION_TYPE_AXIS of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is 1;
   attribute C_IMPLEMENTATION_TYPE_RACH : integer;
-  attribute C_IMPLEMENTATION_TYPE_RACH of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is 2;
+  attribute C_IMPLEMENTATION_TYPE_RACH of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is 1;
   attribute C_IMPLEMENTATION_TYPE_RDCH : integer;
   attribute C_IMPLEMENTATION_TYPE_RDCH of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is 1;
   attribute C_IMPLEMENTATION_TYPE_WACH : integer;
-  attribute C_IMPLEMENTATION_TYPE_WACH of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is 2;
+  attribute C_IMPLEMENTATION_TYPE_WACH of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is 1;
   attribute C_IMPLEMENTATION_TYPE_WDCH : integer;
   attribute C_IMPLEMENTATION_TYPE_WDCH of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is 1;
   attribute C_IMPLEMENTATION_TYPE_WRCH : integer;
-  attribute C_IMPLEMENTATION_TYPE_WRCH of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is 2;
+  attribute C_IMPLEMENTATION_TYPE_WRCH of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is 1;
   attribute C_INIT_WR_PNTR_VAL : integer;
   attribute C_INIT_WR_PNTR_VAL of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is 0;
   attribute C_INTERFACE_TYPE : integer;
@@ -3168,8 +3134,6 @@ entity rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 is
   attribute C_WR_PNTR_WIDTH_WRCH of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is 4;
   attribute C_WR_RESPONSE_LATENCY : integer;
   attribute C_WR_RESPONSE_LATENCY of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is 1;
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 : entity is "fifo_generator_v13_2_1";
 end rotate2rams_yuv420_fifo_fifo_generator_v13_2_1;
 
 architecture STRUCTURE of rotate2rams_yuv420_fifo_fifo_generator_v13_2_1 is
@@ -4064,15 +4028,15 @@ architecture STRUCTURE of rotate2rams_yuv420_fifo is
   attribute C_IMPLEMENTATION_TYPE_AXIS : integer;
   attribute C_IMPLEMENTATION_TYPE_AXIS of U0 : label is 1;
   attribute C_IMPLEMENTATION_TYPE_RACH : integer;
-  attribute C_IMPLEMENTATION_TYPE_RACH of U0 : label is 2;
+  attribute C_IMPLEMENTATION_TYPE_RACH of U0 : label is 1;
   attribute C_IMPLEMENTATION_TYPE_RDCH : integer;
   attribute C_IMPLEMENTATION_TYPE_RDCH of U0 : label is 1;
   attribute C_IMPLEMENTATION_TYPE_WACH : integer;
-  attribute C_IMPLEMENTATION_TYPE_WACH of U0 : label is 2;
+  attribute C_IMPLEMENTATION_TYPE_WACH of U0 : label is 1;
   attribute C_IMPLEMENTATION_TYPE_WDCH : integer;
   attribute C_IMPLEMENTATION_TYPE_WDCH of U0 : label is 1;
   attribute C_IMPLEMENTATION_TYPE_WRCH : integer;
-  attribute C_IMPLEMENTATION_TYPE_WRCH of U0 : label is 2;
+  attribute C_IMPLEMENTATION_TYPE_WRCH of U0 : label is 1;
   attribute C_INIT_WR_PNTR_VAL : integer;
   attribute C_INIT_WR_PNTR_VAL of U0 : label is 0;
   attribute C_INTERFACE_TYPE : integer;

@@ -467,7 +467,7 @@ module rotate2rams_yuv420
    wire [ADDR_WIDTH-1:0]  next_raddr = raddr + 1;
    reg [DIM_WIDTH-1:0] col_pos2, row_pos2;
    wire signed [DIM_WIDTH:0]  col_pos3, row_pos3;
-   wire                       out_of_bounds = 0;//(col_pos2 >= num_cols-3) || (row_pos2 >= num_rows-2) || (col_pos3 >= {1'b0, num_cols}) || (row_pos3 >= {1'b0, num_rows}) || (col_pos3 <= 0) || (row_pos3 <= 0);
+   wire                       out_of_bounds = (col_pos2 >= num_cols-3) || (row_pos2 >= num_rows-2) || (col_pos3 >= {1'b0, num_cols}) || (row_pos3 >= {1'b0, num_rows}) || (col_pos3 <= 0) || (row_pos3 <= 0);
 
    rotate_matrix #(.IN_WIDTH(DIM_WIDTH+1),
                    .ANGLE_WIDTH(ANGLE_WIDTH),
