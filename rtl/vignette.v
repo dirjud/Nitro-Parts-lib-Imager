@@ -144,8 +144,9 @@ module vignette
 	 dtype0     <= dtypei;
 	 dvo        <= dv0;
 	 dtypeo     <= dtype0;
+         data0      <= datai;
 	 if(!enable) begin
-	    datao <= data0;
+	    datao      <= data0;
 	 end else if(dvi) begin
 	    if (dtypei == `DTYPE_FRAME_START) begin
 	       row_pos <= 0;
