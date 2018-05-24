@@ -250,7 +250,7 @@ class RotateYUV420Test(simtest):
 
 
 
-    def testRotateYUV420(self):
+    def _testRotateYUV420(self):
         """Turns on rotation and verifies various angles."""
 
         num_cols = 1280
@@ -358,6 +358,68 @@ class RotateYUV420Test(simtest):
         pylab.show()
 
 
+    def testDebug(self):
+        """Turns on rotation and verifies various angles."""
+
+        num_cols = 128
+        num_rows = 108
+        self.dev.set("Imager", "mode", 10)
+        self.dev.set("Imager", "num_active_cols", num_cols)
+        self.dev.set("Imager", "num_active_rows", num_rows)
+        self.dev.set("Imager", "num_virtual_rows", 300)
+        self.dev.set("Imager", "stream_sel", "ROTATE_YUV420")
+        self.dev.set("Imager", "capture", dict(modei=1, modeo=2))
+        self.dev.set("InterpTest", "phase", 3)
+        self.dev.set("InterpTest", "enable_ed", 1)
+        self.dev.set("Rgb2YuvTest", "enable", 1)
+        self.dev.set("RotateYUV420Test", "enable_420", 1)
+        self.dev.set("RotateYUV420Test", "enable_rotate", 1)
+
+
+        angles =  [0]#-(-360/512.-90)]#[0, 15, 45, 75, 90] #numpy.linspace(0,360, 17)
+        sincos = []
+
+
+        for idx, angle in enumerate(angles):# + [25]): # add a dummy at end to get entire sequence
+            theta = angle / 180.0 * numpy.pi
+            print "Setting angle=", angle
+
+            sin_theta, cos_theta = rot.set_rotation(angle, self.dev, "RotateYUV420Test", bit_depth=sin_cos_bit_depth-2)
+            print "  sin,cos=", self.dev.get("RotateYUV420Test","sin_theta"), self.dev.get("RotateYUV420Test","cos_theta")
+            sincos.append((sin_theta, cos_theta))
+
+            if idx == 0: # first frame, capture the input image
+                self.dev.set("Imager", "enable", 1)
+                y = numpy.zeros([num_rows-2, num_cols-2, 3], dtype=numpy.uint16)
+                self.dev.read("STREAM_INPUT", 0, y)
+                yd = (y >> 2).astype(numpy.uint8)
+                yd[:,:,1:] += 128
+                rgb = numpy.zeros_like(yd)
+                ip.YUV2RGB(yd, rgb)
+                # drain output fifo
+                x = numpy.zeros([1], numpy.uint32)
+                self.dev.set("TestBench","debug", 1)
+                self.dev.read("STREAM_OUTPUT", 0, x)
+                self.dev.set("TestBench","debug", 2)
+            
+            x = numpy.zeros([(num_rows-2)*(num_cols-2)*3], dtype=numpy.uint8)
+            self.dev.read("STREAM_OUTPUT", 0, x)
+            z = numpy.zeros([(num_rows-2),(num_cols-2)], dtype=numpy.uint8)
+            import pdb
+            pdb.set_trace()
+            for idx in range(x.shape[0]):
+                try:
+                    addr = x[idx][0] << 16 + x[idx][1] << 8 + x[idx]
+                    row = addr / (num_cols-2)
+                    col = addr - row*(num_cols-2)
+                    z[row,col]=255
+                except:
+                    pass
+            pylab.imshow(z)
+            pylab.show()
+
+
+        
 if __name__ == "__main__":
     ifile = "chart_1280x720.png"
     ofile = "chart_1280x720_rotated.png"

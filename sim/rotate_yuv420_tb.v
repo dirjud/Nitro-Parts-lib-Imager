@@ -107,6 +107,8 @@ module rotate_yuv420_tb
       .dtypeo(dtypeo),
       .datao(datao),
 
+      .web_clkp(img_clk),
+      .web_clkn(!img_clk),
       .addr0(addr0),
       .web0(web0),
       .oeb0(oeb0),

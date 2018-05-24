@@ -70,6 +70,9 @@ SIM_FILES = sim/Imager_tb.v \
 	rtl_auto/CircleCropTestTerminal.v \
 	sim/circle_crop_tb.v \
 	rtl/circle_crop.v \
+	rtl_auto/CropTestTerminal.v \
+	sim/crop_tb.v \
+	rtl/crop.v \
 	sim/raw_to_32_tb.v \
 	rtl_auto/RawTo32TestTerminal.v \
 	rtl/raw_to_32.v \

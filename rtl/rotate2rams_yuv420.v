@@ -35,15 +35,17 @@ module rotate2rams_yuv420
    output reg [`DTYPE_WIDTH-1:0]  dtypeo,
    output reg [31:0]              datao,
 
-   output reg [ADDR_WIDTH-1:0] 	  addr0,
-   output 			  web0 /*verilator clocker*/ ,
-   output reg 			  oeb0,
-   inout [15:0] 		  ram_databus0,
+   input                          web_clkp,
+   input                          web_clkn,
+   output reg [ADDR_WIDTH-1:0]    addr0,
+   output                         web0 /*verilator clocker*/ ,
+   output reg                     oeb0,
+   inout [15:0]                   ram_databus0,
 
-   output reg [ADDR_WIDTH-1:0] 	  addr1,
-   output 			  web1 /*verilator clocker*/ ,
-   output reg 			  oeb1,
-   inout [15:0] 		  ram_databus1
+   output reg [ADDR_WIDTH-1:0]    addr1,
+   output                         web1 /*verilator clocker*/ ,
+   output reg                     oeb1,
+   inout [15:0]                   ram_databus1
    );
 
    parameter DIM_WIDTH = $clog2(MAX_COLS);
@@ -646,8 +648,8 @@ module rotate2rams_yuv420
    assign sram_datai0 = ram_databus0;
    assign sram_datai1 = ram_databus1;
 
-   ODDR2 web0_oddr(.Q(web0), .C0(clk), .C1(!clk), .CE(1), .D0(1), .D1(web0_internal), .R(0), .S(0));
-   ODDR2 web1_oddr(.Q(web1), .C0(clk), .C1(!clk), .CE(1), .D0(1), .D1(web1_internal), .R(0), .S(0));
+   ODDR2 web0_oddr(.Q(web0), .C0(web_clkp), .C1(web_clkn), .CE(1), .D0(1), .D1(web0_internal), .R(0), .S(0));
+   ODDR2 web1_oddr(.Q(web1), .C0(web_clkp), .C1(web_clkn), .CE(1), .D0(1), .D1(web1_internal), .R(0), .S(0));
    
    // synthesis attribute IOB of datao0 is "TRUE";
    // synthesis attribute IOB of datao1 is "TRUE";
@@ -674,10 +676,11 @@ module rotate2rams_yuv420
    // synthesis attribute KEEP of addr1_internal is "TRUE";
 
 
-   integer wfile, ofile, frame_cnt;
+   integer wfile, ofile, ifile, frame_cnt;
    initial begin
       wfile = $fopen("rotate.txt","w");
       ofile = $fopen("rotate_out.txt","w");
+      ifile = $fopen("rotate_in.txt","w");
       frame_cnt = 0;
    end
    always @(posedge clk) begin
@@ -687,10 +690,12 @@ module rotate2rams_yuv420
       if(frame_start) begin
          $fdisplay(wfile, "START");
          $fdisplay(ofile, "START");
+         $fdisplay(ifile, "START");
       end
       if(frame_end) begin
          $fdisplay(wfile, "END");
          $fdisplay(ofile, "END");
+         $fdisplay(ifile, "END");
 //         wfile0 = $fopen("rotate_sram0_" + frame_cnt, "w");
 //         wfile1 = $fopen("rotate_sram1_" + frame_cnt, "w");
 //         $fclose(wfile0);
@@ -698,6 +703,9 @@ module rotate2rams_yuv420
       end
       if(dvo && dtypeo == 8) begin
          $fdisplay(ofile, "0x%x", datao);
+      end
+      if(dvi && dtypei == 8) begin
+         $fdisplay(ifile, "0x%x 0x%x 0x%x", yi, ui, vi);
       end
    end
 
@@ -709,6 +717,17 @@ module rotate2rams_yuv420
    reg [`DTYPE_WIDTH-1:0] dtype_;
 
    always @(*) begin
+//      if(en_rot) begin
+//         dv_          = dv3 &&   dtype3 ;
+//         dtype_       = dtype3;
+//         pixel_valid_ = ram_data_en;
+//         frame_start_ = dv3 &&   dtype3 == `DTYPE_FRAME_START ;
+//         frame_end_   = dv3 &&   dtype3 == `DTYPE_FRAME_END   ;
+//         header_start_= dv3 &&   dtype3 == `DTYPE_HEADER_START;
+//         header_valid_= dv3 &&   dtype3 == `DTYPE_HEADER      ;
+//         header_end_  = dv3 &&   dtype3 == `DTYPE_HEADER_END  ;
+//         row_start_   = dv3 &&   dtype3 == `DTYPE_ROW_START   ;
+//         row_end_     = dv3 &&   dtype3 == `DTYPE_ROW_END     ;
       if(en_rot) begin
          dv_          = dv3;
          dtype_       = dtype3;
@@ -783,6 +802,8 @@ module rotate2rams_yuv420
 	 next_obuf = { obuf[OBUF_WIDTH-9:0],  raw_data };
 	 next_opos = opos_plus_8;
       end else if(en_rot) begin
+//	 next_obuf = { obuf[OBUF_WIDTH-25:0], 2'b0, ram_data_[37:16] };
+//	 next_opos = opos_plus_24;
          if(dump_uv) begin
 	    next_obuf = { obuf[OBUF_WIDTH-25:0], datao_rot[15:8], datao_rot_s[7:0], datao_rot[7:0] };
 	    next_opos = opos_plus_24;
