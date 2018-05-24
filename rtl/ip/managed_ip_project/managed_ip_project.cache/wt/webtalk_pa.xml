@@ -3,7 +3,7 @@
 <!--The data in this file is primarily intended for consumption by Xilinx tools.
 The structure and the elements are likely to change over the next few releases.
 This means code written to parse this file will need to be revisited each subsequent release.-->
-<application name="pa" timeStamp="Tue May 22 15:45:24 2018">
+<application name="pa" timeStamp="Tue May 22 18:19:18 2018">
 <section name="Project Information" visible="false">
 <property name="ProjectID" value="ca08058fa0bb483184c35c52df1c05ca" type="ProjectID"/>
 <property name="ProjectIteration" value="1" type="ProjectIteration"/>
@@ -17,29 +17,35 @@ This means code written to parse this file will need to be revisited each subseq
 <property name="ImplStrategy" value="Vivado Implementation Defaults" type="ImplStrategy"/>
 </item>
 <item name="Java Command Handlers">
-<property name="CustomizeCore" value="12" type="JavaHandler"/>
-<property name="EditDelete" value="10" type="JavaHandler"/>
+<property name="CustomizeCore" value="14" type="JavaHandler"/>
+<property name="EditDelete" value="11" type="JavaHandler"/>
+<property name="ManageCompositeTargets" value="2" type="JavaHandler"/>
 <property name="NewIPLocationHandler" value="1" type="JavaHandler"/>
-<property name="OpenIPLocationHandler" value="5" type="JavaHandler"/>
+<property name="OpenIPLocationHandler" value="8" type="JavaHandler"/>
 <property name="RecustomizeCore" value="3" type="JavaHandler"/>
 </item>
 <item name="Gui Handlers">
-<property name="BaseDialog_OK" value="22" type="GuiHandlerData"/>
-<property name="CoreTreeTablePanel_CORE_TREE_TABLE" value="41" type="GuiHandlerData"/>
-<property name="FileSetPanel_FILE_SET_PANEL_TREE" value="25" type="GuiHandlerData"/>
-<property name="GettingStartedView_MANAGE_IP" value="6" type="GuiHandlerData"/>
+<property name="BaseDialog_OK" value="25" type="GuiHandlerData"/>
+<property name="CmdMsgDialog_OK" value="1" type="GuiHandlerData"/>
+<property name="CoreTreeTablePanel_CORE_TREE_TABLE" value="51" type="GuiHandlerData"/>
+<property name="ExpRunTreePanel_EXP_RUN_TREE_TABLE" value="1" type="GuiHandlerData"/>
+<property name="FileSetPanel_FILE_SET_PANEL_TREE" value="29" type="GuiHandlerData"/>
+<property name="GettingStartedView_MANAGE_IP" value="9" type="GuiHandlerData"/>
 <property name="GettingStartedView_START_USING_VIVADO_WITH_IP_CATALOG" value="1" type="GuiHandlerData"/>
 <property name="NewIPProjectWizard_IP_LOCATION" value="1" type="GuiHandlerData"/>
-<property name="PACommandNames_OPEN_IP_LOCATION" value="5" type="GuiHandlerData"/>
-<property name="RDICommands_DELETE" value="10" type="GuiHandlerData"/>
+<property name="PACommandNames_GENERATE_COMPOSITE_FILE" value="1" type="GuiHandlerData"/>
+<property name="PACommandNames_OPEN_IP_LOCATION" value="8" type="GuiHandlerData"/>
+<property name="PACommandNames_RESET_COMPOSITE_FILE" value="1" type="GuiHandlerData"/>
+<property name="RDICommands_DELETE" value="11" type="GuiHandlerData"/>
 <property name="RemoveSourcesDialog_ALSO_DELETE" value="5" type="GuiHandlerData"/>
-<property name="SimpleOutputProductDialog_GENERATE_OUTPUT_PRODUCTS_IMMEDIATELY" value="12" type="GuiHandlerData"/>
-<property name="SrcMenu_IP_DOCUMENTATION" value="11" type="GuiHandlerData"/>
+<property name="SimpleOutputProductDialog_GENERATE_OUTPUT_PRODUCTS_IMMEDIATELY" value="15" type="GuiHandlerData"/>
+<property name="SimpleOutputProductDialog_RESET_OUTPUT_PRODUCTS" value="1" type="GuiHandlerData"/>
+<property name="SrcMenu_IP_DOCUMENTATION" value="13" type="GuiHandlerData"/>
 </item>
 <item name="Other">
-<property name="GuiMode" value="87" type="GuiMode"/>
+<property name="GuiMode" value="90" type="GuiMode"/>
 <property name="BatchMode" value="0" type="BatchMode"/>
-<property name="TclMode" value="77" type="TclMode"/>
+<property name="TclMode" value="80" type="TclMode"/>
 </item>
 </section>
 </application>

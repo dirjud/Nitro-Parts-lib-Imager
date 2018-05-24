@@ -1,4 +1,4 @@
-module rotate2rams_yuv420_fifo
+module rotate_fifo
    (input clk,
     input srst,
     input [37:0] din,
@@ -10,7 +10,7 @@ module rotate2rams_yuv420_fifo
     output reg almost_empty
     );
 
-   parameter DEPTH=512;
+   parameter DEPTH=1024;
    parameter DEPTH_WIDTH=$clog2(DEPTH);
    reg [37:0]  mem[0:DEPTH-1];
 

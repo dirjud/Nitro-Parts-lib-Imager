@@ -54,7 +54,7 @@
 // (in parentheses) to your own signal names.
 
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
-rotate2rams_yuv420_fifo your_instance_name (
+rotate_fifo your_instance_name (
   .clk(clk),                    // input wire clk
   .srst(srst),                  // input wire srst
   .din(din),                    // input wire [37 : 0] din
@@ -67,7 +67,7 @@ rotate2rams_yuv420_fifo your_instance_name (
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
-// You must compile the wrapper file rotate2rams_yuv420_fifo.v when simulating
-// the core, rotate2rams_yuv420_fifo. When compiling the wrapper file, be sure to
+// You must compile the wrapper file rotate_fifo.v when simulating
+// the core, rotate_fifo. When compiling the wrapper file, be sure to
 // reference the Verilog simulation library.
 

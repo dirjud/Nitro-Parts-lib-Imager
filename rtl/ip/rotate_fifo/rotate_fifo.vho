@@ -52,7 +52,7 @@
 -- The following code must appear in the VHDL architecture header.
 
 ------------- Begin Cut here for COMPONENT Declaration ------ COMP_TAG
-COMPONENT rotate2rams_yuv420_fifo
+COMPONENT rotate_fifo
   PORT (
     clk : IN STD_LOGIC;
     srst : IN STD_LOGIC;
@@ -71,7 +71,7 @@ END COMPONENT;
 -- body. Substitute your own instance name and net names.
 
 ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-your_instance_name : rotate2rams_yuv420_fifo
+your_instance_name : rotate_fifo
   PORT MAP (
     clk => clk,
     srst => srst,
@@ -85,7 +85,7 @@ your_instance_name : rotate2rams_yuv420_fifo
   );
 -- INST_TAG_END ------ End INSTANTIATION Template ---------
 
--- You must compile the wrapper file rotate2rams_yuv420_fifo.vhd when simulating
--- the core, rotate2rams_yuv420_fifo. When compiling the wrapper file, be sure to
+-- You must compile the wrapper file rotate_fifo.vhd when simulating
+-- the core, rotate_fifo. When compiling the wrapper file, be sure to
 -- reference the VHDL simulation library.
 

@@ -283,7 +283,7 @@ class RotateYUV420Test(simtest):
 #        z_yuv = _rotate_img(yd, 0)
 #        self.assertTrue((yuv[6:-6,6:-6] == z_yuv[6:-6,6:-6,0]).all())
         
-        angles =  [-(-360/512.-90)]#[0, 15, 45, 75, 90] #numpy.linspace(0,360, 17)
+        angles =  [45]#-(-360/512.-90)]#[0, 15, 45, 75, 90] #numpy.linspace(0,360, 17)
         sincos = []
 
 

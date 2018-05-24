@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GenRun Id="lookup_map_mem_synth_1" LaunchPart="xc7a35tcsg324-3" LaunchTime="1526644318">
-  <File Type="RDS-UTIL-PB" Name="lookup_map_mem_utilization_synth.pb"/>
   <File Type="RDS-UTIL" Name="lookup_map_mem_utilization_synth.rpt"/>
+  <File Type="RDS-UTIL-PB" Name="lookup_map_mem_utilization_synth.pb"/>
   <File Type="RDS-RDS" Name="lookup_map_mem.vds"/>
   <File Type="RDS-DCP" Name="lookup_map_mem.dcp"/>
   <File Type="PA-TCL" Name="lookup_map_mem.tcl"/>

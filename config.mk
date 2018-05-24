@@ -36,7 +36,7 @@ SIM_FILES = sim/Imager_tb.v \
 	sim/sram.v \
 	rtl_auto/RotateYUV420TestTerminal.v \
 	sim/rotate_yuv420_tb.v \
-	sim/rotate2rams_yuv420_fifo.v \
+	sim/rotate_fifo.v \
 	rtl/rotate2rams_yuv420.v \
 	rtl_auto/DotProductTestTerminal.v \
 	sim/dot_product_tb.v \

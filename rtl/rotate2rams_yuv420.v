@@ -53,7 +53,7 @@ module rotate2rams_yuv420
    // Delay the stream one pipeline cycle to match that of the kernel module.
    reg [7:0] 		   y1, u1, v1;
    reg [`DTYPE_WIDTH-1:0]  dtype1, dtype2, dtype3;
-   reg [15:0] 		   meta_data1;
+   reg [15:0] 		   meta_data1, meta_data2, meta_data3;
    reg 			   dv1, dv2, dv3;
    always @(posedge clk or negedge resetb) begin
       if(!resetb) begin
@@ -62,6 +62,8 @@ module rotate2rams_yuv420
 	 v1         <= 0;
 	 dtype1     <= 0;
 	 meta_data1 <= 0;
+	 meta_data2 <= 0;
+	 meta_data3 <= 0;
 	 dv1        <= 0;
 	 dv2        <= 0;
 	 dtype2     <= 0;
@@ -73,6 +75,8 @@ module rotate2rams_yuv420
 	 v1         <= vi;
 	 dtype1     <= dtypei;
 	 meta_data1 <= meta_datai;
+	 meta_data2 <= meta_data1;
+	 meta_data3 <= meta_data2;
 	 dv1        <= dvi;
 	 dv2        <= dv1;
 	 dtype2     <= dtype1;
@@ -279,6 +283,79 @@ module rotate2rams_yuv420
    wire [DIM_WIDTH+DIM_WIDTH+16-1:0] wfifo_dout[0:3];
    reg [3:0]                         wfifo_rd_en, wfifo_rd_en_s;
 
+   
+   always @(posedge clk or negedge resetb) begin
+      if(!resetb) begin
+         pixel_valid0_s <= 0;
+         col_pos_s <= 0;
+         row_pos_s <= 0;
+         y00_s <=  0;
+         y01_s <=  0;
+         y10_s <=  0;
+         y11_s <=  0;
+         y00_ss <= 0;
+         y01_ss <= 0;
+         y10_ss <= 0;
+         y11_ss <= 0;
+         u00_s  <= 0;
+         u01_s  <= 0;
+         u10_s  <= 0;
+         u11_s  <= 0;
+         u00_ss <= 0;
+         u01_ss <= 0;
+         u10_ss <= 0;
+         u11_ss <= 0;
+         v00_s  <= 0;
+         v01_s  <= 0;
+         v10_s  <= 0;
+         v11_s  <= 0;
+         v00_ss <= 0;
+         v01_ss <= 0;
+         v10_ss <= 0;
+         v11_ss <= 0;
+               
+         u_ave_s <= 0;
+         u_ave_ss <= 0;
+         v_ave_s <= 0;
+         v_ave_ss <= 0;
+      end else begin
+        pixel_valid0_s <= pixel_valid0;
+         col_pos_s <= col_pos;
+         row_pos_s <= row_pos;
+         y00_s <= y00;
+         y01_s <= y01;
+         y10_s <= y10;
+         y11_s <= y11;
+         y00_ss <= y00_s;
+         y01_ss <= y01_s;
+         y10_ss <= y10_s;
+         y11_ss <= y11_s;
+         
+         u00_s  <= u00;
+         u01_s  <= u01;
+         u10_s  <= u10;
+         u11_s  <= u11;
+         u00_ss <= u00_s;
+         u01_ss <= u01_s;
+         u10_ss <= u10_s;
+         u11_ss <= u11_s;
+               
+         v00_s  <= v00;
+         v01_s  <= v01;
+         v10_s  <= v10;
+         v11_s  <= v11;
+         v00_ss <= v00_s;
+         v01_ss <= v01_s;
+         v10_ss <= v10_s;
+         v11_ss <= v11_s;
+               
+         u_ave_s <= u_ave;
+         u_ave_ss <= u_ave_s;
+         v_ave_s <= v_ave;
+         v_ave_ss <= v_ave_s;
+      end
+   end
+   
    generate
       for(idx=0; idx<4; idx=idx+1) begin
          rotate_matrix #(.IN_WIDTH(DIM_WIDTH+1),
@@ -312,47 +389,22 @@ module rotate2rams_yuv420
          assign wfifo_din_ss[idx] = { waddr_ss[idx], x2_ss[idx], uv_ave_ss[idx] };
 
 
-         always @(posedge clk) begin
-            pixel_valid0_s <= pixel_valid0;
-            col_pos_s <= col_pos;
-            row_pos_s <= row_pos;
-            y00_s <= y00;
-            y01_s <= y01;
-            y10_s <= y10;
-            y11_s <= y11;
-            y00_ss <= y00_s;
-            y01_ss <= y01_s;
-            y10_ss <= y10_s;
-            y11_ss <= y11_s;
-
-            u00_s  <= u00;
-            u01_s  <= u01;
-            u10_s  <= u10;
-            u11_s  <= u11;
-            u00_ss <= u00_s;
-            u01_ss <= u01_s;
-            u10_ss <= u10_s;
-            u11_ss <= u11_s;
-
-            v00_s  <= v00;
-            v01_s  <= v01;
-            v10_s  <= v10;
-            v11_s  <= v11;
-            v00_ss <= v00_s;
-            v01_ss <= v01_s;
-            v10_ss <= v10_s;
-            v11_ss <= v11_s;
-
-            dc0_ss[idx] <= dc0_s[idx];
-            //dc1_ss[idx] <= dc1_s[idx];
-            dr0_ss[idx] <= dr0_s[idx];
-            //dr1_ss[idx] <= dr1_s[idx];
-            u_ave_s <= u_ave;
-            u_ave_ss <= u_ave_s;
-            v_ave_s <= v_ave;
-            v_ave_ss <= v_ave_s;
-            pR_ss[idx] <= pR_s[idx];
-            pC_ss[idx] <= pC_s[idx];
+         always @(posedge clk or negedge resetb) begin
+            if(!resetb) begin
+               dc0_ss[idx] <= 0;
+               //dc1_ss[idx] <= 0;
+               dr0_ss[idx] <= 0;
+               //dr1_ss[idx] <= 0;
+               pR_ss[idx] <= 0;
+               pC_ss[idx] <= 0;
+            end else begin
+               dc0_ss[idx] <= dc0_s[idx];
+               //dc1_ss[idx] <= dc1_s[idx];
+               dr0_ss[idx] <= dr0_s[idx];
+               //dr1_ss[idx] <= dr1_s[idx];
+               pR_ss[idx] <= pR_s[idx];
+               pC_ss[idx] <= pC_s[idx];
+            end
          end
          // weight each corner for the kernel
          weighted_ave #(.DATA_WIDTH(8), .MULT_WIDTH(INTERP_WIDTH+1))
@@ -378,13 +430,19 @@ module rotate2rams_yuv420
             .Z(x2_ss[idx]));
          
 
-         always @(posedge clk) begin
-            pix_en_ss[idx] <= pix_en_s[idx];
-            pix_en_sss[idx] <= pix_en_ss[idx];
-            wfifo_din_sss[idx] <= wfifo_din_ss[idx];
+         always @(posedge clk or negedge resetb) begin
+            if(!resetb) begin
+               pix_en_ss[idx] <= 0;
+               pix_en_sss[idx] <= 0;
+               wfifo_din_sss[idx] <= 0;
+            end else begin
+               pix_en_ss[idx] <= pix_en_s[idx];
+               pix_en_sss[idx] <= pix_en_ss[idx];
+               wfifo_din_sss[idx] <= wfifo_din_ss[idx];
+            end
          end
 
-         rotate2rams_yuv420_fifo wfifo
+         rotate_fifo wfifo
            (
             .clk(clk),      // input wire clk
             .srst(!resetb),    // input wire srst
@@ -616,6 +674,32 @@ module rotate2rams_yuv420
    // synthesis attribute KEEP of addr1_internal is "TRUE";
 
 
+   integer wfile, ofile, frame_cnt;
+   initial begin
+      wfile = $fopen("rotate.txt","w");
+      ofile = $fopen("rotate_out.txt","w");
+      frame_cnt = 0;
+   end
+   always @(posedge clk) begin
+      if(ram_data_en) begin
+         $fdisplay(wfile, "0x%x", ram_data_);
+      end
+      if(frame_start) begin
+         $fdisplay(wfile, "START");
+         $fdisplay(ofile, "START");
+      end
+      if(frame_end) begin
+         $fdisplay(wfile, "END");
+         $fdisplay(ofile, "END");
+//         wfile0 = $fopen("rotate_sram0_" + frame_cnt, "w");
+//         wfile1 = $fopen("rotate_sram1_" + frame_cnt, "w");
+//         $fclose(wfile0);
+//         $fclose(wfile1);
+      end
+      if(dvo && dtypeo == 8) begin
+         $fdisplay(ofile, "0x%x", datao);
+      end
+   end
 
 
 
@@ -624,7 +708,7 @@ module rotate2rams_yuv420
    reg dv_, pixel_valid_, frame_start_, frame_end_, header_start_, header_valid_, header_end_, row_start_,row_end_;
    reg [`DTYPE_WIDTH-1:0] dtype_;
 
-   always @(en_rot) begin
+   always @(*) begin
       if(en_rot) begin
          dv_          = dv3;
          dtype_       = dtype3;
@@ -719,7 +803,8 @@ module rotate2rams_yuv420
    end
 
    wire [5:0]  next_opos2 = next_opos - 32;
-   wire [15:0] meta_datao = (opos == `Image_image_type) ? image_type : meta_data1;
+   wire [15:0] meta_datao = (opos == `Image_image_type) ? image_type : 
+                            (en_rot) ? meta_data3 : meta_data1;
    
    /* verilator lint_off WIDTH */
    wire [31:0] datao1 = next_obuf >> next_opos2;

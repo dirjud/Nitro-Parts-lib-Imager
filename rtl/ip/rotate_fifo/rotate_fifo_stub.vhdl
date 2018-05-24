@@ -1,18 +1,18 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.4 (lin64) Build 2086221 Fri Dec 15 20:54:30 MST 2017
--- Date        : Sun May 20 09:42:28 2018
+-- Date        : Tue May 22 17:13:25 2018
 -- Host        : borah.lane.brooks.nu running 64-bit Fedora release 27 (Twenty Seven)
--- Command     : write_vhdl -force -mode synth_stub -rename_top rotate2rams_yuv420_fifo -prefix
---               rotate2rams_yuv420_fifo_ rotate2rams_yuv420_fifo_stub.vhdl
--- Design      : rotate2rams_yuv420_fifo
+-- Command     : write_vhdl -force -mode synth_stub
+--               /home/lane/work/ubixum/prj/xenecor/src/lib/imager/rtl/ip/rotate_fifo/rotate_fifo_stub.vhdl
+-- Design      : rotate_fifo
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7a35tcsg324-3
 -- --------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity rotate2rams_yuv420_fifo is
+entity rotate_fifo is
   Port ( 
     clk : in STD_LOGIC;
     srst : in STD_LOGIC;
@@ -25,9 +25,9 @@ entity rotate2rams_yuv420_fifo is
     almost_empty : out STD_LOGIC
   );
 
-end rotate2rams_yuv420_fifo;
+end rotate_fifo;
 
-architecture stub of rotate2rams_yuv420_fifo is
+architecture stub of rotate_fifo is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;
