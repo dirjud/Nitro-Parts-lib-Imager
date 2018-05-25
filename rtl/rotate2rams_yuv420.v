@@ -15,7 +15,7 @@
 // unsigned numbers.
 
 module rotate2rams_yuv420
-  #(parameter RAW_PIXEL_SHIFT=0, BLOCK_RAM=1, MAX_COLS=1288, ANGLE_WIDTH=10, ADDR_WIDTH=21) // number of LSBs to drop in raw data stream to make it 8b.
+  #(parameter RAW_PIXEL_SHIFT=0, BLOCK_RAM=1, MAX_COLS=1288, ANGLE_WIDTH=10, ADDR_WIDTH=21, DIM_WIDTH = $clog2(MAX_COLS)) // number of LSBs to drop in raw data stream to make it 8b.
   (input clk,
    input                          resetb,
    input [15:0]                   image_type,
@@ -31,6 +31,8 @@ module rotate2rams_yuv420
    input [7:0]                    ui,
    input [7:0]                    vi,
 
+   output reg [DIM_WIDTH-1:0]     num_rows,
+   output reg [DIM_WIDTH-1:0]     num_cols,
    output reg                     dvo,
    output reg [`DTYPE_WIDTH-1:0]  dtypeo,
    output reg [31:0]              datao,
@@ -48,7 +50,8 @@ module rotate2rams_yuv420
    inout [15:0]                   ram_databus1
    );
 
-   parameter DIM_WIDTH = $clog2(MAX_COLS);
+   reg [DIM_WIDTH-1:0]            num_rows_s, num_cols_s;
+
    reg signed [ANGLE_WIDTH-1:0]   sin_theta_s;
    reg signed [ANGLE_WIDTH-1:0]   cos_theta_s;
    
@@ -178,13 +181,17 @@ module rotate2rams_yuv420
    reg  pixel_valid0_s;
    
    // Calculate the row and column phase within the image.
-   reg [DIM_WIDTH-1:0] col_pos, row_pos, col_pos_s, row_pos_s, num_rows, num_cols;
+   reg [DIM_WIDTH-1:0] col_pos, row_pos, col_pos_s, row_pos_s;
+   wire [DIM_WIDTH-1:0] next_col_pos = col_pos + 1;
+   wire [DIM_WIDTH-1:0] next_row_pos = row_pos + 1;
    always @(posedge clk or negedge resetb) begin
       if(!resetb) begin
          row_pos <= 0;
          col_pos <= 0;
          num_rows <= 720;
          num_cols <= 1280;
+         num_rows_s <= 720;
+         num_cols_s <= 1280;
          sin_theta_s <= 0;
          cos_theta_s <= (1<<(ANGLE_WIDTH-2));
       end else begin
@@ -193,16 +200,20 @@ module rotate2rams_yuv420
             sin_theta_s <= sin_theta;
             cos_theta_s <= cos_theta;
 	 end else if (row_end) begin
-            row_pos <= row_pos + 1;
+            row_pos <= next_row_pos;
 	 end else if(frame_end) begin
-            num_rows <= row_pos + 1;
-            num_cols <= col_pos + 1;
+            /* verilator lint_off WIDTH */
+            num_rows <= next_row_pos & ~(32'b1);
+            num_cols <= next_col_pos & ~(32'b1);
+            /* verilator lint_on WIDTH */
+            num_rows_s <= num_rows;
+            num_cols_s <= num_cols;
          end
 
 	 if(row_start) begin
             col_pos <= 0;
 	 end else if(pixel_valid0) begin
-            col_pos <= col_pos + 1;
+            col_pos <= next_col_pos;
 	 end
       end
    end
@@ -527,7 +538,7 @@ module rotate2rams_yuv420
    wire [ADDR_WIDTH-1:0]  next_raddr = raddr + 1;
    reg [DIM_WIDTH-1:0] col_pos2, row_pos2;
    wire signed [DIM_WIDTH:0]  col_pos3, row_pos3;
-   wire                       out_of_bounds = (col_pos2 >= num_cols-3) || (row_pos2 >= num_rows-2) || (col_pos3 >= {1'b0, num_cols}) || (row_pos3 >= {1'b0, num_rows}) || (col_pos3 <= 0) || (row_pos3 <= 0);
+   wire                       out_of_bounds = (col_pos2 >= num_cols_s-2) || (row_pos2 >= num_rows_s-2) || (col_pos3 >= {1'b0, num_cols_s}) || (row_pos3 >= {1'b0, num_rows_s}) || (col_pos3 <= 0) || (row_pos3 <= 0);
 
    rotate_matrix #(.IN_WIDTH(DIM_WIDTH+1),
                    .ANGLE_WIDTH(ANGLE_WIDTH),
@@ -537,8 +548,8 @@ module rotate2rams_yuv420
       .sin_theta(sin_neg_theta),
       .xi({1'b0, col_pos2 }),
       .yi({1'b0, row_pos2 }),
-      .num_cols(num_cols),
-      .num_rows(num_rows),
+      .num_cols(num_cols_s),
+      .num_rows(num_rows_s),
       .xo(col_pos3),
       .yo(row_pos3)
       );
@@ -717,17 +728,19 @@ module rotate2rams_yuv420
    reg [`DTYPE_WIDTH-1:0] dtype_;
 
    always @(*) begin
-//      if(en_rot) begin
-//         dv_          = dv3 &&   dtype3 ;
-//         dtype_       = dtype3;
-//         pixel_valid_ = ram_data_en;
-//         frame_start_ = dv3 &&   dtype3 == `DTYPE_FRAME_START ;
-//         frame_end_   = dv3 &&   dtype3 == `DTYPE_FRAME_END   ;
-//         header_start_= dv3 &&   dtype3 == `DTYPE_HEADER_START;
-//         header_valid_= dv3 &&   dtype3 == `DTYPE_HEADER      ;
-//         header_end_  = dv3 &&   dtype3 == `DTYPE_HEADER_END  ;
-//         row_start_   = dv3 &&   dtype3 == `DTYPE_ROW_START   ;
-//         row_end_     = dv3 &&   dtype3 == `DTYPE_ROW_END     ;
+`ifdef TDEBUG
+      if(en_rot) begin
+         dv_          = dv3 && (dtype3 != `DTYPE_PIXEL_MASK) && (dtype3 != `DTYPE_ROW_START) && (dtype3 != `DTYPE_ROW_END);
+         pixel_valid_ = ram_data_en;
+         dtype_       = (pixel_valid_) ? `DTYPE_PIXEL_MASK : dtype3;
+         frame_start_ = dv3 &&   dtype3 == `DTYPE_FRAME_START ;
+         frame_end_   = dv3 &&   dtype3 == `DTYPE_FRAME_END   ;
+         header_start_= dv3 &&   dtype3 == `DTYPE_HEADER_START;
+         header_valid_= dv3 &&   dtype3 == `DTYPE_HEADER      ;
+         header_end_  = dv3 &&   dtype3 == `DTYPE_HEADER_END  ;
+         row_start_   = dv3 &&   dtype3 == `DTYPE_ROW_START   ;
+         row_end_     = dv3 &&   dtype3 == `DTYPE_ROW_END     ;
+`else         
       if(en_rot) begin
          dv_          = dv3;
          dtype_       = dtype3;
@@ -739,6 +752,7 @@ module rotate2rams_yuv420
          header_end_  = dv3 &&   dtype3 == `DTYPE_HEADER_END  ;
          row_start_   = dv3 &&   dtype3 == `DTYPE_ROW_START   ;
          row_end_     = dv3 &&   dtype3 == `DTYPE_ROW_END     ;
+`endif
       end else begin
          dv_          = dv1;
          dtype_       = dtype1;
@@ -802,8 +816,10 @@ module rotate2rams_yuv420
 	 next_obuf = { obuf[OBUF_WIDTH-9:0],  raw_data };
 	 next_opos = opos_plus_8;
       end else if(en_rot) begin
-//	 next_obuf = { obuf[OBUF_WIDTH-25:0], 2'b0, ram_data_[37:16] };
-//	 next_opos = opos_plus_24;
+`ifdef TDEBUG
+	 next_obuf = { obuf[OBUF_WIDTH-25:0], 2'b0, ram_data_[37:16] };
+	 next_opos = opos_plus_24;
+`else         
          if(dump_uv) begin
 	    next_obuf = { obuf[OBUF_WIDTH-25:0], datao_rot[15:8], datao_rot_s[7:0], datao_rot[7:0] };
 	    next_opos = opos_plus_24;
@@ -811,6 +827,7 @@ module rotate2rams_yuv420
             next_obuf = { obuf[OBUF_WIDTH-9:0],  datao_rot[15:8] }; // drop the u and v channels
 	    next_opos = opos_plus_8;
          end
+`endif         
       end else if(enable_420 == 0) begin // pass all the yuv data
 	 next_obuf = { obuf[OBUF_WIDTH-25:0], y1, u1, v1  };
 	 next_opos = opos_plus_24;
@@ -841,7 +858,6 @@ module rotate2rams_yuv420
 	 obuf <= 0;
 	 opos <= 0;
 	 flushed <= 0;
-	 
       end else begin
 	 flushed <= flush_required;
 

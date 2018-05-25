@@ -39,7 +39,7 @@ from PIL import Image
 #            #    print " ob=", ob, "out=", img0[row,col]
 #    return img0
 
-debug_points = [ [178, 146] ]
+debug_points = [ [559, 606], [332,563],[893,394] ]
 
 sin_cos_bit_depth = 18
 sin_cos_theta_unity = 1<<sin_cos_bit_depth
@@ -119,7 +119,11 @@ def _rotate_img(yuv, theta):
                     except:
                         x = [0,0,0]
 
-                    if p[0] == 158 and p[1] == 151:
+                    if p[0] == 528 and p[1] == 604:
+                        print "HERE", row, col
+                    if p[0] == 342 and p[1] == 741:
+                        print "HERE", row, col
+                    if p[0] == 600 and p[1] == 215:
                         print "HERE", row, col
                     mem[p[0],p[1], 0] = x[0]
                     if p[1] & 1: # odd col gets v
@@ -361,8 +365,8 @@ class RotateYUV420Test(simtest):
     def testDebug(self):
         """Turns on rotation and verifies various angles."""
 
-        num_cols = 128
-        num_rows = 108
+        num_cols = 1282
+        num_rows = 1081
         self.dev.set("Imager", "mode", 10)
         self.dev.set("Imager", "num_active_cols", num_cols)
         self.dev.set("Imager", "num_active_rows", num_rows)
@@ -376,15 +380,22 @@ class RotateYUV420Test(simtest):
         self.dev.set("RotateYUV420Test", "enable_rotate", 1)
 
 
-        angles =  [0]#-(-360/512.-90)]#[0, 15, 45, 75, 90] #numpy.linspace(0,360, 17)
+        angles =  [45]#-(-360/512.-90)]#[0, 15, 45, 75, 90] #numpy.linspace(0,360, 17)
         sincos = []
 
 
         for idx, angle in enumerate(angles):# + [25]): # add a dummy at end to get entire sequence
             theta = angle / 180.0 * numpy.pi
-            print "Setting angle=", angle
 
-            sin_theta, cos_theta = rot.set_rotation(angle, self.dev, "RotateYUV420Test", bit_depth=sin_cos_bit_depth-2)
+            sin_theta = 48015
+            cos_theta = 44604
+            theta = numpy.arctan(sin_theta / float(cos_theta))
+            angle = theta/numpy.pi*180
+            print "Setting angle=", angle
+            
+            self.dev.set("RotateYUV420Test","cos_theta",cos_theta)
+            self.dev.set("RotateYUV420Test","sin_theta",sin_theta)
+            #sin_theta, cos_theta = rot.set_rotation(angle, self.dev, "RotateYUV420Test", bit_depth=sin_cos_bit_depth-2)
             print "  sin,cos=", self.dev.get("RotateYUV420Test","sin_theta"), self.dev.get("RotateYUV420Test","cos_theta")
             sincos.append((sin_theta, cos_theta))
 
@@ -402,19 +413,21 @@ class RotateYUV420Test(simtest):
                 self.dev.read("STREAM_OUTPUT", 0, x)
                 self.dev.set("TestBench","debug", 2)
             
-            x = numpy.zeros([(num_rows-2)*(num_cols-2)*3], dtype=numpy.uint8)
+            yuvI = _rotate_img(yd, theta)
+            x = numpy.zeros([(num_rows-2)*(num_cols-2),3], dtype=numpy.uint8)
             self.dev.read("STREAM_OUTPUT", 0, x)
             z = numpy.zeros([(num_rows-2),(num_cols-2)], dtype=numpy.uint8)
-            import pdb
-            pdb.set_trace()
+            addrs = []
             for idx in range(x.shape[0]):
-                try:
-                    addr = x[idx][0] << 16 + x[idx][1] << 8 + x[idx]
-                    row = addr / (num_cols-2)
-                    col = addr - row*(num_cols-2)
-                    z[row,col]=255
-                except:
-                    pass
+                addr = (x[idx][0] << 16) + (x[idx][1] << 8) + x[idx][2]
+                row = addr / (num_cols-2)
+                col = addr - row*(num_cols-2)
+                z[row,col]=255
+                addrs.append(addr)
+                #if addr == 528*(num_cols-2) + 604:
+                #    import pdb
+                #    pdb.set_trace()
+                prev_addr = addr
             pylab.imshow(z)
             pylab.show()
 

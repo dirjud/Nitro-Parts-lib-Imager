@@ -1,5 +1,0 @@
-<?xml version="1.0"?>
-<Runs Version="1" Minor="0">
-	<Run Id="rotate2ram_yuv420_fifo_synth_1" LaunchDir="/home/lane/work/ubixum/prj/xenecor/src/lib/imager/rtl/ip/managed_ip_project/managed_ip_project.runs/rotate2ram_yuv420_fifo_synth_1" FlowId="Vivado_Synthesis" FromStepId="vivado" ToStepId="vivado"/>
-</Runs>
-
