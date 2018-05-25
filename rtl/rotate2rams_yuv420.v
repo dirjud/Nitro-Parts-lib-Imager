@@ -50,10 +50,7 @@ module rotate2rams_yuv420
    inout [15:0]                   ram_databus1
    );
 
-   reg [DIM_WIDTH-1:0]            num_rows_s, num_cols_s;
-
-   reg signed [ANGLE_WIDTH-1:0]   sin_theta_s;
-   reg signed [ANGLE_WIDTH-1:0]   cos_theta_s;
+   reg signed [ANGLE_WIDTH-1:0] sin_theta_s, cos_theta_s, sin_theta_ss, cos_theta_ss;
    
    // Delay the stream one pipeline cycle to match that of the kernel module.
    reg [7:0] 		   y1, u1, v1;
@@ -190,15 +187,17 @@ module rotate2rams_yuv420
          col_pos <= 0;
          num_rows <= 720;
          num_cols <= 1280;
-         num_rows_s <= 720;
-         num_cols_s <= 1280;
          sin_theta_s <= 0;
          cos_theta_s <= (1<<(ANGLE_WIDTH-2));
+         sin_theta_ss <= 0;
+         cos_theta_ss <= (1<<(ANGLE_WIDTH-2));
       end else begin
 	 if(frame_start) begin
             row_pos <= 0;
             sin_theta_s <= sin_theta;
             cos_theta_s <= cos_theta;
+            sin_theta_ss <= sin_theta_s;
+            cos_theta_ss <= cos_theta_s;
 	 end else if (row_end) begin
             row_pos <= next_row_pos;
 	 end else if(frame_end) begin
@@ -206,8 +205,6 @@ module rotate2rams_yuv420
             num_rows <= next_row_pos & ~(32'b1);
             num_cols <= next_col_pos & ~(32'b1);
             /* verilator lint_on WIDTH */
-            num_rows_s <= num_rows;
-            num_cols_s <= num_cols;
          end
 
 	 if(row_start) begin
@@ -252,6 +249,8 @@ module rotate2rams_yuv420
    // kernel).
    wire signed [ANGLE_WIDTH-1:0] cos_neg_theta = cos_theta_s;
    wire signed [ANGLE_WIDTH-1:0] sin_neg_theta = (~(sin_theta_s)) + 1; // invert
+   wire signed [ANGLE_WIDTH-1:0] cos_neg_theta_ss = cos_theta_ss;
+   wire signed [ANGLE_WIDTH-1:0] sin_neg_theta_ss = (~(sin_theta_ss)) + 1; // invert
    parameter INTERP_WIDTH=4;
    wire [DIM_WIDTH+INTERP_WIDTH:0]   c0_s[0:3];
    wire [DIM_WIDTH+INTERP_WIDTH:0]   r0_s[0:3];
@@ -538,18 +537,18 @@ module rotate2rams_yuv420
    wire [ADDR_WIDTH-1:0]  next_raddr = raddr + 1;
    reg [DIM_WIDTH-1:0] col_pos2, row_pos2;
    wire signed [DIM_WIDTH:0]  col_pos3, row_pos3;
-   wire                       out_of_bounds = (col_pos2 >= num_cols_s-2) || (row_pos2 >= num_rows_s-2) || (col_pos3 >= {1'b0, num_cols_s}) || (row_pos3 >= {1'b0, num_rows_s}) || (col_pos3 <= 0) || (row_pos3 <= 0);
+   wire                       out_of_bounds = (col_pos2 >= num_cols-2) || (row_pos2 >= num_rows-2) || (col_pos3 >= {1'b0, num_cols-1}) || (row_pos3 >= {1'b0, num_rows-1}) || (col_pos3 <= 1) || (row_pos3 <= 1);
 
    rotate_matrix #(.IN_WIDTH(DIM_WIDTH+1),
                    .ANGLE_WIDTH(ANGLE_WIDTH),
                    .OUT_WIDTH(DIM_WIDTH+1))
    rotate_matrix_ob
-     (.cos_theta(cos_neg_theta),
-      .sin_theta(sin_neg_theta),
+     (.cos_theta(cos_neg_theta_ss),
+      .sin_theta(sin_neg_theta_ss),
       .xi({1'b0, col_pos2 }),
       .yi({1'b0, row_pos2 }),
-      .num_cols(num_cols_s),
-      .num_rows(num_rows_s),
+      .num_cols(num_cols),
+      .num_rows(num_rows),
       .xo(col_pos3),
       .yo(row_pos3)
       );
