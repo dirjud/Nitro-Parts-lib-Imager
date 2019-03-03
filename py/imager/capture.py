@@ -105,7 +105,7 @@ def _capture(dev, img, di, timeout):
     header = decode_header(di, raw_header)
     try:
         verify_header(header)
-    except Exception, e:
+    except Exception as e:
         log.warn(str(e))
         log.warn("Attempting to resync to stream")
         resync(dev, raw_header, di)
@@ -149,7 +149,7 @@ def capture(dev, img, timeout=None):
     for i in range(10):
         try:
             return _capture(dev, img, dev.get_di(), timeout)
-        except Exception, e:
+        except Exception as e:
             if(str(e) != "Bad compressed frame"):
                 raise
             log.info("Skipping bad compressed frame " + str(i))
