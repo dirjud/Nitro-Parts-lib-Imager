@@ -492,30 +492,40 @@ module rotate2rams_yuv420
          ram_data1 <= 0;
          wpos0 <= 0;
       end else begin
-         if(!wfifo_almost_empty[wpos0] || (!wfifo_empty[wpos0] && !wfifo_rd_en[wpos0])) begin
-            wfifo_rd_en <= wpos0_mask;
-         end else if(!wfifo_almost_empty[wpos1] || (!wfifo_empty[wpos1] && !wfifo_rd_en[wpos1])) begin
-            wfifo_rd_en <= wpos1_mask;
-         end else if(!wfifo_almost_empty[wpos2] || (!wfifo_empty[wpos2] && !wfifo_rd_en[wpos2])) begin
-            wfifo_rd_en <= wpos2_mask;
-         end else if(!wfifo_almost_empty[wpos3] || (!wfifo_empty[wpos3] && !wfifo_rd_en[wpos3])) begin
-            wfifo_rd_en <= wpos3_mask;
-         end else begin
+	 if(!enable_rotate) begin
             wfifo_rd_en <= 0;
-         end 
-         wpos0 <= wpos1;
-         wfifo_rd_en_s <= wfifo_rd_en;
-         if(|wfifo_rd_en_s) begin
-            ram_data_ <= (wfifo_rd_en_s == 1) ? wfifo_dout[0] :
-                         (wfifo_rd_en_s == 2) ? wfifo_dout[1] :
-                         (wfifo_rd_en_s == 4) ? wfifo_dout[2] :
-                         wfifo_dout[3];
-            ram_data_en <= 1;
-         end else begin
+            wfifo_rd_en_s <= 0;
             ram_data_en <= 0;
-         end
-         ram_data0 <=  ram_data_[15:0];
-         ram_data1 <=  ram_data_[15:0];
+            ram_data_ <= 0;
+            ram_data0 <= 0;
+            ram_data1 <= 0;
+            wpos0 <= 0;
+	 end else begin
+            if(!wfifo_almost_empty[wpos0] || (!wfifo_empty[wpos0] && !wfifo_rd_en[wpos0])) begin
+               wfifo_rd_en <= wpos0_mask;
+            end else if(!wfifo_almost_empty[wpos1] || (!wfifo_empty[wpos1] && !wfifo_rd_en[wpos1])) begin
+               wfifo_rd_en <= wpos1_mask;
+            end else if(!wfifo_almost_empty[wpos2] || (!wfifo_empty[wpos2] && !wfifo_rd_en[wpos2])) begin
+               wfifo_rd_en <= wpos2_mask;
+            end else if(!wfifo_almost_empty[wpos3] || (!wfifo_empty[wpos3] && !wfifo_rd_en[wpos3])) begin
+               wfifo_rd_en <= wpos3_mask;
+            end else begin
+               wfifo_rd_en <= 0;
+            end 
+            wpos0 <= wpos1;
+            wfifo_rd_en_s <= wfifo_rd_en;
+            if(|wfifo_rd_en_s) begin
+               ram_data_ <= (wfifo_rd_en_s == 1) ? wfifo_dout[0] :
+                            (wfifo_rd_en_s == 2) ? wfifo_dout[1] :
+                            (wfifo_rd_en_s == 4) ? wfifo_dout[2] :
+                            wfifo_dout[3];
+               ram_data_en <= 1;
+            end else begin
+               ram_data_en <= 0;
+            end
+            ram_data0 <=  ram_data_[15:0];
+            ram_data1 <=  ram_data_[15:0];
+	 end
       end
    end
    wire [DIM_WIDTH*2-1:0] ram_waddr = ram_data_[DIM_WIDTH*2+16-1:16];
